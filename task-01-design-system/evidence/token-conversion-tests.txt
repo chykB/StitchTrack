@@ -1,0 +1,19 @@
+✔ counts every source category and emits 374 unique valid custom properties (3.140466ms)
+✔ all 149 primitives preserve exported colour bytes and custom collections win (9.200333ms)
+✔ all 57 semantic roles retain their exact references and resolve to exported primitives (0.999519ms)
+✔ alias chains remain references rather than being flattened (2.826399ms)
+✔ missing, legacy and circular reference targets fail clearly (6.922652ms)
+✔ normalization collisions are rejected rather than overwriting variables (3.490502ms)
+✔ all 15 typography styles retain all 11 exported fields with CSS units (0.507345ms)
+✔ all three shadows preserve geometry, negative spread, colour and exact alpha bytes (0.137673ms)
+✔ invalid values and missing custom collections fail instead of generating invalid CSS (15.450039ms)
+✔ conversion is repeatable and does not mutate its input (14.00803ms)
+✔ generated artifact matches conversion and two CLI runs from another cwd are byte-identical (144.840177ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 293.323776

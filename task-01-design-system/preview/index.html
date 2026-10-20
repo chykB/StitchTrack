@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A sample StitchTrack order overview for a small tailoring business.">
+  <title>Order overview · StitchTrack</title>
+  <link rel="preload" href="fonts/DM-Sans-variable.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to orders</a>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">ST</span>StitchTrack</div>
+      <div class="workspace"><span class="workspace-name">Ade &amp; Threads</span><span class="workspace-location">Tailoring studio · Lagos</span></div>
+      <span class="avatar" aria-label="Workspace owner: Ade">A</span>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="page-heading">
+      <div><p class="eyebrow">YOUR STUDIO AT A GLANCE</p><h1>Order overview</h1><p class="intro">A little clarity for a busy day at the studio.</p></div>
+      <div class="snapshot"><time datetime="2026-10-20">Tuesday, 20 October 2026</time><span>Sample workspace · Static snapshot</span></div>
+    </div>
+
+    <section class="summary" aria-label="Order summary">
+      <article class="summary-card"><h2>Active orders</h2><p class="metric">8</p><p class="metric-note">Across the studio</p></article>
+      <article class="summary-card"><h2>Due this week</h2><p class="metric">4</p><p class="metric-note">Through Sunday, 25 Oct</p></article>
+      <article class="summary-card"><h2>Awaiting approval</h2><p class="metric">3</p><p class="metric-note">Designs waiting on customers</p></article>
+      <article class="summary-card"><h2>Outstanding balance</h2><p class="metric money">&#8358;248,000</p><p class="metric-note">Across 7 unpaid orders</p></article>
+    </section>
+
+    <section class="orders" aria-labelledby="orders-heading">
+      <div class="section-heading"><div><h2 id="orders-heading">Current orders <span class="count">8</span></h2><p>Every garment, from first cut to final pickup.</p></div><span class="sort-note">Soonest delivery first</span></div>
+      <div class="table-wrapper">
+        <table aria-labelledby="orders-heading">
+          <caption class="visually-hidden">Eight active tailoring orders, sorted by delivery date. Balances are in Nigerian naira.</caption>
+          <thead><tr><th scope="col">Order</th><th scope="col">Customer &amp; garment</th><th scope="col">Delivery</th><th scope="col">Progress</th><th scope="col">Design approval</th><th scope="col" class="balance">Outstanding</th></tr></thead>
+          <tbody>
+            <tr>
+              <th scope="row">ST-1048</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Amaka Okafor</strong><span>Aso-ebi lace gown</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-10-21">21 Oct 2026</time><span>Tomorrow</span></td>
+              <td data-label="Progress"><span class="progress ready">Ready for pickup</span></td>
+              <td data-label="Design approval"><span class="status approved">Approved</span></td>
+              <td class="balance" data-label="Outstanding">&#8358;25,000</td>
+            </tr>
+            <tr>
+              <th scope="row">ST-1049</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Tunde Balogun</strong><span>Two-piece agbada</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-10-22">22 Oct 2026</time><span>In 2 days</span></td>
+              <td data-label="Progress"><span class="progress">In production</span></td>
+              <td data-label="Design approval"><span class="status approved">Approved</span></td>
+              <td class="balance" data-label="Outstanding">&#8358;60,000</td>
+            </tr>
+            <tr>
+              <th scope="row">ST-1050</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Zainab Yusuf</strong><span>Ankara skirt &amp; blouse</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-10-23">23 Oct 2026</time><span>In 3 days</span></td>
+              <td data-label="Progress"><span class="progress">Fitting scheduled</span></td>
+              <td data-label="Design approval"><span class="status pending">Awaiting approval</span></td>
+              <td class="balance" data-label="Outstanding">&#8358;18,000</td>
+            </tr>
+            <tr>
+              <th scope="row">ST-1051</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Ifeoma Eze</strong><span>Bridal reception dress</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-10-24">24 Oct 2026</time><span>In 4 days</span></td>
+              <td data-label="Progress"><span class="progress">In production</span></td>
+              <td data-label="Design approval"><span class="status changes">Changes requested</span></td>
+              <td class="balance" data-label="Outstanding">&#8358;75,000</td>
+            </tr>
+            <tr>
+              <th scope="row">ST-1052</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Chidi Nwosu</strong><span>Senator suit</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-10-26">26 Oct 2026</time><span>Next week</span></td>
+              <td data-label="Progress"><span class="progress">Cutting</span></td>
+              <td data-label="Design approval"><span class="status approved">Approved</span></td>
+              <td class="balance" data-label="Outstanding">&#8358;30,000</td>
+            </tr>
+            <tr>
+              <th scope="row">ST-1053</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Kemi Adebayo</strong><span>Adire wrap dress</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-10-28">28 Oct 2026</time><span>Next week</span></td>
+              <td data-label="Progress"><span class="progress">Not started</span></td>
+              <td data-label="Design approval"><span class="status pending">Awaiting approval</span></td>
+              <td class="balance" data-label="Outstanding">&#8358;22,000</td>
+            </tr>
+            <tr>
+              <th scope="row">ST-1054</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Mariam Bello</strong><span>Bridesmaid dress</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-10-30">30 Oct 2026</time><span>Next week</span></td>
+              <td data-label="Progress"><span class="progress">In production</span></td>
+              <td data-label="Design approval"><span class="status approved">Approved</span></td>
+              <td class="balance paid" data-label="Outstanding"><span>&#8358;0</span><small>Paid in full</small></td>
+            </tr>
+            <tr>
+              <th scope="row">ST-1055</th>
+              <td class="customer" data-label="Customer &amp; garment"><strong>Daniel Obi</strong><span>Linen two-piece</span></td>
+              <td class="delivery" data-label="Delivery"><time datetime="2026-11-02">02 Nov 2026</time><span>In 13 days</span></td>
+              <td data-label="Progress"><span class="progress">Not started</span></td>
+              <td data-label="Design approval"><span class="status pending">Awaiting approval</span></td>
+              <td class="balance" data-label="Outstanding">&#8358;18,000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer"><span>Showing all 8 active orders</span><span>Balances in Nigerian naira (NGN)</span></div>
+    </section>
+    <p class="page-note">Sample names and orders for the Task One before-and-after experiment.</p>
+  </main>
+</body>
+</html>

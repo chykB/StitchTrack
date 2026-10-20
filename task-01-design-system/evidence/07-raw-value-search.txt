@@ -1,0 +1,3 @@
+Searching preview HTML/CSS for hardcoded colour values
+Search exit code: 1
+No hardcoded hexadecimal, RGB, or HSL colour values found.

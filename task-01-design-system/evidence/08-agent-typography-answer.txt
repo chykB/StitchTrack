@@ -1,0 +1,26 @@
+My question to the AI agent:
+
+Which exact StitchTrack typography style is used for the "Order overview" heading?
+
+Identify the CSS selector, the typography variables it uses, and the source style from the exported design tokens. Verify the answer against the actual code rather than guessing. Do not modify any files.
+
+AI agent response:
+
+The heading uses Headline / Large by default and Headline / Medium at viewport widths 420px or below.
+The selector is h1: [default rule (line 32)](/home/bmalik/stitchtrack/task-01-design-system/preview/styles.css:32), [mobile override (line 127)](/home/bmalik/stitchtrack/task-01-design-system/preview/styles.css:127).
+Property	Default variable	Mobile variable
+Font family	--stitchtrack-type-headline-large-font-family	--stitchtrack-type-headline-medium-font-family
+Font size	--stitchtrack-type-headline-large-font-size	--stitchtrack-type-headline-medium-font-size
+Font weight	--stitchtrack-type-headline-large-font-weight	--stitchtrack-type-headline-medium-font-weight
+Line height	--stitchtrack-type-headline-large-line-height	--stitchtrack-type-headline-medium-line-height
+Letter spacing	--stitchtrack-type-headline-large-letter-spacing	--stitchtrack-type-headline-medium-letter-spacing
+
+
+Verified against [06-tokens-complete.json](/home/bmalik/stitchtrack/task-01-design-system/evidence/06-tokens-complete.json):
+- font.headline.large.value: DM Sans, 32px, weight 600, line height 44.8px, letter spacing 0px.
+- font.headline.medium.value: DM Sans, 28px, weight 600, line height 39.2px, letter spacing 0px.
+The export repeats these styles under typography.headline.large and typography.headline.medium; their values match. No files were modified.
+
+
+
+
