@@ -1,0 +1,29 @@
+StitchTrack — Broken-reference experiment
+
+=== ACTIVE BRANCH ===
+main
+
+=== COMMIT HISTORY ===
+* be829e4 (experiment/broken-token-reference) Demonstrate broken semantic colour reference
+* 26a4bf6 (HEAD -> main) Establish StitchTrack design-system baseline
+
+=== BRANCHES NOT MERGED INTO MAIN ===
+  experiment/broken-token-reference
+
+=== EXPERIMENTAL COMMIT ANCESTRY CHECK ===
+Exit code: 1
+0 = experimental commit merged into main
+1 = experimental commit NOT merged into main
+
+=== FINAL BRANCH VERIFICATION ===
+Active branch:
+main
+
+Experimental branch deletion:
+PASS: Experimental branch deleted.
+
+Main commit:
+26a4bf6 Establish StitchTrack design-system baseline
+
+Experimental commit merged into main?
+PASS: Experimental commit was not merged into main.
