@@ -1,28 +1,31 @@
-StitchTrack — Raw-role-reference experiment
+StitchTrack — Raw semantic role regression experiment
 
 === ACTIVE BRANCH ===
 main
 
+=== EXPERIMENTAL COMMIT ===
+7ea4dab4c0a63588068d81a6279de18c0e1fc7f2
+
 === COMMIT HISTORY ===
-* edc5a9b (HEAD -> main, experiment/raw-role-reference) Record complete raw-colour audit
+* 7ea4dab (experiment/raw-role-reference) Add raw semantic role regression screenshot evidence
+* bf12898 Demonstrate raw semantic role regression
+* c07841c (HEAD -> main) Document raw-role-reference experiment evidence
+* edc5a9b Record complete raw-colour audit
 * cb30385 Document broken-reference experiment evidence
+* 26a4bf6 Establish StitchTrack design-system baseline
 
 === BRANCHES NOT MERGED INTO MAIN ===
+  experiment/raw-role-reference
 
-=== EXPERIMENTAL COMMIT ANCESTRY CHECK ===
-Exit code: 0
-0 = experimental commit merged into main
-1 = experimental commit NOT merged into main
+=== EXPERIMENT MERGED INTO MAIN? ===
+PASS: Experiment is NOT merged into main.
 
-=== FINAL BRANCH VERIFICATION ===
+=== BRANCH DELETION ===
+Deleted branch experiment/raw-role-reference (was 7ea4dab).
+
+=== FINAL VERIFICATION ===
 Active branch:
 main
-
-Experimental branch deletion:
 PASS: Experimental branch deleted.
-
-Main commit:
-edc5a9b Record complete raw-colour audit
-
-Experimental commit merged into main?
-PASS: Experimental commit was not merged into main.
+PASS: bf12898 was NOT merged into main.
+PASS: 7ea4dab was NOT merged into main.
