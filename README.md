@@ -45,7 +45,7 @@ These are planned choices, not claims about the current implementation.
 Clone this repository, then enter the project directory:
 
 ```bash
-git clone <REPOSITORY_URL> stitchtrack
+git clone https://github.com/chykB/StitchTrack.git
 cd stitchtrack
 ```
 
