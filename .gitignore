@@ -1,1 +1,13 @@
 *:Zone.Identifier
+
+# Application dependencies and generated output
+node_modules/
+.next/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local credentials and environment overrides
+.env
+.env.*
+!.env.example
+npm-debug.log*

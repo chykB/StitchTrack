@@ -11,7 +11,7 @@ This repository follows the *Ship & Found* five-task assessment using one reposi
 | Task | Status |
 |---|---|
 | Task 1 — Design System | Implemented; final evidence review pending |
-| Task 2 — Repository and Scaffold | Not started |
+| Task 2 — Repository and Scaffold | Initial scaffold implemented and verified |
 | Task 3 — Client Validation | Not started |
 | Task 4 — Server Security | Not started |
 | Task 5 — Sessions, Compliance and Defence | Not started |
@@ -34,22 +34,68 @@ The original brand-colour pinning screenshots still need final verification agai
 
 **Planned for later tasks, not implemented yet:**
 
-- **Next.js and TypeScript:** For a full-stack web application with typed application code.
 - **PostgreSQL and Prisma:** For relational data, business-scoped records, and migrations.
 - **Zod:** For validating application input at defined boundaries.
 
 These are planned choices, not claims about the current implementation.
+
+## Task Two Application Scaffold
+
+The Next.js App Router application lives at the repository root. It contains one
+responsive landing page and a shared layout. It imports Task One's generated
+token stylesheet directly; the local DM Sans font and its licence are copied
+unchanged into `public/fonts/`. Task One remains an independent deliverable.
+
+Use native WSL Linux Node.js 24.22.1 and npm 11.19.1 through NVM:
+
+```bash
+cd ~/stitchtrack
+source ~/.nvm/nvm.sh
+node --version
+npm --version
+```
+
+Dependency installation completed successfully. The installed runtime versions
+are Next.js 16.4.2, React 19.3.1, and React DOM 19.3.1.
+`package-lock.json` has been generated; use `npm ci` for a clean installation
+from the locked dependency versions.
+
+```bash
+npm ci
+npm ls --depth=0
+npm run typecheck
+npm run build
+npm audit
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+Confirmed verification results:
+
+- Dependency installation completed successfully.
+- TypeScript checks passed.
+- The production build passed.
+- `npm audit` reported zero vulnerabilities.
+- Browser verification passed.
+
+Only `next`, `react`, `react-dom`, `typescript`, `@types/node`,
+`@types/react`, and `@types/react-dom` are direct dependencies. The scaffold
+has no environment-variable requirement, database access, authentication,
+product workflows, payment processing, or notifications.
+
+Spacing, border widths, radii, and breakpoints reuse approved Task One preview
+values because the token export contains no corresponding token categories.
+Colours, typography, and elevation use the existing CSS variables.
 
 ## Getting Started
 
 Clone this repository, then enter the project directory:
 
 ```bash
-git clone https://github.com/chykB/StitchTrack.git
+git clone https://github.com/chykB/StitchTrack.git stitchtrack
 cd stitchtrack
 ```
-
-Replace `<REPOSITORY_URL>` with the actual repository URL once published.
 
 Generate the CSS design tokens:
 

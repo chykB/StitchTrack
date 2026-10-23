@@ -1,0 +1,71 @@
+/* Untokenized layout values reuse Task One's approved static preview. */
+.main {
+  max-width: 1400px;
+  margin: auto;
+  padding: 28px 16px;
+}
+
+.intro {
+  padding: 24px;
+  border: 1px solid var(--stitchtrack-color-outline-variant);
+  border-radius: 10px;
+  background: var(--stitchtrack-color-surface-container-lowest);
+  color: var(--stitchtrack-color-on-surface);
+  box-shadow: var(--stitchtrack-shadow-soft);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--stitchtrack-color-primary);
+  font: var(--stitchtrack-type-label-medium-font-weight)
+    var(--stitchtrack-type-label-medium-font-size) /
+    var(--stitchtrack-type-label-medium-line-height)
+    var(--stitchtrack-type-label-medium-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-label-medium-letter-spacing);
+}
+
+.title {
+  margin: 0;
+  font: var(--stitchtrack-type-display-small-font-weight)
+    var(--stitchtrack-type-display-small-font-size) /
+    var(--stitchtrack-type-display-small-line-height)
+    var(--stitchtrack-type-display-small-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-display-small-letter-spacing);
+}
+
+.description {
+  margin: 16px 0 0;
+  color: var(--stitchtrack-color-on-surface-variant);
+}
+
+@media (min-width: 420px) {
+  .main {
+    padding: 32px 24px;
+  }
+}
+
+@media (min-width: 760px) {
+  .main {
+    padding: 42px 40px;
+  }
+
+  .intro {
+    padding: 40px;
+  }
+
+  .title {
+    font: var(--stitchtrack-type-display-large-font-weight)
+      var(--stitchtrack-type-display-large-font-size) /
+      var(--stitchtrack-type-display-large-line-height)
+      var(--stitchtrack-type-display-large-font-family), sans-serif;
+    letter-spacing: var(--stitchtrack-type-display-large-letter-spacing);
+  }
+
+  .description {
+    font: var(--stitchtrack-type-body-large-font-weight)
+      var(--stitchtrack-type-body-large-font-size) /
+      var(--stitchtrack-type-body-large-line-height)
+      var(--stitchtrack-type-body-large-font-family), sans-serif;
+    letter-spacing: var(--stitchtrack-type-body-large-letter-spacing);
+  }
+}

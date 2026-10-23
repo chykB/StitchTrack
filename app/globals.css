@@ -1,0 +1,103 @@
+@import "../task-01-design-system/assets/stitchtrack-tokens.css";
+
+@font-face {
+  font-family: "DM Sans";
+  src: url("/fonts/DM-Sans-variable.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--stitchtrack-color-background);
+  color: var(--stitchtrack-color-on-background);
+  font: var(--stitchtrack-type-body-medium-font-weight)
+    var(--stitchtrack-type-body-medium-font-size) /
+    var(--stitchtrack-type-body-medium-line-height)
+    var(--stitchtrack-type-body-medium-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-body-medium-letter-spacing);
+}
+
+.site-header {
+  background: var(--stitchtrack-color-surface-container-lowest);
+  border-bottom: 1px solid var(--stitchtrack-color-outline-variant);
+}
+
+.site-shell {
+  max-width: 1400px;
+  margin: auto;
+  padding: 16px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--stitchtrack-color-primary);
+  text-decoration: none;
+  font: var(--stitchtrack-type-title-large-font-weight)
+    var(--stitchtrack-type-title-large-font-size) /
+    var(--stitchtrack-type-title-large-line-height)
+    var(--stitchtrack-type-title-large-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-title-large-letter-spacing);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--stitchtrack-color-primary);
+  color: var(--stitchtrack-color-on-primary);
+  font: var(--stitchtrack-type-label-medium-font-weight)
+    var(--stitchtrack-type-label-medium-font-size) /
+    var(--stitchtrack-type-label-medium-line-height)
+    var(--stitchtrack-type-label-medium-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-label-medium-letter-spacing);
+}
+
+.skip-link:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link:focus {
+  display: inline-block;
+  margin: 10px;
+  padding: 8px;
+  color: var(--stitchtrack-color-primary);
+  background: var(--stitchtrack-color-surface-container-lowest);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--stitchtrack-color-primary);
+  outline-offset: 4px;
+}
+
+@media (min-width: 420px) {
+  .site-shell {
+    padding: 18px 24px;
+  }
+}
+
+@media (min-width: 760px) {
+  .site-shell {
+    padding: 20px 40px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+}
