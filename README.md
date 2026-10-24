@@ -11,7 +11,7 @@ This repository follows the *Ship & Found* five-task assessment using one reposi
 | Task | Status |
 |---|---|
 | Task 1 — Design System | Implemented; final evidence review pending |
-| Task 2 — Repository and Scaffold | Initial scaffold implemented and verified |
+| Task 2 — Repository and Scaffold | Initial scaffold and isolated persistence experiment verified |
 | Task 3 — Client Validation | Not started |
 | Task 4 — Server Security | Not started |
 | Task 5 — Sessions, Compliance and Defence | Not started |
@@ -37,7 +37,7 @@ The original brand-colour pinning screenshots still need final verification agai
 - **PostgreSQL and Prisma:** Isolated Task Two assessment persistence code; database verification is developer-run.
 - **Zod:** Server-side validation for the temporary assessment form.
 
-Database identity checks, migration application, and real persistence evidence remain unverified until the developer performs them.
+The developer verified persistence in the isolated `stitchtrack_assessment` database after manually applying the assessment migration.
 
 ## Task Two Application Scaffold
 
@@ -94,7 +94,15 @@ Colours, typography, and elevation use the existing CSS variables.
 The temporary assessment page is at `/assessment/enquiry`, with a separate
 POST endpoint at `/api/assessment/enquiries`. Both are disabled by default
 and unavailable outside local development. They use synthetic data only.
-No migrations are included or applied by code implementation.
+The assessment migration file is version-controlled at
+`prisma/migrations/20261023_task_two_enquiry/migration.sql`. The developer
+manually applied it to the isolated `stitchtrack_assessment` database.
+Application code does not execute migrations automatically.
+
+The developer verified successful HTTP 201 submissions and actual PostgreSQL
+records. Prisma Studio displayed five records; records 3 and 5 were created
+more than 24 minutes apart. The deliberately failed submission returned
+HTTP 500 (`internal_error`) and created no new record.
 
 See [the persistence experiment procedure](task-02-repository-and-scaffold/docs/persistence-experiment.md)
 for confirmed-test-database configuration, user-only migration review, two
@@ -122,8 +130,9 @@ and download errors. Installation and the Prisma 7.10.1 upgrade later succeeded.
 The earlier five-finding audit and original scaffold audit above are historical.
 
 These commands require no live database. Unit tests use mocked persistence.
-Real database verification and browser form submissions must be performed by
-the developer after reviewing the documented preflight and migration steps.
+The developer has completed database verification and browser form submissions.
+Any further database operations remain developer-run and must follow the
+documented preflight and migration procedures.
 
 ## Getting Started
 
@@ -168,7 +177,7 @@ Task Two assessment configuration names are listed in `.env.example`; no databas
 
 ## What This Deliberately Does Not Do
 
-The current repository does not implement order creation, customer login, payments, agreement approvals, or production database persistence. The separate, disabled-by-default assessment has persistence code awaiting developer-run database verification.
+The current repository does not implement order creation, customer login, payments, agreement approvals, or production database persistence. The separate, disabled-by-default assessment has verified persistence in the isolated assessment database and is not a production product workflow.
 
 The Task One dashboard exists to demonstrate that an AI coding agent can apply a real design system to an interface.
 

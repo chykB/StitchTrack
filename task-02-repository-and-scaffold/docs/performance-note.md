@@ -8,8 +8,6 @@ The recorded load time was 789 milliseconds (ms).
 
 Comparing the Result
 
-The assessment mentioned a target of around 10 ms. My result was 779 ms slower than that target.
-
 The assessment uses approximately 10 ms as a performance target. My first recorded page load took 789 ms, which is 779 ms above the target. This shows that the application responded successfully, but the load time was higher than expected.
 
 Although the page loaded successfully, there is still room to improve its performance.
