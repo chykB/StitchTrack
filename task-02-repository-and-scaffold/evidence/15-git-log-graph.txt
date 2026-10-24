@@ -1,0 +1,55 @@
+Task Two: Git Branch Experiment
+Pull request: https://github.com/chykB/StitchTrack/pull/1
+
+Branch history before rejection:
+* 1efaa14 (HEAD -> experiment/rejected-hero-copy) experiment: test generic homepage headline
+*   e70de85 (origin/main, main) Merge pull request #1 from chykB/feat/information-design
+|\  
+| * 95ada9a (origin/feat/information-design, feat/information-design) feat: improve information design and responsive layout
+|/  
+* e9c1c85 docs: align repository guide with verified persistence results
+* 148e90a docs: record Task Two server and persistence evidence
+* d19b308 feat: add assessment enquiry persistence and tests
+* c6d8e08 feat: scaffold StitchTrack application with design tokens
+* b76e836 Update README with published repository details
+* 35c183c Add Task One video walkthrough
+* 45045a2 Complete Task One documentation and palette evidence
+* 2d2f0e3 Finalize raw semantic role regression evidence
+* c07841c Document raw-role-reference experiment evidence
+* edc5a9b Record complete raw-colour audit
+* cb30385 Document broken-reference experiment evidence
+* 26a4bf6 Establish StitchTrack design-system baseline
+
+Rejected change:
+commit 1efaa149f9b379f0ace3d97284137a27d795db81
+Author:     chykB <104171978+chykB@users.noreply.github.com>
+AuthorDate: Sat Oct 24 21:29:48 2026 +0100
+Commit:     chykB <104171978+chykB@users.noreply.github.com>
+CommitDate: Sat Oct 24 21:29:48 2026 +0100
+
+    experiment: test generic homepage headline
+
+ app/page.tsx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Reason for rejection:
+The proposed homepage heading was too generic.
+The approved heading describes StitchTrack more clearly.
+
+After rejecting and deleting the experimental branch:
+  feat/information-design 95ada9a [origin/feat/information-design] feat: improve information design and responsive layout
+* main                    e70de85 [origin/main] Merge pull request #1 from chykB/feat/information-design
+*   e70de85 (HEAD -> main, origin/main) Merge pull request #1 from chykB/feat/information-design
+|\  
+| * 95ada9a (origin/feat/information-design, feat/information-design) feat: improve information design and responsive layout
+|/  
+* e9c1c85 docs: align repository guide with verified persistence results
+* 148e90a docs: record Task Two server and persistence evidence
+* d19b308 feat: add assessment enquiry persistence and tests
+* c6d8e08 feat: scaffold StitchTrack application with design tokens
+* b76e836 Update README with published repository details
+* 35c183c Add Task One video walkthrough
+
+Working tree:
+## main...origin/main
+?? task-02-repository-and-scaffold/evidence/15-git-log-graph.txt
