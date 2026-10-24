@@ -1,0 +1,22 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../app/generated/prisma"
+  moduleFormat = "esm"
+  runtime      = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Temporary Task Two synthetic-data assessment model. No product relationships.
+// Applied migrations and assessment records require a reviewed cleanup strategy.
+model AssessmentEnquiry {
+  id        Int      @id @default(autoincrement())
+  requestId String   @unique @db.Uuid
+  name      String   @db.VarChar(80)
+  enquiry   String   @db.VarChar(500)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@map("task_two_enquiries")
+}

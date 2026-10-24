@@ -6,21 +6,32 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "pretypecheck": "npm run prisma:generate",
+    "prebuild": "npm run prisma:generate",
+    "test:assessment": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/assessment/*.test.ts"
   },
   "engines": {
     "node": "24.x",
     "npm": "11.x"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "next": "16.4.2",
+    "pg": "8.16.3",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "24.19.1",
+    "@types/pg": "8.16.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "prisma": "7.10.1",
     "typescript": "5.9.3"
   }
 }
