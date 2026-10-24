@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { assessmentEnabled, isLocalHost } from "../../../lib/assessment/config";
 import EnquiryForm from "./EnquiryForm";
 import styles from "./enquiry.module.css";
+
+export const metadata: Metadata = {
+  title: "Assessment enquiry | StitchTrack",
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 

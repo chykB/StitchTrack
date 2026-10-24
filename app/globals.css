@@ -101,3 +101,12 @@ a:focus-visible {
     gap: 10px;
   }
 }
+
+a[href] {
+  cursor: pointer;
+}
+
+.brand:hover, .skip-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

@@ -3,9 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "StitchTrack | Tailoring orders and agreements",
-  description:
-    "StitchTrack is a tailoring order and agreement management platform for small fashion studios in Nigeria.",
+  title: "StitchTrack",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
