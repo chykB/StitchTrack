@@ -1,0 +1,11 @@
+
+> stitchtrack@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.255.255.254:3000
+✓ Ready in 268ms
+✓ Running next.config took 12ms
+
+ GET / 200 in 287ms (next.js: 102ms, application-code: 185ms)

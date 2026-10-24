@@ -1,0 +1,28 @@
+
+> stitchtrack@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.255.255.254:3000
+✓ Ready in 344ms
+✓ Running next.config took 22ms
+
+ GET /assessment/enquiry 200 in 280ms (next.js: 129ms, application-code: 151ms)
+{"nodeEnvIsDevelopment":true,"experimentFlagIsTrue":true,"localAssessmentRequest":true,"urlHost":"localhost:3000","hostHeader":"localhost:3000"}
+{"event":"assessment_enquiry","at":"2026-10-24T16:40:06.550Z","requestId":"49248ce5-6b44-4c87-a33c-3b869d77c342","method":"POST","path":"/api/assessment/enquiries","status":500,"durationMs":105,"outcome":"configuration_rejected"}
+ POST /api/assessment/enquiries 500 in 187ms (next.js: 54ms, application-code: 133ms)
+
+> stitchtrack@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.255.255.254:3000
+✓ Ready in 427ms
+✓ Running next.config took 30ms
+
+ GET /assessment/enquiry 200 in 373ms (next.js: 135ms, application-code: 238ms)
+{"nodeEnvIsDevelopment":true,"experimentFlagIsTrue":true,"localAssessmentRequest":true,"urlHost":"localhost:3000","hostHeader":"localhost:3000"}
+{"event":"assessment_enquiry","at":"2026-10-24T17:03:51.978Z","requestId":"43e070b0-17a5-4b5d-9288-8aba41a6dc13","method":"POST","path":"/api/assessment/enquiries","status":500,"durationMs":176,"outcome":"internal_error"}
+ POST /api/assessment/enquiries 500 in 273ms (next.js: 73ms, application-code: 201ms)

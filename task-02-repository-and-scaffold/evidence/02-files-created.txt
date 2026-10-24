@@ -1,0 +1,53 @@
+The scaffold source is implemented. Installation remains blocked: WSL npm returned E404 for Next.js 16.4.2, React 19.3.1, and React DOM 19.3.1. Your exact versions remain pinned; no substitutes were installed.
+Created:
+- package.json
+- tsconfig.json
+- app/layout.tsx
+- app/page.tsx
+- app/globals.css
+- app/page.module.css
+- public/fonts/DM-Sans-variable.ttf
+- public/fonts/OFL.txt
+Modified:
+- .gitignore — dependency, build-cache, and local-environment exclusions.
+- README.md — scaffold instructions and installation blocker.
+- AGENTS.md
+- docs/PRD.md
+- task-02-repository-and-scaffold/docs/scaffold-prompt.md
+The last three correct rule paths and document the approved repository structure and missing-document decisions.
+Installed dependencies: none. The seven declared versions are:
+Package	Pinned version
+next	16.4.2
+react	19.3.1
+react-dom	19.3.1
+typescript	5.9.3
+@types/node	24.19.1
+@types/react	19.3.0
+@types/react-dom	19.3.0
+
+
+Actual verification:
+- WSL: Node 24.22.1, npm 11.19.1, Linux.
+- All 34 Task One files and three existing rule files remain byte-identical.
+- Font and licence copies match their originals.
+- All 39 referenced tokens exist; application CSS contains no hardcoded colours or primitive references.
+- Source checks confirm one landing route, accessible landmarks, and exactly seven direct dependencies.
+- git diff --check passed.
+- npm ls --depth=0 reported all dependencies missing.
+Type checking, production build, and browser verification were not run. No valid lockfile or generated next-env.d.ts exists yet.
+Once npm can resolve the approved versions, run in WSL:
+cd ~/stitchtrack
+source ~/.nvm/nvm.sh
+
+npm install &&
+npm ls --depth=0 &&
+npm run typecheck &&
+npm run build
+
+npm run dev
+Then open http://localhost:3000. After the lockfile is generated, use npm ci for subsequent clean installations.
+The source follows the approved plan: root application, existing tokens, local DM Sans, basic layout, and one responsive landing page. No authentication, product features, database operations, extra dependencies, or Git mutations were introduced. Runtime verification and lockfile generation remain outstanding.
+Assumptions: none.
+
+
+Thursday 9:43 PM

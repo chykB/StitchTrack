@@ -32,12 +32,12 @@ The original brand-colour pinning screenshots still need final verification agai
 - **DM Sans:** Selected after comparing typefaces using StitchTrack interface content.
 - **Git:** To preserve the working design system and isolate deliberate regression experiments.
 
-**Planned for later tasks, not implemented yet:**
+**Task Two assessment implementation:**
 
-- **PostgreSQL and Prisma:** For relational data, business-scoped records, and migrations.
-- **Zod:** For validating application input at defined boundaries.
+- **PostgreSQL and Prisma:** Isolated Task Two assessment persistence code; database verification is developer-run.
+- **Zod:** Server-side validation for the temporary assessment form.
 
-These are planned choices, not claims about the current implementation.
+Database identity checks, migration application, and real persistence evidence remain unverified until the developer performs them.
 
 ## Task Two Application Scaffold
 
@@ -71,7 +71,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Confirmed verification results:
+Confirmed verification results for the original scaffold, before the persistence experiment:
 
 - Dependency installation completed successfully.
 - TypeScript checks passed.
@@ -79,14 +79,51 @@ Confirmed verification results:
 - `npm audit` reported zero vulnerabilities.
 - Browser verification passed.
 
-Only `next`, `react`, `react-dom`, `typescript`, `@types/node`,
-`@types/react`, and `@types/react-dom` are direct dependencies. The scaffold
-has no environment-variable requirement, database access, authentication,
-product workflows, payment processing, or notifications.
+The initial scaffold uses `next`, `react`, `react-dom`, `typescript`,
+`@types/node`, `@types/react`, and `@types/react-dom`. The separate persistence
+experiment additionally uses `@prisma/client`, `@prisma/adapter-pg`, `pg`,
+`zod`, `prisma`, and `@types/pg`. The landing page needs no database settings.
+Authentication, product workflows, payment processing, and notifications are absent.
 
 Spacing, border widths, radii, and breakpoints reuse approved Task One preview
 values because the token export contains no corresponding token categories.
 Colours, typography, and elevation use the existing CSS variables.
+
+## Task Two Persistence Experiment
+
+The temporary assessment page is at `/assessment/enquiry`, with a separate
+POST endpoint at `/api/assessment/enquiries`. Both are disabled by default
+and unavailable outside local development. They use synthetic data only.
+No migrations are included or applied by code implementation.
+
+See [the persistence experiment procedure](task-02-repository-and-scaffold/docs/persistence-experiment.md)
+for confirmed-test-database configuration, user-only migration review, two
+submission checks, isolated connection failure, recovery, and evidence capture.
+Never use a development or production database for this assessment.
+
+Generate the ignored Prisma client before checks (pretypecheck/prebuild also do this):
+
+```bash
+npm run prisma:validate
+npm run prisma:generate
+npm run test:assessment
+npm run typecheck
+npm run build
+```
+
+Implementation checks passed: 21 database-free unit tests, Prisma schema validation,
+client generation, TypeScript checking, and the production build. On 2026-10-24,
+Zod was upgraded from 4.1.12 to exactly 4.6.7 to address the high-severity finding.
+The subsequent `npm audit` reported zero vulnerabilities. Assessment tests,
+TypeScript checking, and the production build passed after the upgrade.
+No general dependency upgrade or automatic audit fix was run.
+Earlier dependency installation attempts failed because of registry availability
+and download errors. Installation and the Prisma 7.10.1 upgrade later succeeded.
+The earlier five-finding audit and original scaffold audit above are historical.
+
+These commands require no live database. Unit tests use mocked persistence.
+Real database verification and browser form submissions must be performed by
+the developer after reviewing the documented preflight and migration steps.
 
 ## Getting Started
 
@@ -127,11 +164,11 @@ See `task-01-design-system/README.md` for the design-system implementation and s
 
 The token converter and static preview do not use credentials or external service connections.
 
-Later tasks may introduce environment variables for database connections, authentication, and other services. Their names and purposes will be documented when those services are implemented. Secret values will not be committed.
+Task Two assessment configuration names are listed in `.env.example`; no database identity or credential is supplied. The experiment requires explicit, independently confirmed test settings. See its procedure before enabling it. Secret values must not be committed.
 
 ## What This Deliberately Does Not Do
 
-The current repository does not implement order creation, customer login, payments, agreement approvals, or database persistence.
+The current repository does not implement order creation, customer login, payments, agreement approvals, or production database persistence. The separate, disabled-by-default assessment has persistence code awaiting developer-run database verification.
 
 The Task One dashboard exists to demonstrate that an AI coding agent can apply a real design system to an interface.
 

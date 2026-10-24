@@ -1,0 +1,29 @@
+Correct directory: /tmp/stitchtrack-nested-Dz9Gvz/stitchtrack
+
+> stitchtrack-nested-demo@1.0.0 dev
+> echo nested-demo-running
+
+nested-demo-running
+
+Recovery Method 2: Agent-directed scaffold in place
+
+Codex was instructed to create package.json directly inside:
+/tmp/stitchtrack-nested-Dz9Gvz/
+
+Commands reported by Codex:
+cd /tmp/stitchtrack-nested-Dz9Gvz
+source ~/.nvm/nvm.sh
+npm run dev
+
+Actual output:
+> dev
+> echo in-place-scaffold-running
+
+in-place-scaffold-running
+
+Exit code: 0
+
+The initial piped invocation failed due to a carriage-return issue.
+The direct invocation succeeded.
+
+No changes were made to the actual StitchTrack repository.

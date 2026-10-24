@@ -1,0 +1,10 @@
+Port 3107 listener:
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      511        127.0.0.1:3107      0.0.0.0:*    users:(("MainThread",pid=25679,fd=21))
+
+Process details:
+    PID COMMAND         COMMAND
+  25679 MainThread      node -e require("http").createServer((req,res)=>res.end("test")).listen(3107,"127.0.0.1",()=>console.log("Test server running; PID="+process.pid))
+State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+Recovery successful: port 3107 is available; PID=25966
+Test server closed normally

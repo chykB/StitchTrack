@@ -1,0 +1,23 @@
+
+> stitchtrack@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3000
+
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 350ms
+✓ Running next.config took 15ms
+
+ GET /assessment/enquiry?utm_source=chatgpt.com 200 in 217ms (next.js: 93ms, application-code: 124ms)
+{"event":"assessment_enquiry","at":"2026-10-23T17:12:31.192Z","requestId":"64d525d2-2f63-4ae1-8374-8c1528496946","method":"POST","path":"/api/assessment/enquiries","status":404,"durationMs":0,"outcome":"disabled"}
+ POST /api/assessment/enquiries 404 in 70ms (next.js: 49ms, application-code: 21ms)
+✓ Compiled in 282ms
+{"nodeEnvIsDevelopment":true,"experimentFlagIsTrue":true,"localAssessmentRequest":false,"urlHost":"localhost:3000","hostHeader":"127.0.0.1:3000"}
+{"event":"assessment_enquiry","at":"2026-10-23T17:25:48.059Z","requestId":"844b4564-34dc-4877-b6f5-fcc33f703174","method":"POST","path":"/api/assessment/enquiries","status":404,"durationMs":1,"outcome":"disabled"}
+ POST /api/assessment/enquiries 404 in 10ms (next.js: 2ms, application-code: 8ms)
+{"nodeEnvIsDevelopment":true,"experimentFlagIsTrue":true,"localAssessmentRequest":true,"urlHost":"localhost:3000","hostHeader":"localhost:3000"}
+{"event":"assessment_enquiry","at":"2026-10-23T17:32:36.644Z","requestId":"64833831-4133-406f-bb75-9882b79e15cf","method":"POST","path":"/api/assessment/enquiries","status":201,"durationMs":155,"outcome":"created","id":1,"createdAt":"2026-10-23T17:32:36.635Z"}
+ POST /api/assessment/enquiries 201 in 162ms (next.js: 1.4ms, application-code: 161ms)
+{"nodeEnvIsDevelopment":true,"experimentFlagIsTrue":true,"localAssessmentRequest":true,"urlHost":"localhost:3000","hostHeader":"localhost:3000"}
+{"event":"assessment_enquiry","at":"2026-10-23T17:34:53.209Z","requestId":"8985df15-74f4-4a19-a5f9-6bf995c8539e","method":"POST","path":"/api/assessment/enquiries","status":201,"durationMs":15,"outcome":"created","id":2,"createdAt":"2026-10-23T17:34:53.206Z"}
+ POST /api/assessment/enquiries 201 in 19ms (next.js: 1.0ms, application-code: 18ms)

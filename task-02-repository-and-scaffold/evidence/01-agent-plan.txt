@@ -1,0 +1,74 @@
+Planning only: no files changed, packages installed, or Git mutations performed.
+I understand this as one minimal Next.js App Router and TypeScript application with a shared layout and one responsive landing page. It will describe StitchTrack using existing product wording and consume Task One’s design system. Product workflows remain outside this scaffold.
+I reviewed the PRD, repository instructions, available rules, scaffold prompt, and Task One’s implementation and design documentation.
+Existing resources and findings:
+- [AGENTS.md](/home/bmalik/stitchtrack/AGENTS.md) and [docs/PRD.md](/home/bmalik/stitchtrack/docs/PRD.md) exist.
+- The three rule files exist under .agents/rules/, although the instructions reference .agent/rules/.
+- The PRD additionally references 04-agent-workflow.md and docs/refined-idea.md; neither exists.
+- There is no existing package.json, lockfile, TypeScript configuration, or application scaffold.
+- Task One provides the complete export, converter, tests, generated CSS, static preview, local DM Sans font, and licence.
+- An in-memory conversion matched the existing generated CSS: 374 properties, covering 149 primitives, 57 semantic colours, 15 typography styles, and three shadows.
+- There are no spacing, border-width, or radius tokens, despite the design rules requesting them.
+- Git is currently on main, with existing untracked instructions, documentation, and Task Two files. Those will be preserved.
+The proposed application location is the repository root, with Task Two retaining its assessment documentation. This requires confirmation: AGENTS.md calls Task Two a workspace, while the PRD describes it as an evidence/documentation folder.
+stitchtrack/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── globals.css
+│   └── page.module.css
+├── public/
+│   └── fonts/
+│       ├── DM-Sans-variable.ttf
+│       └── OFL.txt
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+├── next-env.d.ts
+├── .gitignore                         existing
+├── README.md                          existing
+├── task-01-design-system/             preserved
+└── task-02-repository-and-scaffold/    preserved
+Every intended file change, conditional on approval:
+File	Action and purpose
+package.json	Create package metadata and dev, build, start, and typecheck scripts.
+package-lock.json	Generate reproducible dependency resolution after installation is approved.
+tsconfig.json	Create strict TypeScript configuration for Next.js.
+next-env.d.ts	Allow Next.js to generate its framework type declarations.
+app/layout.tsx	Create the required HTML/body layout, language, metadata, and global stylesheet import.
+app/page.tsx	Create the single landing route with branding and wording drawn from the existing README/PRD.
+app/globals.css	Import the existing token CSS directly; register DM Sans and establish token-based defaults.
+app/page.module.css	Add the landing page’s responsive layout using existing typography, semantic colours, and appropriate elevation.
+public/fonts/DM-Sans-variable.ttf	Copy the existing font byte-for-byte for local serving.
+public/fonts/OFL.txt	Copy its existing licence unchanged.
+.gitignore	Preserve existing entries and add dependency, build-cache, and local-secret exclusions.
+README.md	Document the scaffold, approved prerequisites, commands, scope, and verification.
+
+
+The required root layout and page follow Next.js’s manual setup. Serving the copied font from public/fonts/ follows its static-asset convention.
+Proposed dependencies requiring approval:
+- Runtime: next, react, react-dom.
+- Development: typescript, @types/node, @types/react, @types/react-dom.
+Compatible versions would be checked and locked after approval. No UI library, Tailwind, database, authentication, validation, or email packages are proposed.
+The landing page would contain a branded header, one introductory section, and this existing description:
+StitchTrack is a tailoring order and agreement management platform for small fashion studios in Nigeria.
+
+No signup forms, dashboard demonstrations, nonfunctional buttons, or unsupported product claims are proposed.
+Before implementation, please resolve these points:
+1. Rules: Should .agents/rules/ be treated as authoritative despite the path mismatch?
+2. Missing documents: Will you supply 04-agent-workflow.md and docs/refined-idea.md, or explicitly confirm that this scaffold can proceed without them?
+3. Application location: Approve the repository-root proposal, or specify an application location under Task Two.
+4. Dependencies: Approve npm and the seven direct packages listed above.
+5. Missing design tokens: May the scaffold reuse established preview spacing, border widths, radii, and breakpoints, or will you provide approved tokens? I will not invent replacements.
+6. Execution environment: Native WSL Node is unavailable. Windows Node 24.19.0 and npm 11.17.0 exist, but PowerShell execution policy and UNC-directory behaviour need accommodation. Please confirm the intended environment; no toolchain installation is included.
+7. Landing content: Approve the minimal content and structure above.
+After approval, verification would include:
+- Type checking and a production build.
+- Loading the landing page locally and checking browser errors.
+- Confirming actual DM Sans rendering and computed token-based colours.
+- Checking 320px, 390px, 768px, and 1440px layouts, keyboard access, heading structure, and overflow.
+- Checking token references and ensuring existing Task One sources remain unchanged.
+- Comparing generated CSS with the converter’s output in memory. I would not run the existing full token suite unchanged during this check because its CLI test rewrites generated CSS.
+No build, browser test, or scaffold test has run during this review.
+The plan stays within configuration, design-system integration, layout, and one landing page. It excludes product features, database operations, Git mutations, publication, and changes to existing design-system evidence. Implementation remains paused for your explicit approval and clarification.
+Assumptions requiring approval: items 1–7 above.
