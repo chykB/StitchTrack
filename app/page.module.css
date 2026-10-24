@@ -14,22 +14,23 @@
   box-shadow: var(--stitchtrack-shadow-soft);
 }
 
-.eyebrow {
-  margin: 0 0 8px;
-  color: var(--stitchtrack-color-primary);
-  font: var(--stitchtrack-type-label-medium-font-weight)
-    var(--stitchtrack-type-label-medium-font-size) /
-    var(--stitchtrack-type-label-medium-line-height)
-    var(--stitchtrack-type-label-medium-font-family), sans-serif;
-  letter-spacing: var(--stitchtrack-type-label-medium-letter-spacing);
-}
-
 .title {
   margin: 0;
+  max-inline-size: 18ch;
+  text-wrap: balance;
   font: var(--stitchtrack-type-display-small-font-weight)
     var(--stitchtrack-type-display-small-font-size) /
     var(--stitchtrack-type-display-small-line-height)
     var(--stitchtrack-type-display-small-font-family), sans-serif;
+  font-size: clamp(
+    var(--stitchtrack-type-display-small-font-size),
+    calc(1.25rem + 4vw),
+    var(--stitchtrack-type-display-large-font-size)
+  );
+  line-height: calc(
+    var(--stitchtrack-type-display-small-line-height) /
+    var(--stitchtrack-type-display-small-font-size)
+  );
   letter-spacing: var(--stitchtrack-type-display-small-letter-spacing);
 }
 
@@ -54,10 +55,6 @@
   }
 
   .title {
-    font: var(--stitchtrack-type-display-large-font-weight)
-      var(--stitchtrack-type-display-large-font-size) /
-      var(--stitchtrack-type-display-large-line-height)
-      var(--stitchtrack-type-display-large-font-family), sans-serif;
     letter-spacing: var(--stitchtrack-type-display-large-letter-spacing);
   }
 
