@@ -1,195 +1,204 @@
 # StitchTrack
 
-## Overview
+## What this is
 
-StitchTrack is a tailoring order and agreement management platform for small fashion studios in Nigeria, designed to keep garment delivery commitments and approved agreement changes visible without losing their history.
+StitchTrack is a mobile-first tailoring order and agreement management project for independent tailors and small fashion studios in Nigeria. Its planned product will preserve approved garment terms and delivery commitments without losing their change history.
+
+**Implemented now:** a reusable Task One design system and static sample dashboard, a Next.js landing page, and a separate local-only Task Two database persistence experiment. This is not yet a working production order-management application.
+
+The authoritative product requirements are in [docs/PRD.md](docs/PRD.md). Product features described there are planned unless explicitly listed as implemented here.
 
 ## Status
 
-This repository follows the *Ship & Found* five-task assessment using one repository with a separate folder for each task.
+This repository follows the *Ship & Found* five-task assessment. Task deliverables have separate folders; the Task Two application lives at the repository root.
 
 | Task | Status |
-|---|---|
+| --- | --- |
 | Task 1 — Design System | Implemented; final evidence review pending |
-| Task 2 — Repository and Scaffold | Initial scaffold and isolated persistence experiment verified |
+| Task 2 — Repository and Scaffold | Scaffold, isolated persistence experiment and information-design improvements implemented and verified |
 | Task 3 — Client Validation | Not started |
 | Task 4 — Server Security | Not started |
 | Task 5 — Sessions, Compliance and Defence | Not started |
 
-Task One includes a Figma-based design system, a JavaScript token converter, automated tests, and a responsive static order dashboard.
+Task One includes a Figma-based design system, a JavaScript token converter, automated tests and a responsive static order dashboard with sample data.
 
-The dashboard uses sample data. It is not connected to a database, and customers cannot yet create orders or approve agreements.
+Task Two includes a responsive landing page and a temporary enquiry form. The developer manually applied the version-controlled assessment migration to the isolated `stitchtrack_assessment` database and verified real records after HTTP 201 submissions. The experiment is disabled by default and cannot run in production.
 
-The original brand-colour pinning screenshots still need final verification against the assessment instructions.
+The information-design work was merged into `main` through [Pull Request #1](https://github.com/chykB/StitchTrack/pull/1). See the extended Task Two details below for verification and Git workflow evidence.
 
-## Stack and Reasons
+## Stack, with reasons
 
-**Currently implemented:**
+| Technology | Current use and reason |
+| --- | --- |
+| Next.js 16.4.2, App Router | Root application layout, route-specific metadata and a server-side assessment endpoint in one TypeScript project |
+| React and React DOM 19.3.1 | Render the landing page and manage the assessment form's pending, error and confirmed-success states |
+| TypeScript 5.9.3 | Check application types and request/receipt contracts before building |
+| PostgreSQL, Prisma 7.10.1 and pg 8.16.3 | Prove real relational persistence in an isolated assessment database; Prisma provides the schema and generated client, with the PostgreSQL adapter/driver |
+| Zod 4.6.7 | Validate assessment input on the server and validate success receipts |
+| Figma, generated CSS variables and DM Sans | Keep colours, typography and shadows consistent with Task One's approved Tailored Wine design system |
+| Static HTML and CSS | Preserve Task One's independent dashboard demonstration without requiring the application framework |
+| JavaScript and Node.js | Convert the complete Figma export reproducibly and run focused tests without extra test packages |
+| Git | Preserve assessment evidence and isolate reviewed changes and rejected experiments |
 
-- **Figma:** To define reusable colours, typography, shadows, and semantic roles before implementation.
-- **HTML and CSS:** To demonstrate one screen without introducing a full application framework prematurely.
-- **JavaScript with Node.js:** To convert the complete Figma JSON export into CSS variables using a repeatable script without extra dependencies.
-- **DM Sans:** Selected after comparing typefaces using StitchTrack interface content.
-- **Git:** To preserve the working design system and isolate deliberate regression experiments.
+Better Auth and Nodemailer are specified for later authentication and email milestones. They are not installed or implemented in this scaffold.
 
-**Task Two assessment implementation:**
+## Getting started
 
-- **PostgreSQL and Prisma:** Isolated Task Two assessment persistence code; database verification is developer-run.
-- **Zod:** Server-side validation for the temporary assessment form.
+### Run the landing page from a fresh clone
 
-The developer verified persistence in the isolated `stitchtrack_assessment` database after manually applying the assessment migration.
+Use a Linux terminal in WSL, with Git, Node.js 24.x and npm 11.x available inside WSL. Do not use Windows Node.js for these commands. The verified setup used NVM, Node.js 24.22.1 and npm 11.19.1.
 
-## Task Two Application Scaffold
-
-The Next.js App Router application lives at the repository root. It contains one
-responsive landing page and a shared layout. It imports Task One's generated
-token stylesheet directly; the local DM Sans font and its licence are copied
-unchanged into `public/fonts/`. Task One remains an independent deliverable.
-
-Use native WSL Linux Node.js 24.22.1 and npm 11.19.1 through NVM:
+If NVM is already installed, select the verified Node.js version:
 
 ```bash
-cd ~/stitchtrack
 source ~/.nvm/nvm.sh
+nvm install 24.22.1
+nvm use 24.22.1
 node --version
 npm --version
 ```
 
-Dependency installation completed successfully. The installed runtime versions
-are Next.js 16.4.2, React 19.3.1, and React DOM 19.3.1.
-`package-lock.json` has been generated; use `npm ci` for a clean installation
-from the locked dependency versions.
+If Git or NVM/Node.js is missing, install those prerequisites in WSL before continuing. Then clone into your Linux home directory and enter the repository root:
 
 ```bash
+cd ~
+git clone https://github.com/chykB/StitchTrack.git stitchtrack
+cd stitchtrack
 npm ci
-npm ls --depth=0
-npm run typecheck
-npm run build
-npm audit
-npm run dev
+npm run prisma:generate
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Open `http://localhost:3000`.
+Open **http://127.0.0.1:3000/**. Stop the server with **Ctrl+C**.
 
-Confirmed verification results for the original scaffold, before the persistence experiment:
+`npm ci` uses the committed `package-lock.json`. Prisma generation creates the ignored client in `app/generated/prisma`; it does not connect to PostgreSQL.
 
-- Dependency installation completed successfully.
-- TypeScript checks passed.
-- The production build passed.
-- `npm audit` reported zero vulnerabilities.
-- Browser verification passed.
+**The landing page runs without assessment database credentials, a PostgreSQL service or an environment file.** Leave the assessment experiment disabled. Do not create a database or run migrations to view the homepage.
 
-The initial scaffold uses `next`, `react`, `react-dom`, `typescript`,
-`@types/node`, `@types/react`, and `@types/react-dom`. The separate persistence
-experiment additionally uses `@prisma/client`, `@prisma/adapter-pg`, `pg`,
-`zod`, `prisma`, and `@types/pg`. The landing page needs no database settings.
-Authentication, product workflows, payment processing, and notifications are absent.
+If port 3000 is occupied, stop the conflicting process or choose another port for the homepage. The current Open Graph URLs intentionally target port 3000 for local assessment verification.
 
-Spacing, border widths, radii, and breakpoints reuse approved Task One preview
-values because the token export contains no corresponding token categories.
-Colours, typography, and elevation use the existing CSS variables.
+### Run checks without a database
 
-## Task Two Persistence Experiment
-
-The temporary assessment page is at `/assessment/enquiry`, with a separate
-POST endpoint at `/api/assessment/enquiries`. Both are disabled by default
-and unavailable outside local development. They use synthetic data only.
-The assessment migration file is version-controlled at
-`prisma/migrations/20261023_task_two_enquiry/migration.sql`. The developer
-manually applied it to the isolated `stitchtrack_assessment` database.
-Application code does not execute migrations automatically.
-
-The developer verified successful HTTP 201 submissions and actual PostgreSQL
-records. Prisma Studio displayed five records; records 3 and 5 were created
-more than 24 minutes apart. The deliberately failed submission returned
-HTTP 500 (`internal_error`) and created no new record.
-
-See [the persistence experiment procedure](task-02-repository-and-scaffold/docs/persistence-experiment.md)
-for confirmed-test-database configuration, user-only migration review, two
-submission checks, isolated connection failure, recovery, and evidence capture.
-Never use a development or production database for this assessment.
-
-Generate the ignored Prisma client before checks (pretypecheck/prebuild also do this):
+From the repository root, with the development server stopped before the build:
 
 ```bash
+npm ls --depth=0
 npm run prisma:validate
-npm run prisma:generate
 npm run test:assessment
 npm run typecheck
 npm run build
+npm audit
 ```
 
-Implementation checks passed: 21 database-free unit tests, Prisma schema validation,
-client generation, TypeScript checking, and the production build. On 2026-10-24,
-Zod was upgraded from 4.1.12 to exactly 4.6.7 to address the high-severity finding.
-The subsequent `npm audit` reported zero vulnerabilities. Assessment tests,
-TypeScript checking, and the production build passed after the upgrade.
-No general dependency upgrade or automatic audit fix was run.
-Earlier dependency installation attempts failed because of registry availability
-and download errors. Installation and the Prisma 7.10.1 upgrade later succeeded.
-The earlier five-finding audit and original scaffold audit above are historical.
+The existing pretypecheck and prebuild scripts generate Prisma Client automatically. Assessment unit tests use mocked persistence; these commands need no live database. The audit checks the npm registry and its results can change over time.
 
-These commands require no live database. Unit tests use mocked persistence.
-The developer has completed database verification and browser form submissions.
-Any further database operations remain developer-run and must follow the
-documented preflight and migration procedures.
+To inspect the production build locally, run `npm run start -- --hostname 127.0.0.1 --port 3000`. The assessment routes remain unavailable in production.
 
-## Getting Started
+### Run the independent Task One preview
 
-Clone this repository, then enter the project directory:
-
-```bash
-git clone https://github.com/chykB/StitchTrack.git stitchtrack
-cd stitchtrack
-```
-
-Generate the CSS design tokens:
+Node.js and Python 3 are required; npm installation and a database are not.
 
 ```bash
 node task-01-design-system/scripts/build-tokens.mjs
-```
-
-Run the automated tests:
-
-```bash
 node --test task-01-design-system/tests/build-tokens.test.mjs
-```
-
-Start the static preview:
-
-```bash
 python3 -m http.server 4173 --bind 127.0.0.1 --directory task-01-design-system
 ```
 
-Open `http://127.0.0.1:4173/preview/` in your browser.
+Open **http://127.0.0.1:4173/preview/**. See [Task One's README](task-01-design-system/README.md) for its design-system implementation and evidence.
 
-The preview does not require an npm installation, database, or backend service. Node.js and Python 3 must be available locally.
+These fresh-clone instructions have **not yet been tested by another person**.
 
-See `task-01-design-system/README.md` for the design-system implementation and supporting evidence.
+## Environment variables
 
-## Environment Variables
+No environment variables are required for the landing page, Task One token conversion/static preview, or the database-free checks above.
 
-**None are required for Task One.**
+The optional assessment configuration names are listed in [.env.example](.env.example). It contains no database identity or credentials.
 
-The token converter and static preview do not use credentials or external service connections.
+| Variable | Purpose |
+| --- | --- |
+| `ENABLE_PERSISTENCE_EXPERIMENT` | Disabled unless explicitly set to `true` for local development |
+| `EXPERIMENT_DATABASE_URL` | Private connection setting for the independently confirmed, isolated test database |
+| `EXPERIMENT_EXPECTED_DATABASE` | Confirmed test database name |
+| `EXPERIMENT_EXPECTED_HOST` | Confirmed connection host |
+| `EXPERIMENT_EXPECTED_PORT` | Confirmed connection port |
+| `EXPERIMENT_EXPECTED_USER` | Confirmed database user |
+| `EXPERIMENT_FAILURE_PORT` | Optional verified-unused loopback port used only by the assessment application's controlled failure test |
 
-Task Two assessment configuration names are listed in `.env.example`; no database identity or credential is supplied. The experiment requires explicit, independently confirmed test settings. See its procedure before enabling it. Secret values must not be committed.
+Next.js sets `NODE_ENV`; do not override it to bypass the assessment's development-only gate. The assessment also checks the request host and origin. Database configuration never falls back to `DATABASE_URL` or a default database.
 
-## What This Deliberately Does Not Do
+Before enabling the experiment, follow the [persistence procedure](task-02-repository-and-scaffold/docs/persistence-experiment.md) for private shell configuration and independent database-identity checks. A database name alone does not verify the target. Never use a development or production database for this assessment.
 
-The current repository does not implement order creation, customer login, payments, agreement approvals, or production database persistence. The separate, disabled-by-default assessment has verified persistence in the isolated assessment database and is not a production product workflow.
+Keep passwords, connection strings and tokens out of source files, logs, screenshots and shell history. Local environment files are ignored by Git; do not commit secret values. The application and Prisma CLI configuration are described in [lib/assessment/config.ts](lib/assessment/config.ts) and [prisma.config.ts](prisma.config.ts).
 
-The Task One dashboard exists to demonstrate that an AI coding agent can apply a real design system to an interface.
+## What this deliberately does not do
 
-The planned MVP will focus on garment orders, delivery dates, measurements, versioned agreements, approved changes, and payment records. Advanced inventory, full accounting, and automated WhatsApp integration are outside the initial scope.
+The current implementation does not provide tailor/client authentication, a client portal, order creation, agreement approval, measurement history, manual payment records, delivery workflows, notifications or production database persistence. The local assessment form is a temporary synthetic-data experiment, not a production product workflow.
 
-Keeping this scope narrow allows the core workflow to be validated before adding operational complexity.
+The Task One dashboard demonstrates design-system application using fixed example orders and dates. It does not operate a tailoring business.
 
-## Known Defects and Limitations
+The planned MVP includes multi-item orders, measurements, fabric/style references, versioned agreements and controlled changes, manual records of money paid directly to tailors, delivery progress and reminders. These are future product work under the PRD.
 
-- **Shadow colour references:** `task-01-design-system/assets/stitchtrack-tokens.css` contains literal shadow colours with alpha values. Changing the Primary palette token does not automatically recolour these shadows.
-- **Static data:** `task-01-design-system/preview/index.html` contains fixed example orders and dates. These do not update from live business records.
-- **Palette-pinning evidence:** `01-palette-before-pin.png` and `02-palette-after-pin.png` require final confirmation that they show the specific Primary/40 pinning operation requested by the assessment.
-- **Incomplete product functionality:** The current preview is not a working order-management application.
+The MVP deliberately excludes a marketplace, fabric inventory, full accounting, customer-to-tailor payment processing, paid subscriptions, automated WhatsApp/SMS, runtime AI, vector search and offline write synchronization. Keeping the scope narrow allows the core workflow to be validated first.
 
-The actual implementation defects and corrections encountered during Task One are recorded in `task-01-design-system/docs/defects.md`.
+Application code does not execute migrations automatically. Database identity checks, migrations and integration verification remain developer-run. Do not operate on the development database or run test-database operations without specific authorization.
+
+## Known defects, including real file references
+
+- **Unexpected database-failure classification — unresolved:** the controlled unavailable-port submission returned HTTP 500 with outcome `internal_error`, rather than the intended HTTP 503/`database_unavailable`. An earlier configuration failure also returned 500; these were separate attempts. The final failed submission created no new row, and the UI correctly showed an error instead of success. Investigate the real error classification in [lib/assessment/enquiry.ts](lib/assessment/enquiry.ts) alongside the adapter in [lib/assessment/prisma.ts](lib/assessment/prisma.ts). See the observed account in [false-success.md](task-02-repository-and-scaffold/docs/false-success.md), [server-log evidence](task-02-repository-and-scaffold/evidence/13-write-failed-logs.txt) and [UI evidence](task-02-repository-and-scaffold/evidence/13-write-failed-ui.png). Mocked unit tests do not resolve this real-driver discrepancy.
+- **Shadow colours do not follow palette changes:** [stitchtrack-tokens.css](task-01-design-system/assets/stitchtrack-tokens.css) preserves literal exported shadow colours with alpha values. Changing Primary/40 does not automatically recolour these shadows.
+- **Static dashboard data:** [preview/index.html](task-01-design-system/preview/index.html) contains fixed sample orders and dates, not live business records.
+- **Palette-pinning evidence review pending:** [01-palette-before-pin.png](task-01-design-system/evidence/01-palette-before-pin.png) and [02-palette-after-pin.png](task-01-design-system/evidence/02-palette-after-pin.png) still need final confirmation against the specific Primary/40 pinning requirement. [02a-primary-40-variable.png](task-01-design-system/evidence/02a-primary-40-variable.png) is additional evidence.
+- **Local-only sharing metadata:** [app/page.tsx](app/page.tsx) uses a loopback metadata base for the assessment. A public production origin is not approved, and public social-sharing previews have not been tested. See [information-design.md](task-02-repository-and-scaffold/docs/information-design.md).
+- **Incomplete product functionality and setup validation:** [app/page.tsx](app/page.tsx) is a landing page, not the full order-management product. The setup instructions above await an independent fresh-clone walkthrough.
+
+Historical Task One defects and their resolutions are recorded in [defects.md](task-01-design-system/docs/defects.md). Deliberate regression branches were isolated and not merged into the working design-system implementation.
+
+## Task One design-system details
+
+The application imports [Task One's generated token stylesheet](task-01-design-system/assets/stitchtrack-tokens.css) directly. The local DM Sans font and licence were copied unchanged into `public/fonts/`; Task One remains an independent deliverable.
+
+The token converter uses only [06-tokens-complete.json](task-01-design-system/evidence/06-tokens-complete.json). The incomplete export is preserved as assessment evidence. Task One's recorded verification reports 374 CSS custom properties and 11 passing JavaScript tests.
+
+Colours, typography and elevation use the existing CSS variables. Layout dimensions such as spacing, borders and breakpoints reuse approved Task One preview values because the export contains no corresponding token categories. Step 10's approved button padding/radius use rem values; see the [information-design measurements](task-02-repository-and-scaffold/docs/information-design.md).
+
+## Task Two implementation, verification and history
+
+### Scaffold and dependencies
+
+The initial scaffold uses `next`, `react`, `react-dom`, `typescript`, `@types/node`, `@types/react` and `@types/react-dom`. The separate persistence experiment adds `@prisma/client`, `@prisma/adapter-pg`, `pg`, `zod`, `prisma` and `@types/pg`; Prisma CLI remains a development dependency.
+
+Dependency installation, TypeScript checks, production build and browser verification passed for the original scaffold. Its original npm audit reported zero vulnerabilities.
+
+Initial persistence-experiment installation attempts failed because of registry availability and download errors. Those blockers were later resolved, including the targeted Prisma 7.10.1 upgrade. The earlier five-high-severity-finding audit is historical.
+
+On 2026-10-24, Zod was upgraded from 4.1.12 to exactly 4.6.7 to address the subsequently identified high-severity finding. The audit after that upgrade reported zero vulnerabilities; all 21 database-free assessment tests, TypeScript checking and the production build passed. No general dependency upgrade or automatic audit fix was used. These are recorded results, not a new audit run for this README edit.
+
+### Persistence evidence and migration ownership
+
+The temporary page is `/assessment/enquiry`, with POST endpoint `/api/assessment/enquiries`. Both are disabled by default and unavailable outside local development. Use synthetic data only; never enter real customer information.
+
+The migration file is version-controlled at [prisma/migrations/20261023_task_two_enquiry/migration.sql](prisma/migrations/20261023_task_two_enquiry/migration.sql). **Database deployment was performed manually by the developer** against the isolated `stitchtrack_assessment` database. Application startup and request handling do not execute this migration.
+
+The developer verified successful HTTP 201 submissions and actual PostgreSQL records. Prisma Studio displayed five records; records 3 and 5 were created more than 24 minutes apart. The deliberately failed submission returned HTTP 500 (`internal_error`) and left the same five records. The UI did not report false success; the classification issue remains listed above.
+
+Prisma schema validation, client generation, 21 database-free unit tests, typechecking and the production build passed during implementation. Generation and the unit tests require no live database; they do not independently prove real persistence.
+
+The [persistence procedure](task-02-repository-and-scaffold/docs/persistence-experiment.md) preserves the initial implementation procedure, including intended failure responses and user-only migration instructions. Its opening code-only status predates the developer's completed database verification; use the observed results above and [false-success.md](task-02-repository-and-scaffold/docs/false-success.md) for the actual experiment outcome. Do not rerun initial migration generation over the existing migration or database structures.
+
+Any further database operations require the documented identity preflight and separate developer review. Cleanup of the temporary model/data/routes needs a reviewed strategy; never remove an applied migration automatically.
+
+### Information design and Git workflow
+
+The information-design improvements were developed on `feat/information-design` and merged through [Pull Request #1](https://github.com/chykB/StitchTrack/pull/1). They include clearer homepage copy, responsive headings, button hover/focus feedback, an ST favicon and route-specific metadata.
+
+The developer also tested a more general homepage heading on `experiment/rejected-hero-copy`, rejected it because it did not clearly explain StitchTrack's purpose, and deleted that branch without merging it. The history and rejection evidence are recorded in [15-git-log-graph.txt](task-02-repository-and-scaffold/evidence/15-git-log-graph.txt).
+
+[Information-design documentation](task-02-repository-and-scaffold/docs/information-design.md) records actual wrapping observations, typography values, local metadata checks, keyboard focus checks and screenshots 16–20. All 21 assessment tests, TypeScript checking, the production build and `git diff --check` passed for that change. Public sharing previews and user-growth effects were not tested.
+
+### Supporting documents
+
+- [Original and refined scaffold prompts](task-02-repository-and-scaffold/docs/scaffold-prompt.md).
+- [Performance observations](task-02-repository-and-scaffold/docs/performance-note.md).
+- [Persistence implementation and developer-run procedures](task-02-repository-and-scaffold/docs/persistence-experiment.md).
+- [Observed failure and false-success assessment](task-02-repository-and-scaffold/docs/false-success.md).
+- [Product and engineering instructions](AGENTS.md) and [detailed project rules](.agent/rules/01-product.md).
