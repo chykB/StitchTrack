@@ -46,19 +46,51 @@ Better Auth and Nodemailer are specified for later authentication and email mile
 
 ### Run the landing page from a fresh clone
 
-Use a Linux terminal in WSL, with Git, Node.js 24.x and npm 11.x available inside WSL. Do not use Windows Node.js for these commands. The verified setup used NVM, Node.js 24.22.1 and npm 11.19.1.
+Choose the setup path for your operating system. WSL is the developer's verified environment, not a StitchTrack application requirement. Both paths use Git, Node.js 24.x and npm 11.x.
 
-If NVM is already installed, select the verified Node.js version:
+**Verification status:** the developer verified the application in WSL using NVM, Node.js 24.22.1 and npm 11.19.1. Native Windows setup is documented below but awaits independent testing; it has not been verified.
+
+**The landing page runs without assessment database credentials, a PostgreSQL service or an environment file.** Leave the assessment experiment disabled. Do not create a database or run migrations to view the homepage.
+
+#### Windows — PowerShell
+
+Install Git for Windows and Node.js 24.x with npm 11.x, ensuring both are available on PATH. Open a new PowerShell window after installation and check the prerequisites:
+
+```powershell
+git --version
+node --version
+npm.cmd --version
+```
+
+Confirm that Node.js reports 24.x and npm reports 11.x. Clone into your Windows user directory, enter the repository root, install the locked dependencies and generate Prisma Client:
+
+```powershell
+Set-Location $env:USERPROFILE
+git clone https://github.com/chykB/StitchTrack.git stitchtrack
+Set-Location stitchtrack
+npm.cmd ci
+npm.cmd run prisma:generate
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Open **http://127.0.0.1:3000/** in your browser. Stop the server with **Ctrl+C**. The `npm.cmd` commands use npm's Windows command launcher and avoid requiring PowerShell to execute `npm.ps1`.
+
+#### Linux/WSL — Bash and NVM
+
+Use a Linux terminal with Git and NVM installed. In WSL, use Linux Node.js and npm inside that environment. Load NVM, select the verified Node.js version and check the prerequisites:
 
 ```bash
 source ~/.nvm/nvm.sh
 nvm install 24.22.1
 nvm use 24.22.1
+git --version
 node --version
 npm --version
 ```
 
-If Git or NVM/Node.js is missing, install those prerequisites in WSL before continuing. Then clone into your Linux home directory and enter the repository root:
+Confirm Node.js 24.x and npm 11.x; the verified WSL setup used npm 11.19.1. If Git or NVM is missing, install those prerequisites in your Linux environment before continuing.
+
+Clone into your Linux home directory, enter the repository root, install the locked dependencies and generate Prisma Client:
 
 ```bash
 cd ~
@@ -69,19 +101,19 @@ npm run prisma:generate
 npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Open **http://127.0.0.1:3000/**. Stop the server with **Ctrl+C**.
+Open **http://127.0.0.1:3000/** in your browser. Stop the server with **Ctrl+C**. The recorded verification applies to WSL; other Linux installations have not been independently tested.
+
+#### Notes for both setup paths
 
 `npm ci` uses the committed `package-lock.json`. Prisma generation creates the ignored client in `app/generated/prisma`; it does not connect to PostgreSQL.
 
-**The landing page runs without assessment database credentials, a PostgreSQL service or an environment file.** Leave the assessment experiment disabled. Do not create a database or run migrations to view the homepage.
-
-If port 3000 is occupied, stop the conflicting process or choose another port for the homepage. The current Open Graph URLs intentionally target port 3000 for local assessment verification.
+If port 3000 is occupied, choose another port with `--port` in the development-server command and open the corresponding browser URL. The current Open Graph URLs intentionally target port 3000 for local assessment verification.
 
 ### Run checks without a database
 
-From the repository root, with the development server stopped before the build:
+From the repository root, with the development server stopped before the build, run the following commands. In PowerShell, use `npm.cmd` in place of `npm`; in Linux/WSL, use `npm` as shown.
 
-```bash
+```text
 npm ls --depth=0
 npm run prisma:validate
 npm run test:assessment
@@ -92,11 +124,21 @@ npm audit
 
 The existing pretypecheck and prebuild scripts generate Prisma Client automatically. Assessment unit tests use mocked persistence; these commands need no live database. The audit checks the npm registry and its results can change over time.
 
-To inspect the production build locally, run `npm run start -- --hostname 127.0.0.1 --port 3000`. The assessment routes remain unavailable in production.
+To inspect the production build locally, run `npm.cmd run start -- --hostname 127.0.0.1 --port 3000` in PowerShell or `npm run start -- --hostname 127.0.0.1 --port 3000` in Linux/WSL. The assessment routes remain unavailable in production.
 
 ### Run the independent Task One preview
 
-Node.js and Python 3 are required; npm installation and a database are not.
+Node.js and Python 3 are required; npm installation and a database are not. From the repository root, use the commands for your platform.
+
+**Windows — PowerShell** (Python 3 with the `py` launcher):
+
+```powershell
+node task-01-design-system/scripts/build-tokens.mjs
+node --test task-01-design-system/tests/build-tokens.test.mjs
+py -3 -m http.server 4173 --bind 127.0.0.1 --directory task-01-design-system
+```
+
+**Linux/WSL — Bash**:
 
 ```bash
 node task-01-design-system/scripts/build-tokens.mjs
