@@ -44,36 +44,139 @@ Better Auth and Nodemailer are specified for later authentication and email mile
 
 ## Getting started
 
-### Run the landing page from a fresh clone
+### Run the landing page from a new or existing clone
 
 Choose the setup path for your operating system. WSL is the developer's verified environment, not a StitchTrack application requirement. Both paths use Git, Node.js 24.x and npm 11.x.
 
-**Verification status:** the developer verified the application in WSL using NVM, Node.js 24.22.1 and npm 11.19.1. Native Windows setup is documented below but awaits independent testing; it has not been verified.
+**Why Node.js 24.x:** it is the verified version line and matches the repository's declared Node.js requirement. Use 24.22.1 to reproduce the tested setup. Compatibility with Node.js 26, including the tester's initial 26.5.0, has not been established. A newer installed version is not evidence of compatibility with these locked dependencies; select and verify 24.22.1 before installation.
+
+**Verification status:** the developer verified WSL using NVM, Node.js 24.22.1 and npm 11.19.1. An independent tester also ran the homepage on native Windows 10 using CMD, fnm, Node.js 24.22.1 and npm 11.19.1, with troubleshooting assistance and an existing clone. See the [Step 7 README test](task-02-repository-and-scaffold/docs/readme-test.md). The PowerShell alternative remains unverified.
 
 **The landing page runs without assessment database credentials, a PostgreSQL service or an environment file.** Leave the assessment experiment disabled. Do not create a database or run migrations to view the homepage.
 
-#### Windows — PowerShell
+#### Windows — Command Prompt (independently tested with assistance)
 
-Install Git for Windows and Node.js 24.x with npm 11.x, ensuring both are available on PATH. Open a new PowerShell window after installation and check the prerequisites:
+Use **Command Prompt (`cmd.exe`)** for the sequence below. Run one step at a time and confirm success before continuing. If PowerShell instructions cause shell-related difficulties, use this CMD path. Install Git for Windows and fnm and ensure they are available on PATH:
 
-```powershell
+```bat
 git --version
-node --version
-npm.cmd --version
+fnm --version
 ```
 
-Confirm that Node.js reports 24.x and npm reports 11.x. Clone into your Windows user directory, enter the repository root, install the locked dependencies and generate Prisma Client:
+**1. Install the verified Node.js version.** fnm can keep multiple versions installed; you do not need to uninstall an existing Node.js version first:
+
+```bat
+fnm install 24.22.1
+```
+
+Installing the version makes it available. Each `fnm exec --using=24.22.1` command below then selects it for that command and its child processes. This does not depend on `fnm use` in an earlier terminal or change the Node.js version used by every other application.
+
+**2. Enter the repository.**
+
+**Option A: Already cloned StitchTrack**
+
+Use the existing clone's actual location; this example assumes it is in your Windows user directory:
+
+```bat
+cd /d "%USERPROFILE%\stitchtrack"
+dir package.json
+```
+
+**Option B: Haven't cloned StitchTrack yet**
+
+```bat
+cd /d "%USERPROFILE%"
+git clone https://github.com/chykB/StitchTrack.git stitchtrack
+cd stitchtrack
+dir package.json
+```
+
+Choose only one option, then continue to Step 3.
+
+If cloning reports that the destination already exists, check that it is your StitchTrack clone and resume there. Do not delete the repository to repeat setup. Switching Node.js versions also does not require cloning again.
+
+**3. Verify the version that will run StitchTrack:**
+
+```bat
+fnm exec --using=24.22.1 node --version
+fnm exec --using=24.22.1 npm.cmd --version
+```
+
+Expect Node.js 24.22.1 and npm 11.x; the successful independent test used npm 11.19.1. An unprefixed `node --version` can still show another installed version; use the explicitly versioned commands for this setup.
+
+**4. Install dependencies from the lockfile:**
+
+```bat
+fnm exec --using=24.22.1 npm.cmd ci
+```
+
+**Stop if installation fails. Do not continue to Prisma generation or server startup with an incomplete `node_modules` directory.** Resolve the error using the troubleshooting guidance below, retry this step, and continue only after it exits successfully.
+
+**5. Generate Prisma Client after installation succeeds:**
+
+```bat
+fnm exec --using=24.22.1 npm.cmd run prisma:generate
+```
+
+If generation fails, stop and resolve it before starting the server.
+
+**6. Start the development server:**
+
+```bat
+fnm exec --using=24.22.1 npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Wait for Next.js to report Ready, then open **http://127.0.0.1:3000/** in your browser. Stop the server with **Ctrl+C**.
+
+#### Windows — PowerShell option (not independently verified)
+
+Use PowerShell's directory syntax for an existing clone, adjusting the path as needed:
 
 ```powershell
-Set-Location $env:USERPROFILE
-git clone https://github.com/chykB/StitchTrack.git stitchtrack
-Set-Location stitchtrack
-npm.cmd ci
-npm.cmd run prisma:generate
-npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+Set-Location "$env:USERPROFILE\stitchtrack"
+Get-Item package.json
+fnm exec --using=24.22.1 node --version
+fnm exec --using=24.22.1 npm.cmd --version
+fnm exec --using=24.22.1 npm.cmd ci
 ```
 
-Open **http://127.0.0.1:3000/** in your browser. Stop the server with **Ctrl+C**. The `npm.cmd` commands use npm's Windows command launcher and avoid requiring PowerShell to execute `npm.ps1`.
+After installation succeeds, run the generation and startup steps separately:
+
+```powershell
+fnm exec --using=24.22.1 npm.cmd run prisma:generate
+```
+
+Only after generation succeeds, start the server:
+
+```powershell
+fnm exec --using=24.22.1 npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Use `fnm install 24.22.1` first if that version is not installed. Stop on installation or generation errors, as in the CMD path. `npm.cmd` invokes npm's Windows command launcher without requiring execution of `npm.ps1`.
+
+**PowerShell sessions and fnm:** shell initialization is session-specific unless configured in the PowerShell profile. For example, to initialize fnm and select the version for the current PowerShell session:
+
+```powershell
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+fnm use 24.22.1
+```
+
+Opening a new PowerShell session does not carry over initialization performed only in the previous session. To initialize future sessions automatically, configure the initialization line in the relevant PowerShell `$PROFILE`, following [fnm's official PowerShell instructions](https://github.com/Schniz/fnm#powershell). Then select and verify the intended version in the new session. The explicit `fnm exec --using=24.22.1` commands above select the version per command and do not require this optional profile setup.
+
+Do not paste CMD's `cd /d` or `%USERPROFILE%` syntax into PowerShell. **If shell initialization, syntax or script-launch issues are confusing, open CMD, navigate to the same existing clone and follow its numbered sequence.** Changing shells does not require another clone.
+
+#### Windows troubleshooting: identify which step failed
+
+These are different possible problems; do not assume every failure has the same cause:
+
+| Problem | What to check and do |
+| --- | --- |
+| Incorrect shell syntax | Use the block for your terminal. CMD uses `cd /d` and `%USERPROFILE%`; PowerShell uses `Set-Location` and `$env:USERPROFILE`. Use the CMD alternative if PowerShell causes difficulties. |
+| Node.js version mismatch | Verify with `fnm exec --using=24.22.1 node --version`. Node.js 26 compatibility is not established. A mismatch can introduce compatibility problems, but it does not prove the cause of an EPERM error. |
+| Failed or incomplete dependency installation | Stop after a failed `npm.cmd ci`. Missing modules after that failure do not mean Prisma generation or the server should be tried anyway. Complete a successful clean dependency installation first. |
+| Windows EPERM / files in use | The tester encountered EPERM while removing a Next.js SWC binary. A process holding a file can prevent removal. Stop development servers and close relevant Node.js processes/editor sessions; remove only the incomplete project's `node_modules` directory using File Explorer, then retry the explicitly versioned CMD install. |
+
+Before removing `node_modules`, confirm you are in the intended repository root. Preserve `package.json`, `package-lock.json`, source files and evidence. Retry `fnm exec --using=24.22.1 npm.cmd ci` in that existing clone. If it still fails, retain the error for investigation and stop rather than continuing to later steps. The reported EPERM failure is distinct from the unverified compatibility of Node.js 26.
 
 #### Linux/WSL — Bash and NVM
 
@@ -90,7 +193,7 @@ npm --version
 
 Confirm Node.js 24.x and npm 11.x; the verified WSL setup used npm 11.19.1. If Git or NVM is missing, install those prerequisites in your Linux environment before continuing.
 
-Clone into your Linux home directory, enter the repository root, install the locked dependencies and generate Prisma Client:
+For a new clone, run the commands below from your Linux home directory. If the repository already exists, skip the clone command, run `cd ~/stitchtrack` (or use its actual path), and resume at `npm ci`.
 
 ```bash
 cd ~
@@ -105,13 +208,15 @@ Open **http://127.0.0.1:3000/** in your browser. Stop the server with **Ctrl+C**
 
 #### Notes for both setup paths
 
+**If dependency installation fails on either platform, stop.** Resolve it and rerun installation successfully before Prisma generation or development-server startup.
+
 `npm ci` uses the committed `package-lock.json`. Prisma generation creates the ignored client in `app/generated/prisma`; it does not connect to PostgreSQL.
 
 If port 3000 is occupied, choose another port with `--port` in the development-server command and open the corresponding browser URL. The current Open Graph URLs intentionally target port 3000 for local assessment verification.
 
 ### Run checks without a database
 
-From the repository root, with the development server stopped before the build, run the following commands. In PowerShell, use `npm.cmd` in place of `npm`; in Linux/WSL, use `npm` as shown.
+From the repository root, with the development server stopped before the build, run the following commands. In Windows CMD or PowerShell with fnm, replace each leading `npm` with `fnm exec --using=24.22.1 npm.cmd`; in Linux/WSL, use `npm` as shown.
 
 ```text
 npm ls --depth=0
@@ -124,17 +229,17 @@ npm audit
 
 The existing pretypecheck and prebuild scripts generate Prisma Client automatically. Assessment unit tests use mocked persistence; these commands need no live database. The audit checks the npm registry and its results can change over time.
 
-To inspect the production build locally, run `npm.cmd run start -- --hostname 127.0.0.1 --port 3000` in PowerShell or `npm run start -- --hostname 127.0.0.1 --port 3000` in Linux/WSL. The assessment routes remain unavailable in production.
+To inspect the production build locally, run `fnm exec --using=24.22.1 npm.cmd run start -- --hostname 127.0.0.1 --port 3000` in Windows CMD or PowerShell or `npm run start -- --hostname 127.0.0.1 --port 3000` in Linux/WSL. The assessment routes remain unavailable in production.
 
 ### Run the independent Task One preview
 
 Node.js and Python 3 are required; npm installation and a database are not. From the repository root, use the commands for your platform.
 
-**Windows — PowerShell** (Python 3 with the `py` launcher):
+**Windows — CMD or PowerShell** (fnm and Python 3 with the `py` launcher; this preview path was not part of the independent homepage test):
 
-```powershell
-node task-01-design-system/scripts/build-tokens.mjs
-node --test task-01-design-system/tests/build-tokens.test.mjs
+```bat
+fnm exec --using=24.22.1 node task-01-design-system/scripts/build-tokens.mjs
+fnm exec --using=24.22.1 node --test task-01-design-system/tests/build-tokens.test.mjs
 py -3 -m http.server 4173 --bind 127.0.0.1 --directory task-01-design-system
 ```
 
@@ -148,7 +253,7 @@ python3 -m http.server 4173 --bind 127.0.0.1 --directory task-01-design-system
 
 Open **http://127.0.0.1:4173/preview/**. See [Task One's README](task-01-design-system/README.md) for its design-system implementation and evidence.
 
-These fresh-clone instructions have **not yet been tested by another person**.
+An independent tester completed an assisted Windows CMD installation and homepage run from an existing clone. The revised instructions have not yet had an unaided, end-to-end fresh-clone retest. The [test account](task-02-repository-and-scaffold/docs/readme-test.md) records initial failures, assistance, results and pending exact tester quotes.
 
 ## Environment variables
 
@@ -191,7 +296,7 @@ Application code does not execute migrations automatically. Database identity ch
 - **Static dashboard data:** [preview/index.html](task-01-design-system/preview/index.html) contains fixed sample orders and dates, not live business records.
 - **Palette-pinning evidence review pending:** [01-palette-before-pin.png](task-01-design-system/evidence/01-palette-before-pin.png) and [02-palette-after-pin.png](task-01-design-system/evidence/02-palette-after-pin.png) still need final confirmation against the specific Primary/40 pinning requirement. [02a-primary-40-variable.png](task-01-design-system/evidence/02a-primary-40-variable.png) is additional evidence.
 - **Local-only sharing metadata:** [app/page.tsx](app/page.tsx) uses a loopback metadata base for the assessment. A public production origin is not approved, and public social-sharing previews have not been tested. See [information-design.md](task-02-repository-and-scaffold/docs/information-design.md).
-- **Incomplete product functionality and setup validation:** [app/page.tsx](app/page.tsx) is a landing page, not the full order-management product. The setup instructions above await an independent fresh-clone walkthrough.
+- **Incomplete product functionality and setup coverage:** [app/page.tsx](app/page.tsx) is a landing page, not the full order-management product. The independent Windows test succeeded with assistance using an existing clone; an unaided fresh-clone retest and PowerShell verification remain outstanding. Lifecycle-script warnings were reported, but their exact text remains to be reviewed. See [readme-test.md](task-02-repository-and-scaffold/docs/readme-test.md).
 
 Historical Task One defects and their resolutions are recorded in [defects.md](task-01-design-system/docs/defects.md). Deliberate regression branches were isolated and not merged into the working design-system implementation.
 
@@ -239,6 +344,7 @@ The developer also tested a more general homepage heading on `experiment/rejecte
 
 ### Supporting documents
 
+- [Independent Windows README test and troubleshooting](task-02-repository-and-scaffold/docs/readme-test.md).
 - [Original and refined scaffold prompts](task-02-repository-and-scaffold/docs/scaffold-prompt.md).
 - [Performance observations](task-02-repository-and-scaffold/docs/performance-note.md).
 - [Persistence implementation and developer-run procedures](task-02-repository-and-scaffold/docs/persistence-experiment.md).
