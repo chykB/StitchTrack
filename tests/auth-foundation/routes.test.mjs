@@ -8,22 +8,22 @@ if (base.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(b
 }
 
 const pages = [
-  { path: "/signup", title: "Create your tailor account | StitchTrack",
+  { path: "/auth?signup", title: "Create your tailor account | StitchTrack",
     heading: "Create your tailor account", prefix: "signup", password: "new-password",
-    links: ["/login"] },
-  { path: "/login", title: "Tailor login | StitchTrack",
+    links: ["/auth?login"] },
+  { path: "/auth?login", title: "Tailor login | StitchTrack",
     heading: "Log in to StitchTrack", prefix: "login", password: "current-password",
-    links: ["/forgot-password", "/signup"] },
-  { path: "/forgot-password", title: "Reset your password | StitchTrack",
+    links: ["/auth?reset", "/auth?signup"] },
+  { path: "/auth?reset", title: "Reset your password | StitchTrack",
     heading: "Reset your password", prefix: "reset",
-    links: ["/login", "/signup"] },
+    links: ["/auth?login", "/auth?signup"] },
 ];
 const tags = (html, tag) => [...html.matchAll(new RegExp("<" + tag + "\\b[^>]*>", "gi"))].map(m => m[0]);
 const attr = (tag, name) => new RegExp("\\b" + name + '="([^"]*)"', "i").exec(tag)?.[1];
 const has = (tag, name) => new RegExp("\\s" + name + "(?:=|\\s|>)", "i").test(tag);
 
 for (const page of pages) {
-  test("GET " + page.path + " exposes a separate, inert-before-hydration form", async () => {
+  test("GET " + page.path + " renders the URL-selected, inert-before-hydration form", async () => {
     const response = await fetch(new URL(page.path, base), { redirect: "manual" });
     assert.equal(response.status, 200);
     assert.match(response.headers.get("content-type") || "", /text\/html/);
@@ -72,3 +72,80 @@ for (const page of pages) {
       attr(tag, "name") === "robots" && attr(tag, "content") === "noindex, nofollow"));
   });
 }
+
+test("GET /auth defaults to login", async () => {
+  const response = await fetch(new URL("/auth", base), { redirect: "manual" });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("set-cookie"), null);
+  assert.ok((await response.text()).includes('id="login-email"'));
+});
+
+const invalidPaths = [
+  "/auth?mode=forgot-password", "/auth?mode=smjshdsljf", "/auth?mode=login",
+  "/auth?mode=signup", "/auth?mode=reset", "/auth?unknown", "/auth?LOGIN",
+  "/auth?login&login", "/auth?signup&signup", "/auth?reset&reset",
+  "/auth?login&signup", "/auth?signup&reset", "/auth?login&reset",
+  "/auth?login&unknown", "/auth?login=true", "/auth?signup=1", "/auth?reset=false",
+  "/auth?login=", "/auth?signup=", "/auth?reset=", "/auth?login&", "/auth?&login",
+  "/auth?_rsc=arbitrary", "/auth?__proto__", "/auth?constructor", "/auth?%6cogin",
+];
+for (const path of invalidPaths) {
+  test("GET " + path + " returns an actual 404, including a browser User-Agent", async () => {
+    const response = await fetch(new URL(path, base), {
+      redirect: "manual", headers: { "user-agent": "Mozilla/5.0 Chrome/130.0.0.0 Safari/537.36" },
+    });
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get("set-cookie"), null);
+    assert.equal(tags(await response.text(), "form").length, 0);
+  });
+}
+
+test("caller-supplied auth-state headers cannot select a different form", async () => {
+  const response = await fetch(new URL("/auth?signup", base), { headers: { "x-stitchtrack-auth-state": "reset" } });
+  assert.equal(response.status, 200);
+  assert.ok((await response.text()).includes('id="signup-email"'));
+});
+
+test("RSC navigation receives the same state policy and proper invalid-state status", async () => {
+  const valid = await fetch(new URL("/auth?signup=&_rsc=route-test", base), { headers: { rsc: "1" } });
+  assert.equal(valid.status, 200);
+  assert.match(valid.headers.get("content-type") || "", /text\/x-component/);
+  assert.ok((await valid.text()).includes("Create your tailor account"));
+  for (const query of ["mode=forgot-password", "unknown", "signup=&reset=", "reset=unexpected"]) {
+    const invalid = await fetch(new URL("/auth?" + query + "&_rsc=route-test", base), { headers: { rsc: "1" } });
+    assert.equal(invalid.status, 404);
+    assert.equal(invalid.headers.get("set-cookie"), null);
+  }
+});
+
+for (const path of ["/signup", "/login", "/forgot-password", "/this-page-does-not-exist"]) {
+  test("GET " + path + " no longer exposes a separate auth page", async () => {
+    const response = await fetch(new URL(path, base), { redirect: "manual" });
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get("set-cookie"), null);
+  });
+}
+
+
+test("auth query gating does not change the marketing homepage", async () => {
+  for (const path of ["/", "/?signup", "/?mode=unknown"]) {
+    const response = await fetch(new URL(path, base), { redirect: "manual" });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("set-cookie"), null);
+    const html = await response.text();
+    assert.ok(html.includes("Keep tailoring orders and agreements clear"));
+    assert.ok(!html.includes('id="login-email"'));
+  }
+});
+
+test("production assessment page remains disabled and its GET API keeps method handling", async () => {
+  for (const path of ["/assessment/enquiry", "/assessment/enquiry?login"]) {
+    const response = await fetch(new URL(path, base), { redirect: "manual" });
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get("set-cookie"), null);
+    assert.ok(!(await response.text()).includes('id="login-email"'));
+  }
+  const response = await fetch(new URL("/api/assessment/enquiries", base), { redirect: "manual" });
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.get("set-cookie"), null);
+});

@@ -16,7 +16,7 @@ This repository follows the *Ship & Found* five-task assessment. Task deliverabl
 | --- | --- |
 | Task 1 — Design System | Implemented; final evidence review pending |
 | Task 2 — Repository and Scaffold | Scaffold, isolated persistence experiment and information-design improvements implemented and verified |
-| Task 3 — Client Validation | In progress: separate tailor authentication UI; authentication backend not implemented |
+| Task 3 — Client Validation | In progress: URL-controlled tailor authentication UI; authentication backend not implemented |
 | Task 4 — Server Security | Not started |
 | Task 5 — Sessions, Compliance and Defence | Not started |
 
@@ -26,7 +26,7 @@ Task Two includes a responsive landing page and a temporary enquiry form. The de
 
 The information-design work was merged into `main` through [Pull Request #1](https://github.com/chykB/StitchTrack/pull/1). See the extended Task Two details below for verification and Git workflow evidence.
 
-Task Three now has separate signup, login and password-reset-request interfaces for tailors. They do not create accounts, sign users in or send emails. See the [authentication foundation record](task-03-client-validation/docs/auth-foundation.md).
+Task Three now uses one /auth page for tailor signup, login and password-reset requests, selected by ?signup, ?login or ?reset (with /auth defaulting to login). These interfaces do not create accounts, sign users in or send emails. See the historical [authentication foundation record](task-03-client-validation/docs/auth-foundation.md) and the [consolidation rationale and evidence](task-03-client-validation/docs/spa-rationale.md).
 
 ## Stack, with reasons
 

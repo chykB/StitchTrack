@@ -1,0 +1,22 @@
+Task Three Step 1: page count BEFORE consolidation
+Captured from committed Git tree before route-file modification.
+Branch: feat/task-03-auth-foundation
+Commit: cb31dc972461e3d1f0624a964ba4c96b034419d1
+Command: git ls-tree -r --name-only cb31dc9 -- app
+Counting rule: app/**/page.{tsx,ts,jsx,js}; excludes route handlers, layouts, assets and framework-generated not-found routes.
+Total application page routes: 5
+Authentication page routes: 3
+
+Application page sources and public paths:
+app/(auth)/forgot-password/page.tsx -> /forgot-password
+app/(auth)/login/page.tsx -> /login
+app/(auth)/signup/page.tsx -> /signup
+app/assessment/enquiry/page.tsx -> /assessment/enquiry
+app/page.tsx -> /
+
+Authentication page sources:
+app/(auth)/forgot-password/page.tsx
+app/(auth)/login/page.tsx
+app/(auth)/signup/page.tsx
+
+Existing 00-foundation-* evidence preserved unchanged.
