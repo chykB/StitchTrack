@@ -10,12 +10,15 @@ if (base.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(b
 const pages = [
   { path: "/auth?signup", title: "Create your tailor account | StitchTrack",
     heading: "Create your tailor account", prefix: "signup", password: "new-password",
+    legend: "Account details", hiddenLegend: true,
     links: ["/auth?login"] },
   { path: "/auth?login", title: "Tailor login | StitchTrack",
     heading: "Log in to StitchTrack", prefix: "login", password: "current-password",
+    legend: "Login details", hiddenLegend: false,
     links: ["/auth?reset", "/auth?signup"] },
   { path: "/auth?reset", title: "Reset your password | StitchTrack",
     heading: "Reset your password", prefix: "reset",
+    legend: "Reset request", hiddenLegend: false,
     links: ["/auth?login", "/auth?signup"] },
 ];
 const tags = (html, tag) => [...html.matchAll(new RegExp("<" + tag + "\\b[^>]*>", "gi"))].map(m => m[0]);
@@ -48,9 +51,13 @@ for (const page of pages) {
     assert.ok(has(tags(html, "fieldset")[0], "disabled"));
     const fieldset = /<fieldset\b[^>]*>([\s\S]*?)<\/fieldset>/i.exec(html)?.[1];
     assert.ok(fieldset);
-    const legend = /<legend\b[^>]*>([\s\S]*?)<\/legend>/i.exec(fieldset)?.[1];
+    const legend = /<legend\b([^>]*)>([\s\S]*?)<\/legend>/i.exec(fieldset);
     assert.ok(legend);
-    assert.doesNotMatch(legend, /<(input|button|select|textarea)\b/i);
+    assert.equal(legend[2], page.legend);
+    assert.equal(/visuallyHidden/.test(attr(legend[1], "class") || ""), page.hiddenLegend);
+    assert.equal(attr(legend[1], "aria-hidden"), undefined);
+    assert.ok(!has(legend[1], "hidden"));
+    assert.doesNotMatch(legend[2], /<(input|button|select|textarea)\b/i);
     assert.equal(tags(fieldset, "input").length, page.password ? 2 : 1);
     assert.equal(tags(fieldset, "button").length, 1);
     const inputs = tags(html, "input");

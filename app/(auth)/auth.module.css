@@ -29,6 +29,7 @@
     var(--stitchtrack-type-headline-large-font-size));
   letter-spacing: var(--stitchtrack-type-headline-large-letter-spacing);
 }
+.title + form { margin-top: 24px; }
 .description { margin: 16px 0 24px; color: var(--stitchtrack-color-on-surface-variant); }
 .fields { min-inline-size: 0; padding: 0; margin: 0; border: 0; }
 .legend, .field label, .submit {
@@ -39,6 +40,17 @@
   letter-spacing: var(--stitchtrack-type-label-large-letter-spacing);
 }
 .legend { margin-bottom: 16px; padding: 0; }
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 .field { display: grid; gap: 8px; margin-bottom: 24px; }
 .field input {
   inline-size: 100%;
@@ -58,7 +70,6 @@
   border-radius: 0.5rem;
   color: var(--stitchtrack-color-on-primary);
   background: var(--stitchtrack-color-primary);
-  box-shadow: var(--stitchtrack-shadow-soft);
   cursor: pointer;
 }
 .submit:hover:not(:disabled) {

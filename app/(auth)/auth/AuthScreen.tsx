@@ -11,7 +11,7 @@ import type { AuthMode } from "../../../lib/auth/state";
 const copy = {
   signup: {
     heading: "Create your tailor account",
-    description: "A clearer place for your tailoring business.",
+    description: null,
     legend: "Account details",
     button: "Create account",
     unavailable: "Account creation is not available yet.",
@@ -45,9 +45,10 @@ export default function AuthScreen({ mode }: { mode: AuthMode }) {
       <h1 ref={heading} id="auth-title" tabIndex={-1} className={styles.title}>
         {content.heading}
       </h1>
-      <p className={styles.description}>{content.description}</p>
+      {content.description && <p className={styles.description}>{content.description}</p>}
       {/* A mode change discards entered values and the previous unavailable message. */}
       <AuthForm key={mode} buttonLabel={content.button} legend={content.legend}
+        hideLegend={mode === "signup"}
         unavailableMessage={content.unavailable}>
         <FormField id={mode + "-email"} name="email" label="Email address"
           type="email" autoComplete="email" />

@@ -9,10 +9,11 @@ type AuthFormProps = {
   buttonLabel: string;
   unavailableMessage: string;
   legend: string;
+  hideLegend?: boolean;
 };
 
 export default function AuthForm({
-  children, buttonLabel, unavailableMessage, legend,
+  children, buttonLabel, unavailableMessage, legend, hideLegend = false,
 }: AuthFormProps) {
   const [ready, setReady] = useState(false);
   const [attempted, setAttempted] = useState(false);
@@ -32,7 +33,7 @@ export default function AuthForm({
       aria-describedby={attempted ? "auth-feedback" : undefined} aria-busy={!ready}>
       {/* SSR and JavaScript-disabled controls stay inert. No legend inputs. */}
       <fieldset className={styles.fields} disabled={!ready}>
-        <legend className={styles.legend}>{legend}</legend>
+        <legend className={hideLegend ? styles.visuallyHidden : styles.legend}>{legend}</legend>
         {children}
         <button className={styles.submit} type="submit">{buttonLabel}</button>
       </fieldset>
