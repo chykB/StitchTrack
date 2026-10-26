@@ -1,14 +1,16 @@
 # StitchTrack Privacy Policy - working draft
 
-**v0.1 | 26 October 2026 | NOT APPROVED | NOT A PUBLIC POLICY**
+**v0.2 | 26 October 2026 | NOT APPROVED | NOT PUBLIC**
 
 This is a review artifact for an intended service, not a claim that production processing, legal approval or privacy compliance has already been established. See the [source/review note](terms-note.md). No effective date is set.
 
-## 1. Responsible organization and roles
+## 1. Individual operator and preliminary data roles
 
-StitchTrack is the project/product name, not a verified registered entity in this document.
+The owner confirms that StitchTrack is intended to be operated personally by its founder, an individual in Nigeria, during the free initial pilot. No registered company or registered business name has been confirmed. StitchTrack is the product name, not an assumed incorporated entity.
 
-**OWNER/LEGAL REVIEW:** Supply the operator's identity, address and monitored privacy contact. Decide roles for each activity. Account administration may involve the platform determining purposes; business-owned customer records may involve different controller/processor arrangements. No role allocation or processing agreement is assumed.
+The operator likely acts as controller for account-related processing where the operator determines purposes and means. Customer records managed for tailoring businesses require a separate assessment: a tailoring business may determine the purpose of its customer records while the operator processes on its instructions. Actual activities may require a different allocation. These are preliminary review positions, not finalized legal determinations or an approved processing agreement.
+
+**PRE-LAUNCH / OWNER/LEGAL REVIEW:** Check business-name registration status and applicable CAC requirements before operating under StitchTrack. Confirm the individual's legal identity, appropriate address and monitored privacy contact for publication. None is inferred here. Document controller/processor responsibilities separately for each activity and approve any required processing terms.
 
 ## 2. Current interface versus planned processing
 
@@ -30,13 +32,22 @@ The PRD excludes runtime AI features. This draft does not authorize using custom
 
 The [Nigeria Data Protection Act 2023](https://ncc.gov.ng/media/1084/view), sections 24-27, is a source for reviewing minimization, purpose and privacy information.
 
-**OWNER/LEGAL REVIEW:** Map each actual purpose to a documented lawful basis; assess whether contract, another basis or specific consent is appropriate. Do not label all processing as consent or infer a basis solely from a platform-terms checkbox. The official [GAID 2025](https://ndpc.gov.ng/wp-content/uploads/2025/03/NDP-ACT-GAID-2025-MARCH-20TH.pdf) indexed material on lawful bases/consent was consulted with the access limitation recorded in the source note.
+**OWNER/LEGAL REVIEW:** The following are proposed purposes and candidate lawful bases to assess, not final selections or evidence that processing has started. Each must meet the Act's conditions. The official operative [GAID 2025](https://ndpc.gov.ng/wp-content/uploads/2025/03/NDP-ACT-GAID-2025-MARCH-20TH.pdf) must inform that assessment; indexed material was consulted with the full-text access limitation recorded in the source note.
+
+| Proposed purpose | Candidate basis and unresolved review |
+| --- | --- |
+| Tailor account creation, login and recovery | Consider necessity for a contract with that person, or steps at their request before a contract. Confirm the actual relationship and minimum data needed. A free pilot does not settle the basis. |
+| Necessary security checks and limited technical logs | Assess legitimate interests, including necessity, proportionality, balancing against individuals' rights and suitable safeguards. This is not permission for unlimited logs or tracking. |
+| Customer records, invitations, measurements, pictures, versioned agreements, manual payment records and delivery/reminder processing for a tailoring business | The relevant controller must justify a basis for each purpose. Contract necessity may be relevant where the person is party to that contract; other processing needs its own assessment. The operator's contract with a tailor alone does not establish a basis for every client's data. Assess processing on documented business instructions separately from the operator's own purposes. |
+| Rights requests, specific compliance duties and preservation of necessary dispute evidence | Identify any actual legal obligation and its scope; assess any separately proposed legitimate interest for dispute evidence with appropriate limits. No blanket indefinite retention is authorized. |
+
+Do not label all processing as consent or infer a basis solely from a platform-terms checkbox. Any reliance on consent needs a specific, informed and freely given mechanism that can be withdrawn as applicable. No new marketing purpose or consent workflow is introduced.
 
 Required privacy information must be supplied at the appropriate collection points, including an appropriate approach for customer information supplied by tailors. A future public Privacy Policy and any separate consent controls have not yet been implemented.
 
 ## 4. Who can receive data and where it is handled
 
-The intended product restricts access to authorized businesses and linked clients. Actual service providers, locations and disclosures must be confirmed.
+The intended product scopes customer records to the authorized tailoring business and securely linked clients; it does not grant access merely because contact details match. Actual service providers, locations and disclosures must be confirmed.
 
 **OWNER/LEGAL REVIEW:** Inventory hosting, PostgreSQL hosting, SMTP, image handling, subprocessors and destinations. Prisma and Nodemailer are software tools, not proof that a particular provider receives data. Cloudinary is a PRD proposal, not a confirmed processor in this draft. Do not publish a processor list or promise Nigeria-only storage without evidence.
 
@@ -60,7 +71,13 @@ The PRD calls for private access, server-side authorization and protection of cr
 
 **OWNER/LEGAL REVIEW:** Approve incident handling, required notices and responsible contacts; inventory cookies/session storage and any optional tracking before making customer claims. No claim that the site uses no cookies has been verified here. Separately assess children/capacity and any sensitive-data handling; do not invent an age threshold or assume all tailoring pictures are biometric data.
 
-## 8. Publication and changes
+## 8. Pre-launch registration assessment
+
+**OWNER/LEGAL REVIEW:** Assess whether the intended processing makes the individual operator a data controller or processor of major importance under section 44 of the Act and GAID 2025 articles 8-9, including current designations and registration requirements. Record the factual inputs, classification, applicable obligations and review outcome before launch. The outcome, any registration, and any related DPO/audit obligations remain unconfirmed.
+
+Personal operation and a free pilot are not reasons to assume an exemption. Commercial service processing must not simply be labelled household/personal processing. Follow the [pre-launch checklist](terms-note.md#pre-launch-checklist); no NDPC registration or compliance certification is claimed.
+
+## 9. Publication and changes
 
 **OWNER/LEGAL REVIEW:** Resolve all marked items, check the complete current law/guidance and actual implementation, approve an effective version and decide how material changes will be communicated. Platform contract acceptance, receipt of privacy information and consent for a particular purpose remain separate concepts.
 
