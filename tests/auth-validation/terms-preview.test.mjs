@@ -6,7 +6,7 @@ import {
 } from "../../lib/auth/validation.ts";
 
 const enabled = { NODE_ENV: "development", ENABLE_AUTH_TERMS_PREVIEW: "true" };
-const values = { email: "tailor+preview@example.com", password: "a valid passphrase" };
+const values = { name: "Synthetic Tailor", email: "tailor+preview@example.com", password: "a valid passphrase" };
 const reduce = (s, e, mode = "signup", preview = true) => reduceValidation(mode, s, e, preview);
 
 test("draft preview requires explicit development opt-in and a canonical loopback host", () => {
@@ -46,11 +46,12 @@ test("loader returns the original source only for enabled local Signup", async (
   assert.equal(calls, 1);
 });
 
-test("Signup aria-disabled state requires valid email, password and acknowledgement together", () => {
+test("Signup aria-disabled state requires valid name, email, password and acknowledgement together", () => {
   let state = initialValidationState();
   assert.equal(state.draftAcknowledged, false);
   assert.equal(signupSubmissionBlocked("signup", state, true), true);
   assert.deepEqual(visibleErrors("signup", state, true), {});
+  state = reduce(state, { type: "change", field: "name", value: values.name });
   state = reduce(state, { type: "change", field: "email", value: values.email });
   state = reduce(state, { type: "change", field: "password", value: values.password });
   assert.equal(signupSubmissionBlocked("signup", state, true), true);

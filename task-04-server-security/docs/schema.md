@@ -2,7 +2,7 @@
 
 ## 1. Authority and design status
 
-**Proposal only: no new Prisma models, migrations or database operations.** Baseline: 1aab84c on feat/task-03-auth-foundation. This design follows the owner's Task Four requirements, [AGENTS.md](../../AGENTS.md), the [product](../../.agent/rules/01-product.md), [engineering](../../.agent/rules/02-engineering.md) and [design](../../.agent/rules/03-design.md) rules, and the authoritative, read-only [PRD](../../docs/PRD.md), especially sections 2, 4, 6 and 7.
+**Proposal only: no new Prisma models, migrations or database operations.** Original design baseline: 1aab84c on feat/task-03-auth-foundation; the owner-approved name alignment was inspected from b5221bd. This design follows the owner's Task Four requirements, [AGENTS.md](../../AGENTS.md), the [product](../../.agent/rules/01-product.md), [engineering](../../.agent/rules/02-engineering.md) and [design](../../.agent/rules/03-design.md) rules, and the authoritative, read-only [PRD](../../docs/PRD.md), especially sections 2, 4, 6 and 7.
 
 The owner must draw the schema on paper and photograph it before implementation. This document is a drawing blueprint, not Evidence 01. Actual database state has not been inspected; source declarations are not a table inventory from PostgreSQL.
 
@@ -61,13 +61,13 @@ Notation for all proposed tables:
 
 ### User — global identity; Task Four core
 
-**Columns:** id TEXT PK; emailCanonical TEXT UNIQUE; emailVerified BOOLEAN default false; disabledAt time?; createdAt time; updatedAt time.
+**Columns:** id TEXT PK; name TEXT?; emailCanonical TEXT UNIQUE; emailVerified BOOLEAN default false; disabledAt time?; createdAt time; updatedAt time.
 
 **Keys and relationships:** one User to zero/one CredentialAccount, many Sessions, BusinessMembers and ClientAccountLinks. An identity may participate in separately authorized business relationships. Global identity/email alone grants no business access and adds no third V1 user type.
 
-**Constraints:** emailCanonical is nonblank and unique under one consistent approved canonicalization policy. A case-sensitive index with inconsistent application lowercasing is insufficient. disabledAt blocks authentication/access independently of emailVerified. No mandatory signup name is proposed.
+**Constraints:** emailCanonical is nonblank and unique under one consistent approved canonicalization policy. A case-sensitive index with inconsistent application lowercasing is insufficient. disabledAt blocks authentication/access independently of emailVerified. Owner-approved tailor Signup requires a nonblank personal/display name stored as User.name; it is not Business.name. Global nullability leaves the separate passwordless client-name mapping for later review and does not make the tailor Signup field optional. The future registration transaction must enforce the tailor requirement; no client password/name-registration form is introduced.
 
-**Indexes/write cost:** PK and canonical-email uniqueness support identity lookup; registration/email changes maintain both. No extra state index initially; verification/suspension updates write the row.
+**Indexes/write cost:** PK and canonical-email uniqueness support identity lookup; registration/email changes maintain both. Names are not unique or indexed for authentication; duplicate personal names are legitimate. No extra state index initially; verification/suspension updates write the row.
 
 **Duplication/security/lifecycle:** challenge/invitation destination snapshots deliberately repeat email. They do not become alternative authorization sources. Correcting email requires fresh verification and invalidation of relevant challenges, never reassignment of client links through matching. Closure/deletion and revocation need reviewed transactions/policy, not cascading deletion.
 
@@ -93,9 +93,9 @@ Notation for all proposed tables:
 
 ### Business — ownership boundary; before business features
 
-**Columns:** id TEXT PK; disabledAt time?; createdAt time; updatedAt time.
+**Columns:** id TEXT PK; name TEXT; disabledAt time?; createdAt time; updatedAt time.
 
-**Keys and relationships:** Business 1 → many BusinessMembers and Clients; future business-owned Orders/records reference this boundary. Existence alone grants no access. No extra business-profile field is added to Signup.
+**Keys and relationships:** Business 1 → many BusinessMembers and Clients; future business-owned Orders/records reference this boundary. Existence alone grants no access. Business.name is the tailoring business name, collected separately during business setup and required/nonblank when that business is created. It is not collected during initial Signup and need not equal User.name. Business setup is not implemented in this slice.
 
 **Indexes/write cost:** PK only initially; no speculative profile/search indexes. Creation/state changes write a minimal row; child FK indexes carry relationship lookup costs.
 
@@ -200,13 +200,17 @@ Notation for all proposed tables:
 ## 5. Authentication constraints and compatibility gates
 
 1. Use Better Auth with Prisma/PostgreSQL, explicit Argon2id hash/verify callbacks and Zod boundaries before business logic/persistence. Verify exact versions, Node 24/native support, plugin schema, transactions and field mapping before installation. No dependency is installed or pinned by this document. See [Prisma integration](https://better-auth.com/docs/adapters/prisma) and [password configuration](https://better-auth.com/docs/authentication/email-password).
-2. Do not add/fabricate a mandatory signup name to satisfy library defaults. Prove a supported email/password-only mapping; stop for an owner decision if unsupported. Verify session protection/revocation and all generic/server-to-server endpoint paths; wrappers must not bypass validation/limits.
-3. Valid details plus acceptance of approved Terms create an unverified tailor. No sign-in/business access until verification; no cross-business access merely because email is verified. Clients remain invitation-authorized/passwordless. Disable unauthorized OTP signup/credential replacement; existing identity does not automatically establish a business link.
+2. The owner has approved tailor Signup with Your name, Email and Password; Login remains Email/Password. User.name is a personal/display name and Business.name is collected later in business setup. This is a product decision, not a fabricated field for library defaults. Verify the supported name mapping, including the distinct client flow; do not invent a business name or require it at Signup. Verify session protection/revocation and all generic/server-to-server endpoint paths; wrappers must not bypass validation/limits.
+3. Valid name/email/password plus acceptance of approved Terms create an unverified tailor. No sign-in/business access until verification; no cross-business access merely because email is verified. Clients remain invitation-authorized/passwordless. Disable unauthorized OTP signup/credential replacement; existing identity does not automatically establish a business link.
 4. Canonicalize email consistently across registration, Login, Reset, invitation and verification. Proposed baseline is surrounding-email-whitespace removal and domain-case normalization. Resolve local-part case, Unicode/IDN, uniqueness and provider/Better Auth behaviour before implementation. Do not strip plus tags or provider-specific dots. The existing client validator trims a syntax-check copy only; canonical storage is not implemented.
 5. Preserve password case, Unicode and meaningful whitespace exactly: no silent trimming, normalization or truncation in hashing/Login/reset. Preserve rejection of blank/whitespace-only new passwords and disallowed controls. **Proposed production minimum: 15 Unicode code points**, subject to PRD review and coordinated frontend/backend/recovery changes. Today's UI remains 12. Review safe request-byte/hash-processing bounds without silent truncation; do not apply new enrollment length rules retroactively to Login. [NIST](https://pages.nist.gov/800-63-4/sp800-63b.html) motivates review, not a claim of compliance.
 6. Secure randomness must cover all six-digit strings including leading zeros. Use the reviewed [Better Auth Email OTP integration](https://better-auth.com/docs/plugins/email-otp), enforce five minutes/three invalid attempts/60-second cooldown and account/IP limits, and bind purpose/identity. No second ad-hoc verifier.
 7. Preserve the existing strict /auth, ?login, ?signup, ?reset and ?verify contract until separately approved integration. Current verification is a local-only, UI-only preview; removing its guard must not prematurely enable unfinished public verification.
 8. Keep public onboarding disabled until launch readiness. Secure sessions, approved Terms/version recording, shared limits, breach-screening failure policy and authorized SMTP/worker configuration are gates. Synthetic pre-approval testing needs an explicit test-only arrangement, not a legal-acceptance claim.
+
+**PRD compatibility of the name decision:** section 2 specifies tailor email/password authentication without prohibiting a personal/display name; section 6 distinguishes User from Business. The owner-approved required Your name field supplements that model without changing the two user types, client passwordless access or mandatory six-digit verification before sign-in. The PRD is unchanged. Earlier Task Three two-field inventories remain historical records, not the current Signup specification.
+
+The current UI checks name blankness only (including Unicode whitespace), retaining spelling/spacing without a name whitelist, forced first/last split or arbitrary length requirement. Errors appear on blur or submission and clear when corrected, using the existing associated text/caution feedback. Values remain in transient UI memory. No authentication or pre-verification session is created.
 
 **Conflicts requiring explicit treatment:** assessment password-edge trimming conflicts with exact preservation. Demonstrate only on synthetic data and disclose the divergence. Adding payment processing or retrieval to the product merely for the rubric would conflict with PRD sections 3/4; use the separate lab. The proposed 15-code-point minimum is not an existing PRD requirement or permission to change today's 12-character UI. No other direct PRD conflict is identified. Unresolved mappings, bounds, cardinalities and session policies are review decisions, not PRD amendments.
 
@@ -307,7 +311,7 @@ EXISTING TASK TWO: AssessmentEnquiry only; preserve existing source/migration
 
 ## 9. Slice 2 prerequisites and later gates
 
-Slice 2 should begin with database-free security primitives/tests after separate approval: exact compatible dependencies, supported minimal Signup, Prisma 7 mapping, explicit Argon2id hooks and offline generation. Resolve canonicalization and password minimum/processing bounds; coordinate future frontend/backend changes. Owner review and genuine paper evidence precede model implementation.
+Slice 2 should begin with database-free security primitives/tests after separate approval: exact compatible dependencies, supported approved name/email/password Signup and separate client mapping, Prisma 7 mapping, explicit Argon2id hooks and offline generation. Resolve canonicalization and password minimum/processing bounds; coordinate future frontend/backend changes. Owner review and genuine paper evidence precede model implementation.
 
 Before database integration, confirm target/role/history separation, independent migration/shadow paths, transaction support, session lifetimes/revocation and client-link cardinality. Before exposing endpoints, approve thresholds/shared counters, counter-store and breach-service outage policies, challenge protection and trusted-proxy topology. Before email, confirm sender/provider/test recipients, protected durable worker operation, retries and local secret configuration. No secrets are requested in documentation.
 

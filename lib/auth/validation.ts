@@ -1,7 +1,7 @@
 import type { AuthMode } from "./state";
 
-export type AuthField = "email" | "password";
-export type AuthValues = Record<AuthField, string>;
+export type AuthField = "name" | "email" | "password";
+export type AuthValues = { name?: string; email: string; password: string };
 export type AuthErrors = Partial<Record<AuthField | "draftAcknowledgement", string>>;
 export const PASSWORD_MIN = 12;
 export const PASSWORD_GUIDANCE =
@@ -29,6 +29,11 @@ export function initialValidationState(): ValidationState {
     touched: {}, edited: {}, submitted: false, emailFormatActive: false, unavailable: false,
     draftAcknowledged: false, draftAcknowledgementTouched: false,
   };
+}
+
+export function nameError(value: string): string | undefined {
+  // Check blankness only; preserve spelling, punctuation and spacing.
+  if (/^[\s\p{White_Space}]*$/u.test(value)) return "Enter your name.";
 }
 
 export function emailError(value: string): string | undefined {
@@ -66,6 +71,8 @@ export function passwordSpaceNotice(mode: AuthMode, value: string): string | und
   }
 }
 
+// Credential-only checks retained for the historical synthetic attack fixture.
+// Complete UI form requirements, including the approved name, are composed below.
 export function validateAuthValues(mode: AuthMode, values: AuthValues): AuthErrors {
   const errors: AuthErrors = {};
   const email = emailError(values.email);
@@ -79,6 +86,10 @@ export function validateAssessmentForm(
   mode: AuthMode, values: AuthValues, acknowledged: boolean, requireDraftAcknowledgement = false,
 ): AuthErrors {
   const errors = validateAuthValues(mode, values);
+  if (mode === "signup") {
+    const name = nameError(values.name ?? "");
+    if (name) errors.name = name;
+  }
   if (mode === "signup" && requireDraftAcknowledgement && acknowledged !== true) {
     errors.draftAcknowledgement = "Review the draft Platform Terms before continuing.";
   }
@@ -93,6 +104,9 @@ export function signupSubmissionBlocked(mode: AuthMode, state: ValidationState, 
 export function visibleErrors(mode: AuthMode, state: ValidationState, requireDraftAcknowledgement = false): AuthErrors {
   const all = validateAssessmentForm(mode, state.values, state.draftAcknowledged, requireDraftAcknowledgement);
   const errors: AuthErrors = {};
+  if (mode === "signup" && (state.touched.name || state.submitted) && all.name) {
+    errors.name = all.name;
+  }
   const emailVisible = mode === "signup" ?
     state.submitted || state.edited.email || state.touched.email :
     state.emailFormatActive || (!state.values.email.trim() && (state.touched.email || state.submitted));

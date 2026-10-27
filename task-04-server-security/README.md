@@ -4,9 +4,9 @@
 
 Task Four moves StitchTrack from the [Task Three UI](../task-03-client-validation/README.md) towards server validation, secure credentials, sessions and email verification. The [PRD](../docs/PRD.md) is authoritative and read-only. Baseline: commit 1aab84c on feat/task-03-auth-foundation. The owner's supplied requirements define the assessment; no assessment PDF was available.
 
-**Slice 1 is documentation only.** The [schema and authentication design](docs/schema.md) is a proposal, not Prisma implementation or a deployed database. No Task Four experiment or evidence is complete.
+**Slice 1 was documentation only.** The [schema and authentication design](docs/schema.md) remains a proposal, not Prisma implementation or a deployed database. A subsequent owner-approved database-free alignment adds Your name to Signup. No Task Four server-security experiment or evidence is complete.
 
-Signup, Login, Reset and the opt-in local verification preview remain UI-only. Better Auth, Argon2id integration, real registration, sessions, SMTP and background delivery are not implemented. Source declares only Task Two's AssessmentEnquiry; actual database contents and migration history remain unverified for Task Four.
+Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Better Auth, Argon2id integration, real registration, sessions, SMTP and background delivery are not implemented. Source declares only Task Two's AssessmentEnquiry; actual database contents and migration history remain unverified for Task Four.
 
 ## Assessment versus product scope
 

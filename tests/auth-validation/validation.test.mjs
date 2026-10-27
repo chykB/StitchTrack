@@ -113,7 +113,7 @@ test("edge-space notice is non-blocking, signup-only and reserved for otherwise 
   for (const value of [" abcdefghijkl", "abcdefghijkl ", " abcdefghij "]) {
     assert.match(passwordSpaceNotice("signup", value), /kept exactly as entered/);
     assert.deepEqual(validateAuthValues("signup", { email: "tailor@example.com", password: value }), {});
-    assert.equal(submit("signup", initialValidationState(), { email: "tailor@example.com", password: value }).unavailable, true);
+    assert.equal(submit("signup", initialValidationState(), { name: "Synthetic Tailor", email: "tailor@example.com", password: value }).unavailable, true);
   }
   for (const value of ["", " ".repeat(12), "short ", "abcdefghijkl", "abcdef ghijkl", "abcdefghijkl\t"]) {
     assert.equal(passwordSpaceNotice("signup", value), undefined);
@@ -184,7 +184,7 @@ test("only a valid local submit reaches unavailable; editing cannot trigger succ
     const invalid = submit(mode, initialValidationState());
     assert.equal(invalid.unavailable, false);
     assert.ok(Object.keys(visibleErrors(mode, invalid)).length);
-    const values = { email: "tailor@example.com", password: "abcdefghijkl" };
+    const values = { ...(mode === "signup" ? { name: "Synthetic Tailor" } : {}), email: "tailor@example.com", password: "abcdefghijkl" };
     let state = submit(mode, initialValidationState(), values);
     assert.deepEqual(validateAuthValues(mode, values), {});
     assert.equal(state.unavailable, true);

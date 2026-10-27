@@ -92,7 +92,7 @@ for (const mode of ["signup", "login", "reset"]) {
     assert.doesNotMatch(html, /<form[^>]*action=/);
     const fieldset = /<fieldset[^>]*disabled[^>]*>([\s\S]*?)<\/fieldset>/.exec(html);
     assert.ok(fieldset);
-    assert.equal((fieldset[1].match(/<input\b/g) || []).length, mode === "reset" ? 1 : 2);
+    assert.equal((fieldset[1].match(/<input\b/g) || []).length, mode === "signup" ? 3 : mode === "login" ? 2 : 1);
     assert.equal((fieldset[1].match(/<button\b/g) || []).length, mode === "reset" ? 1 : 2);
     assert.equal(/<legend class="visuallyHidden"/.test(html), mode !== "reset");
     if (mode === "login") assert.match(html, /<legend class="visuallyHidden">Login details<\/legend>/);
@@ -199,7 +199,7 @@ test("enabled Signup renders minimal draft labels and an always-visible native s
     legend: "Account details", hideLegend: true, draftPreview: draftFixture,
   }));
   const fieldset = /<fieldset[^>]*disabled[^>]*>([\s\S]*?)<\/fieldset>/.exec(html)[1];
-  assert.equal((fieldset.match(/<input\b/g) || []).length, 3);
+  assert.equal((fieldset.match(/<input\b/g) || []).length, 4);
   const checkbox = /<input\b[^>]*type="checkbox"[^>]*>/.exec(fieldset)[0];
   assert.match(checkbox, /name="draftAcknowledgement"/);
   assert.match(checkbox, /required/);
@@ -263,7 +263,8 @@ test("complete form guard prevents native submission before hydration without re
 
 function submitFixture(values, checked) {
   let prevented = false, focused;
-  const fields = { email: { value: values.email, focus() { focused = "email"; } },
+  const fields = { name: { value: values.name ?? "Synthetic Tailor", focus() { focused = "name"; } },
+    email: { value: values.email, focus() { focused = "email"; } },
     password: { value: values.password, focus() { focused = "password"; } },
     draftAcknowledgement: { checked, focus() { focused = "draftAcknowledgement"; } } };
   const event = { preventDefault() { prevented = true; }, currentTarget: {
@@ -302,7 +303,7 @@ test("complete local Signup preserves values and reaches only unavailable feedba
   t.mock.method(globalThis, "fetch", () => assert.fail("No credential transmission"));
   t.mock.method(console, "log", () => assert.fail("No credential log"));
   t.mock.method(console, "info", () => assert.fail("No credential log"));
-  const values = { email: "test+synthetic@example.com", password: " valid passphrase " };
+  const values = { name: "Synthetic Tailor", email: "test+synthetic@example.com", password: " valid passphrase " };
   const fixture = submitFixture(values, true);
   let state = initialValidationState();
   handleLocalSubmit(fixture.event, true, "signup", true, event => {
