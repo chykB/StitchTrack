@@ -1,0 +1,60 @@
+TASK THREE — STEP 9: GIT ROLLBACK EVIDENCE
+Date: 2026-10-27
+Branch: feat/task-03-auth-foundation
+
+BEFORE ROLLBACK
+
+Command:
+git log -3 --oneline
+
+Output:
+3009fe1 test(git): add temporary rollback exercise note
+bcd1b37 feat(auth): checkpoint Task 3 validation and assessment evidence
+003d8a1 docs: refine pilot terms and privacy drafts for individual operator
+
+SELECTED COMMIT TO REVERT
+
+3009fe1
+
+The commit added only:
+task-03-client-validation/rollback-exercise-note.md
+
+EXACT ROLLBACK COMMAND
+
+git revert --no-edit 3009fe1
+
+ACTUAL COMMAND OUTPUT
+
+[feat/task-03-auth-foundation c019741] Revert "test(git): add temporary rollback exercise note"
+ Date: Tue Oct 27 14:21:04 2026 +0100
+ 1 file changed, 1 deletion(-)
+ delete mode 100644 task-03-client-validation/rollback-exercise-note.md
+
+AFTER ROLLBACK
+
+Command:
+git log -4 --oneline
+
+Output:
+c019741 (HEAD -> feat/task-03-auth-foundation) Revert "test(git): add temporary rollback exercise note"
+3009fe1 test(git): add temporary rollback exercise note
+bcd1b37 feat(auth): checkpoint Task 3 validation and assessment evidence
+003d8a1 (origin/feat/task-03-auth-foundation) docs: refine pilot terms and privacy drafts for individual operator
+
+Command:
+git status --short
+
+Output:
+(no output; working tree clean)
+
+Command:
+test ! -e task-03-client-validation/rollback-exercise-note.md && echo "Rollback verified: temporary file removed"
+
+Observed result:
+Rollback verified: temporary file removed
+
+CONCLUSION
+
+The temporary commit was reversed by a new revert commit.
+The protected development checkpoint bcd1b37 remains in history.
+No reset, force push, database operation or history rewrite was performed.
