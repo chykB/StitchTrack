@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { resolveAuthState } from "./lib/auth/state";
+import { verificationPreviewAllowed } from "./lib/auth/verification-preview";
 
 export function proxy(request: NextRequest) {
   const mode = resolveAuthState(new URL(request.url).search, request.headers.get("rsc") === "1");
-  if (mode === null) {
+  if (mode === null || (mode === "verify" && !verificationPreviewAllowed(process.env, request.headers.get("host")))) {
     // Reject before streaming can commit a 200 response. Let Next render its
     // built-in not-found route; unrelated paths never enter this matcher.
     return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });

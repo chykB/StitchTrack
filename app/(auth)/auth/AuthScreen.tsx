@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AuthForm from "../_components/AuthForm";
-import FormField from "../_components/FormField";
+import DraftDocument from "../_components/DraftDocument";
+import { focusViewTarget, nextSignupView } from "../../../lib/auth/draft-document";
+import type { DocumentKind, SignupView } from "../../../lib/auth/draft-document";
 import styles from "../auth.module.css";
 
+import type { DraftTermsPreview } from "../../../lib/auth/terms-preview";
 import type { AuthMode } from "../../../lib/auth/state";
 
 const copy = {
@@ -18,7 +21,7 @@ const copy = {
   },
   login: {
     heading: "Log in to StitchTrack",
-    description: "For tailors and fashion studios.",
+    description: null,
     legend: "Login details",
     button: "Log in",
     unavailable: "Login is not available yet.",
@@ -32,31 +35,38 @@ const copy = {
   },
 };
 
-export default function AuthScreen({ mode }: { mode: AuthMode }) {
+export default function AuthScreen({ mode, draftPreview }: { mode: AuthMode; draftPreview?: DraftTermsPreview }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const content = copy[mode];
+  const [view, setView] = useState<SignupView>("signup");
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const previousView = useRef<SignupView>("signup");
+  const activeView = nextSignupView(mode, Boolean(draftPreview), view);
+  const documentOpen = activeView !== "signup";
+
+  useEffect(() => {
+    if (previousView.current !== "signup" && activeView === "signup") focusViewTarget(trigger.current);
+    previousView.current = activeView;
+  }, [activeView]);
+
+  function openDocument(kind: DocumentKind, initiatingLink?: HTMLButtonElement) {
+    if (initiatingLink) trigger.current = initiatingLink;
+    setView(nextSignupView(mode, Boolean(draftPreview), kind));
+  }
 
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
   }, [mode]);
 
-  return (
+  const formContent = (
     <>
-      <h1 ref={heading} id="auth-title" tabIndex={-1} className={styles.title}>
+      <h1 ref={heading} id={documentOpen ? "signup-title" : "auth-title"} tabIndex={-1} className={styles.title}>
         {content.heading}
       </h1>
       {content.description && <p className={styles.description}>{content.description}</p>}
       {/* A mode change discards entered values and the previous unavailable message. */}
-      <AuthForm key={mode} buttonLabel={content.button} legend={content.legend}
-        hideLegend={mode === "signup"}
-        unavailableMessage={content.unavailable}>
-        <FormField id={mode + "-email"} name="email" label="Email address"
-          type="email" autoComplete="email" />
-        {mode !== "reset" && (
-          <FormField id={mode + "-password"} name="password" label="Password"
-            type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
-        )}
-      </AuthForm>
+      <AuthForm key={mode} mode={mode} buttonLabel={content.button} legend={content.legend}
+        hideLegend={mode !== "reset"} unavailableMessage={content.unavailable} draftPreview={draftPreview} onOpenDocument={openDocument} />
       <nav className={styles.navigation} aria-label="Account options">
         {mode === "signup" ? (
           <p>Already have an account? <Link href="/auth?login" scroll={false} prefetch={false}>Log in</Link></p>
@@ -73,9 +83,16 @@ export default function AuthScreen({ mode }: { mode: AuthMode }) {
       </nav>
       {mode === "signup" && (
         <p className={styles.clientNote}>
-          Clients access their orders through a tailor’s invitation, without creating a password.
+          Clients access StitchTrack through an invitation from their tailor.
         </p>
       )}
     </>
   );
+  if (mode !== "signup" || !draftPreview) return formContent;
+  return <>
+    {/* Keep the form mounted: values and validation stay only in browser memory. */}
+    <div hidden={documentOpen}>{formContent}</div>
+    {documentOpen && <DraftDocument kind={activeView} source={draftPreview[activeView]}
+      onBack={() => setView("signup")} onDocument={openDocument} />}
+  </>;
 }

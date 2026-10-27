@@ -98,3 +98,19 @@ The temporary verification servers were stopped after checks. Build/typecheck re
 No database operations, migrations, real email, package changes, Git staging, commits or pushes were performed. PRD, rules, Task One, Task Two, historical foundation documentation and 00-foundation evidence are preserved.
 
 Assumptions: none
+
+## Approved Step 4 extension: guarded verify screen
+
+The preceding three-state contract and counts record Step 1's actual consolidation. The owner subsequently added Tailor Email Verification to the PRD and approved one additional key-only screen state, `/auth?verify`, for Step 4 Stage A. The existing default/login/signup/reset URLs keep their previous behaviour. This is still one authentication page route, not a new credential-form mode or a new client invitation flow.
+
+`AuthState` includes verify, while `AuthMode` remains the three credential modes so password/Signup logic cannot accidentally treat verification as a password form. The [server page](../../app/%28auth%29/auth/page.tsx) selects [EmailVerificationForm](../../app/%28auth%29/_components/EmailVerificationForm.tsx) separately, with a distinct title and shared auth layout. Signup does not navigate there on a fake registration success. The verification view has a normal Next.js Back to login link.
+
+For Stage A, the [existing auth proxy](../../proxy.ts) and page require explicit local-development opt-in with `ENABLE_CODE_INPUT_EXPERIMENT=true` and a canonical loopback Host. The proxy rejects before streaming so disabled verification gets real HTTP 404 for both documents and RSC navigation. Its matcher remains /auth; next.config.ts is unchanged. Production returns 404 even with the flag enabled. No numeric version is served as production verification.
+
+The URL parser still rejects unknown keys, assignments, duplicates, conflicts, mode parameters and encoded aliases. New invalid examples include `?verify=`, `?verify=1`, `?verify&verify`, `?verify&login` and `?mode=verify`. Next's internal RSC serialization is handled only under the existing transport rules, not accepted as public query syntax.
+
+At Stage A, source counts were four application page routes (home, auth, assessment enquiry and the retained code-input comparison) and one authentication page route. The increase came from the earlier standalone comparison, not this query-state extension. After the owner completed both Step 4 evidence groups, cleanup removed the comparison: current source counts are three application page routes and one auth page, with four URL-selected screens. Historical foundation and Step 1 route-count evidence is preserved rather than rewritten.
+
+Automated verification passed: 81 combined unit/component/query-policy checks; 21 database-free assessment regressions; 60 HTTP checks per context across development off/on and production; typecheck and build. The verification browser suite passed direct loading, refresh, browser Back/Forward and no full-document reload while using Back to login/history. The existing Signup document/Login/Reset browser suite also passed: 14 Node tests including their two parents overall. These results do not constitute owner screenshots or spoken Narrator observations.
+
+[The final numeric-input record](numeric-input.md#genuine-before-and-after-evidence) maps both completed evidence groups and gives current activation instructions. That handoff described the temporary native field. Stage B and the owner-approved cleanup are now complete: the text field remains, the standalone comparison returns 404, and the unchanged local-only guard now lives in lib/auth/verification-preview.ts. The final numeric-input record maps all six genuine PNGs and records the current tests. No authentication backend, email, database operation or session was added.

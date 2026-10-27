@@ -72,11 +72,11 @@
   background: var(--stitchtrack-color-primary);
   cursor: pointer;
 }
-.submit:hover:not(:disabled) {
+.submit:hover:not(:disabled):not([aria-disabled="true"]) {
   background: var(--stitchtrack-color-primary-container);
   color: var(--stitchtrack-color-on-primary-container);
 }
-.fields:disabled .submit {
+.fields:disabled .submit, .submit[aria-disabled="true"] {
   background: var(--stitchtrack-color-surface-container-high);
   color: var(--stitchtrack-color-on-surface-variant);
   border-color: var(--stitchtrack-color-outline-variant);
@@ -97,3 +97,111 @@
   .shell { padding: 42px 40px; }
   .panel { padding: 40px; }
 }
+
+.field input[aria-invalid="true"] { border-color: var(--stitchtrack-color-error); }
+.hint, .error {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font: var(--stitchtrack-type-body-small-font-weight)
+    var(--stitchtrack-type-body-small-font-size) /
+    var(--stitchtrack-type-body-small-line-height)
+    var(--stitchtrack-type-body-small-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-body-small-letter-spacing);
+}
+.hint { color: var(--stitchtrack-color-on-surface-variant); }
+.error { display: flex; align-items: flex-start; gap: 8px; color: var(--stitchtrack-color-error); }
+.errorIcon { flex: none; inline-size: 1.25rem; block-size: 1.25rem; }
+
+.inputControl { position: relative; min-inline-size: 0; }
+.field input.passwordInput { padding-inline-end: 3.75rem; }
+.passwordToggle {
+  position: absolute;
+  inset-inline-end: 4px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  color: var(--stitchtrack-color-on-surface-variant);
+  background: transparent;
+  cursor: pointer;
+}
+.passwordToggle svg { inline-size: 1.25rem; block-size: 1.25rem; pointer-events: none; }
+.passwordToggle:hover:not(:disabled) {
+  background: var(--stitchtrack-color-primary-container);
+  color: var(--stitchtrack-color-on-primary-container);
+}
+.passwordToggle:focus-visible {
+  outline: 2px solid var(--stitchtrack-color-primary);
+  outline-offset: 2px;
+}
+.passwordToggle:disabled { cursor: not-allowed; }
+
+.draftAcknowledgement { margin-bottom: 24px; min-inline-size: 0; }
+.acknowledgementRow { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); gap: 8px; align-items: start; }
+.acknowledgementRow p { margin: 0; overflow-wrap: anywhere; }
+.checkboxTarget { display: grid; place-items: center; inline-size: 2.75rem; block-size: 2.75rem; cursor: pointer; }
+.draftAcknowledgement input { inline-size: 1.25rem; block-size: 1.25rem; margin: 0; accent-color: var(--stitchtrack-color-primary); }
+.draftAcknowledgement .error { margin-top: 8px; }
+.documentLink {
+  display: inline;
+  padding: 0.25rem 0;
+  min-block-size: 2.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--stitchtrack-color-primary);
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.documentLink:hover { color: var(--stitchtrack-color-on-primary-container); text-decoration-thickness: 2px; }
+.documentLink:disabled { cursor: not-allowed; }
+.documentLink:focus-visible, .draftAcknowledgement input:focus-visible, .backToSignup:focus-visible,
+.legalDocument h1:focus, .tableScroll:focus-visible {
+  outline: 2px solid var(--stitchtrack-color-primary);
+  outline-offset: 4px;
+}
+.legalDocument { min-inline-size: 0; overflow-wrap: anywhere; }
+.legalDocument h1 {
+  margin: 24px 0;
+  font: var(--stitchtrack-type-headline-large-font-weight)
+    var(--stitchtrack-type-headline-large-font-size) /
+    var(--stitchtrack-type-headline-large-line-height)
+    var(--stitchtrack-type-headline-large-font-family), sans-serif;
+  font-size: clamp(var(--stitchtrack-type-headline-small-font-size), calc(1rem + 2vw), var(--stitchtrack-type-headline-large-font-size));
+  letter-spacing: var(--stitchtrack-type-headline-large-letter-spacing);
+}
+.legalDocument h2 {
+  margin: 24px 0 16px;
+  font: var(--stitchtrack-type-title-large-font-weight)
+    var(--stitchtrack-type-title-large-font-size) / var(--stitchtrack-type-title-large-line-height)
+    var(--stitchtrack-type-title-large-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-title-large-letter-spacing);
+}
+.legalDocument p, .legalDocument li { margin-block: 0 16px; }
+.legalDocument a { color: var(--stitchtrack-color-primary); text-underline-offset: 0.2em; }
+.legalDocument a:hover { color: var(--stitchtrack-color-on-primary-container); }
+.backToSignup {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--stitchtrack-color-outline);
+  border-radius: 0.5rem;
+  color: var(--stitchtrack-color-primary);
+  background: var(--stitchtrack-color-surface-container-lowest);
+  font: var(--stitchtrack-type-label-large-font-weight)
+    var(--stitchtrack-type-label-large-font-size) / var(--stitchtrack-type-label-large-line-height)
+    var(--stitchtrack-type-label-large-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-label-large-letter-spacing);
+  cursor: pointer;
+}
+.backToSignup:hover { color: var(--stitchtrack-color-on-primary-container); background: var(--stitchtrack-color-primary-container); }
+.tableScroll { max-inline-size: 100%; overflow-x: auto; margin-block: 16px; }
+.legalDocument table { inline-size: 100%; min-inline-size: 28rem; border-collapse: collapse; }
+.legalDocument th, .legalDocument td { padding: 8px; border: 1px solid var(--stitchtrack-color-outline-variant); vertical-align: top; text-align: start; }
+.legalDocument th { background: var(--stitchtrack-color-surface-container-low); }

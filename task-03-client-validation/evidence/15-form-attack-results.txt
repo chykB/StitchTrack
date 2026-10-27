@@ -1,0 +1,166 @@
+StitchTrack Task Three, Step 8 — actual form-attack results
+========================================================
+Recorded: 2026-10-27 (UTC). Branch: feat/task-03-auth-foundation.
+HEAD: 003d8a1e895517e9eb64381b2c758077e36abc65, plus the existing uncommitted Task Three work and this Step 8 fixture/tests.
+Provenance: agent-executed automated tests and real Chrome/CDP interaction, NOT owner manual testing or a screen-reader transcript.
+No assessment screenshot, recording or transcript was created. Only synthetic inputs were used.
+The assessment PDF was unavailable; the owner's supplied Step 8 requirements were used.
+
+Scope and interpretation
+------------------------
+Existing Signup, Login, Reset and verification source was not changed.
+BLOCKED / BLOCKED_FORMAT means client feedback rejected the local submission.
+FORMAT_ONLY_VALID_ACTION_UNAVAILABLE means only local validation passed; the UI action remains unavailable.
+FORMAT_ONLY_VALID_NOT_VERIFIED means the code format passed, not that a code exists, was emailed or was verified.
+The draft checkbox is an unapproved local acknowledgement, not contractual Terms acceptance.
+No full-name or other nonexistent field was invented.
+There is no password maximum or app email maximum to probe as an existing boundary.
+129- and 4096-character password samples were exercised; this does NOT establish safe unbounded backend processing.
+Code boundaries were 5/6/7 ASCII digits; password boundaries were 11/12/13 Unicode code points.
+No actual account, session, email, database connection or write was made.
+
+A. Actual validator/reducer results (WSL Node.js 24.22.1)
+-------------------------------------------------------
+Executed from /home/bmalik/stitchtrack:
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/form-attack/inputs.test.mjs
+
+70 tests passed, 0 failed. Actual outcomes: 43 blocked, 27 format-only.
+Each JSON line below is the observed output of the current validation functions, not a predicted result.
+Inputs are described rather than dumping password strings.
+{"id":"signup-email-empty","mode":"signup","input":"empty email","outcome":"BLOCKED","errors":{"email":"Enter your email address."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-single","mode":"signup","input":"single-character email x","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-spaces","mode":"signup","input":"three ASCII spaces as email","outcome":"BLOCKED","errors":{"email":"Enter your email address."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-a-at-b","mode":"signup","input":"borderline email a@b","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-short-shaped","mode":"signup","input":"short but coarse-shape-valid email a@b.c","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-plus","mode":"signup","input":"plus-addressed synthetic email","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-edge-spaces","mode":"signup","input":"synthetic email with two leading/trailing spaces","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-inner-space","mode":"signup","input":"internal whitespace in email","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-two-at","mode":"signup","input":"two at-signs in email","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-empty","mode":"login","input":"empty email","outcome":"BLOCKED","errors":{"email":"Enter your email address."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-single","mode":"login","input":"single-character email x","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-spaces","mode":"login","input":"three ASCII spaces as email","outcome":"BLOCKED","errors":{"email":"Enter your email address."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-a-at-b","mode":"login","input":"borderline email a@b","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-short-shaped","mode":"login","input":"short but coarse-shape-valid email a@b.c","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-plus","mode":"login","input":"plus-addressed synthetic email","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-edge-spaces","mode":"login","input":"synthetic email with two leading/trailing spaces","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-inner-space","mode":"login","input":"internal whitespace in email","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"login-email-two-at","mode":"login","input":"two at-signs in email","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"reset-email-empty","mode":"reset","input":"empty email","outcome":"BLOCKED","errors":{"email":"Enter your email address."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-single","mode":"reset","input":"single-character email x","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-spaces","mode":"reset","input":"three ASCII spaces as email","outcome":"BLOCKED","errors":{"email":"Enter your email address."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-a-at-b","mode":"reset","input":"borderline email a@b","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-short-shaped","mode":"reset","input":"short but coarse-shape-valid email a@b.c","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-plus","mode":"reset","input":"plus-addressed synthetic email","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-edge-spaces","mode":"reset","input":"synthetic email with two leading/trailing spaces","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-inner-space","mode":"reset","input":"internal whitespace in email","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"reset-email-two-at","mode":"reset","input":"two at-signs in email","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":null}
+{"id":"signup-email-long","mode":"signup","input":"300-character local part; no app email maximum","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-email-unicode","mode":"signup","input":"Unicode local part; only coarse syntax checked","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-password-empty","mode":"signup","input":"empty password","outcome":"BLOCKED","errors":{"password":"Enter your password."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":0}
+{"id":"signup-password-single","mode":"signup","input":"one ASCII character x","outcome":"BLOCKED","errors":{"password":"Use at least 12 characters. Letters, numbers, symbols and spaces are allowed."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":1}
+{"id":"signup-password-space","mode":"signup","input":"one ASCII space","outcome":"BLOCKED","errors":{"password":"Choose a password that is not only whitespace."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":1}
+{"id":"signup-password-twelve-spaces","mode":"signup","input":"12 ASCII spaces","outcome":"BLOCKED","errors":{"password":"Choose a password that is not only whitespace."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":12}
+{"id":"signup-password-eleven","mode":"signup","input":"11 lowercase ASCII characters","outcome":"BLOCKED","errors":{"password":"Use at least 12 characters. Letters, numbers, symbols and spaces are allowed."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":11}
+{"id":"signup-password-twelve","mode":"signup","input":"12 lowercase ASCII characters","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":12}
+{"id":"signup-password-thirteen","mode":"signup","input":"13 lowercase ASCII characters","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":13}
+{"id":"signup-password-digits","mode":"signup","input":"12 ASCII digits only","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":12}
+{"id":"signup-password-symbols","mode":"signup","input":"12 symbols only","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":12}
+{"id":"signup-password-passphrase","mode":"signup","input":"ordinary internal spaces","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-password-leading-space","mode":"signup","input":"one leading space plus 12 letters","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":13}
+{"id":"signup-password-trailing-space","mode":"signup","input":"12 letters plus one trailing space","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":13}
+{"id":"signup-password-129","mode":"signup","input":"129 lowercase characters; above removed provisional maximum","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":129}
+{"id":"signup-password-4096","mode":"signup","input":"4096 lowercase characters; finite large sample, no max claim","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":4096}
+{"id":"signup-password-tab","mode":"signup","input":"tab inside otherwise long password","outcome":"BLOCKED","errors":{"password":"Remove tabs, line breaks or other control characters from your password."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":13}
+{"id":"signup-password-newline","mode":"signup","input":"newline inside otherwise long password","outcome":"BLOCKED","errors":{"password":"Remove tabs, line breaks or other control characters from your password."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":13}
+{"id":"signup-password-eleven-points","mode":"signup","input":"11 supplementary Unicode code points (22 UTF-16 units)","outcome":"BLOCKED","errors":{"password":"Use at least 12 characters. Letters, numbers, symbols and spaces are allowed."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":11}
+{"id":"signup-password-twelve-points","mode":"signup","input":"12 supplementary Unicode code points (24 UTF-16 units)","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":12}
+{"id":"signup-password-combining","mode":"signup","input":"12 code points including a combining mark (not grapheme counting)","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":false,"inputPreserved":true,"passwordCodePoints":12}
+{"id":"login-password-empty","mode":"login","input":"empty login password","outcome":"BLOCKED","errors":{"password":"Enter your password."},"unavailable":false,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":0}
+{"id":"login-password-single","mode":"login","input":"one-character login password; presence-only policy","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":1}
+{"id":"login-password-space","mode":"login","input":"one-space login password; presence-only policy","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":1}
+{"id":"login-password-twelve-spaces","mode":"login","input":"12-space login password; no signup policy imposed","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":{},"unavailable":true,"signupActionBlocked":null,"inputPreserved":true,"passwordCodePoints":12}
+{"id":"signup-unchecked-draft","mode":"signup","input":"valid credentials, local draft acknowledgement unchecked","outcome":"BLOCKED","errors":{"draftAcknowledgement":"Review the draft Platform Terms before continuing."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":20}
+{"id":"signup-bypass-baseline","mode":"signup","input":"direct-request baseline: email a@b and one-space password, draft checked for isolation","outcome":"BLOCKED","errors":{"email":"Enter an email address like you@example.com.","password":"Choose a password that is not only whitespace."},"unavailable":false,"signupActionBlocked":true,"inputPreserved":true,"passwordCodePoints":1}
+{"id":"verify-empty","mode":"verify","input":"empty code","outcome":"BLOCKED_FORMAT","errors":{"code":"Enter your email verification code."},"inputPreserved":true,"codePoints":0,"utf16Units":0}
+{"id":"verify-single","mode":"verify","input":"one digit","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":1,"utf16Units":1}
+{"id":"verify-spaces","mode":"verify","input":"six spaces","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-five","mode":"verify","input":"five digits, lower length boundary","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":5,"utf16Units":5}
+{"id":"verify-six","mode":"verify","input":"six digits preserving leading zeros","outcome":"FORMAT_ONLY_VALID_NOT_VERIFIED","errors":{},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-seven","mode":"verify","input":"seven digits, upper length boundary","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":7,"utf16Units":7}
+{"id":"verify-all-zeros","mode":"verify","input":"six zeros","outcome":"FORMAT_ONLY_VALID_NOT_VERIFIED","errors":{},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-native-loss","mode":"verify","input":"four digits after historical native stepping","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":4,"utf16Units":4}
+{"id":"verify-leading-space","mode":"verify","input":"leading space plus six digits","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":7,"utf16Units":7}
+{"id":"verify-trailing-space","mode":"verify","input":"six digits plus trailing space","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":7,"utf16Units":7}
+{"id":"verify-inner-space","mode":"verify","input":"internal space","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-exponent","mode":"verify","input":"six-character exponent-looking string","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-decimal","mode":"verify","input":"six-character decimal-looking string","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-fullwidth","mode":"verify","input":"six fullwidth digits","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-arabic","mode":"verify","input":"six Arabic-Indic digits","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":6,"utf16Units":6}
+{"id":"verify-newline","mode":"verify","input":"six digits plus newline","outcome":"BLOCKED_FORMAT","errors":{"code":"Use exactly six digits from 0 to 9."},"inputPreserved":true,"codePoints":7,"utf16Units":7}
+
+B. Actual browser results
+------------------------
+The running app was an isolated copy of the current source at http://127.0.0.1:3104.
+No .env files were copied. The owner's running port 3000 process was left alone.
+Development-only code and draft previews were enabled; persistence and the form-bypass fixture were disabled during this attack run.
+Chrome was driven through its local debugging interface, using actual input insertion and native button clicks.
+Driver: Windows Node.js 24.19.0. App: WSL Node.js 24.22.1 / Next.js 16.4.2.
+Executed in PowerShell:
+$env:AUTH_TEST_CDP_URL='http://127.0.0.1:9224'
+$env:AUTH_TEST_BASE_URL='http://127.0.0.1:3104'
+node --test tests/form-attack/browser.test.mjs
+
+26 case checks plus the parent test passed (Node reports 27 tests); 0 failed.
+Actual outcomes: 11 blocked, 15 reached the truthful unavailable-action message.
+{"id":"signup-bypass-baseline","mode":"signup","input":"direct-request baseline: email a@b and one-space password, draft checked for isolation","outcome":"BLOCKED","errors":[{"id":"signup-email-error","text":"Enter an email address like you@example.com."},{"id":"signup-password-error","text":"Choose a password that is not only whitespace."}],"feedback":"Check the fields marked with an error.","requestedInputPreservedByBrowser":true,"domEmailLength":3,"domPasswordCodePoints":1,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-email-edge-spaces","mode":"signup","input":"synthetic email with two leading/trailing spaces","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":false,"domEmailLength":35,"domPasswordCodePoints":20,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-email-short-shaped","mode":"signup","input":"short but coarse-shape-valid email a@b.c","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":5,"domPasswordCodePoints":20,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-eleven","mode":"signup","input":"11 lowercase ASCII characters","outcome":"BLOCKED","errors":[{"id":"signup-password-error","text":"Use at least 12 characters. Letters, numbers, symbols and spaces are allowed."}],"feedback":"Check the fields marked with an error.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":11,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-twelve","mode":"signup","input":"12 lowercase ASCII characters","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":12,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-twelve-spaces","mode":"signup","input":"12 ASCII spaces","outcome":"BLOCKED","errors":[{"id":"signup-password-error","text":"Choose a password that is not only whitespace."}],"feedback":"Check the fields marked with an error.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":12,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-leading-space","mode":"signup","input":"one leading space plus 12 letters","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":13,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-trailing-space","mode":"signup","input":"12 letters plus one trailing space","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":13,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-129","mode":"signup","input":"129 lowercase characters; above removed provisional maximum","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":129,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-4096","mode":"signup","input":"4096 lowercase characters; finite large sample, no max claim","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":4096,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-tab","mode":"signup","input":"tab inside otherwise long password","outcome":"BLOCKED","errors":[{"id":"signup-password-error","text":"Remove tabs, line breaks or other control characters from your password."}],"feedback":"Check the fields marked with an error.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":13,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-password-newline","mode":"signup","input":"newline inside otherwise long password","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Account creation is not available yet.","requestedInputPreservedByBrowser":false,"domEmailLength":35,"domPasswordCodePoints":13,"domCodeLength":null,"draftAcknowledged":true}
+{"id":"signup-unchecked-draft","mode":"signup","input":"valid credentials, local draft acknowledgement unchecked","outcome":"BLOCKED","errors":[{"id":"signup-draft-acknowledgement-error","text":"Review the draft Platform Terms before continuing."}],"feedback":"Review the draft Platform Terms before continuing.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":20,"domCodeLength":null,"draftAcknowledged":false}
+{"id":"login-password-single","mode":"login","input":"one-character login password; presence-only policy","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Login is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":1,"domCodeLength":null,"draftAcknowledged":null}
+{"id":"login-password-space","mode":"login","input":"one-space login password; presence-only policy","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Login is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":1,"domCodeLength":null,"draftAcknowledged":null}
+{"id":"login-email-a-at-b","mode":"login","input":"borderline email a@b","outcome":"BLOCKED","errors":[{"id":"login-email-error","text":"Enter an email address like you@example.com."}],"feedback":"Check the fields marked with an error.","requestedInputPreservedByBrowser":true,"domEmailLength":3,"domPasswordCodePoints":20,"domCodeLength":null,"draftAcknowledged":null}
+{"id":"login-email-edge-spaces","mode":"login","input":"synthetic email with two leading/trailing spaces","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Login is not available yet.","requestedInputPreservedByBrowser":false,"domEmailLength":35,"domPasswordCodePoints":20,"domCodeLength":null,"draftAcknowledged":null}
+{"id":"reset-email-a-at-b","mode":"reset","input":"borderline email a@b","outcome":"BLOCKED","errors":[{"id":"reset-email-error","text":"Enter an email address like you@example.com."}],"feedback":"Check the fields marked with an error.","requestedInputPreservedByBrowser":true,"domEmailLength":3,"domPasswordCodePoints":null,"domCodeLength":null,"draftAcknowledged":null}
+{"id":"reset-email-plus","mode":"reset","input":"plus-addressed synthetic email","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Password reset is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":35,"domPasswordCodePoints":null,"domCodeLength":null,"draftAcknowledged":null}
+{"id":"reset-email-edge-spaces","mode":"reset","input":"synthetic email with two leading/trailing spaces","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Password reset is not available yet.","requestedInputPreservedByBrowser":false,"domEmailLength":35,"domPasswordCodePoints":null,"domCodeLength":null,"draftAcknowledged":null}
+{"id":"verify-six","mode":"verify","input":"six digits preserving leading zeros","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Email verification is not available yet.","requestedInputPreservedByBrowser":true,"domEmailLength":null,"domPasswordCodePoints":null,"domCodeLength":6,"draftAcknowledged":null}
+{"id":"verify-native-loss","mode":"verify","input":"four digits after historical native stepping","outcome":"BLOCKED","errors":[{"id":"verification-code-error","text":"Use exactly six digits from 0 to 9."}],"feedback":"","requestedInputPreservedByBrowser":true,"domEmailLength":null,"domPasswordCodePoints":null,"domCodeLength":4,"draftAcknowledged":null}
+{"id":"verify-leading-space","mode":"verify","input":"leading space plus six digits","outcome":"BLOCKED","errors":[{"id":"verification-code-error","text":"Use exactly six digits from 0 to 9."}],"feedback":"","requestedInputPreservedByBrowser":true,"domEmailLength":null,"domPasswordCodePoints":null,"domCodeLength":7,"draftAcknowledged":null}
+{"id":"verify-fullwidth","mode":"verify","input":"six fullwidth digits","outcome":"BLOCKED","errors":[{"id":"verification-code-error","text":"Use exactly six digits from 0 to 9."}],"feedback":"","requestedInputPreservedByBrowser":true,"domEmailLength":null,"domPasswordCodePoints":null,"domCodeLength":6,"draftAcknowledged":null}
+{"id":"verify-newline","mode":"verify","input":"six digits plus newline","outcome":"FORMAT_ONLY_VALID_ACTION_UNAVAILABLE","errors":[],"feedback":"Email verification is not available yet.","requestedInputPreservedByBrowser":false,"domEmailLength":null,"domPasswordCodePoints":null,"domCodeLength":6,"draftAcknowledged":null}
+{"id":"verify-seven","mode":"verify","input":"seven digits, upper length boundary","outcome":"BLOCKED","errors":[{"id":"verification-code-error","text":"Use exactly six digits from 0 to 9."}],"feedback":"","requestedInputPreservedByBrowser":true,"domEmailLength":null,"domPasswordCodePoints":null,"domCodeLength":7,"draftAcknowledged":null}
+BROWSER_ATTACK_NETWORK {"documentRequests":26,"localWrites":0,"note":"Direct loads were intentional; no authentication POST occurred."}
+
+Browser input handling matters:
+- In the three edge-space email trials, the browser's final email value differed from the requested padded sample; all three reached unavailable feedback.
+- The Signup newline and verification newline trials also did not preserve the requested raw input; their DOM values reached unavailable feedback.
+- These trials are NOT evidence that the validator accepted raw newline characters. The pure-function tests rejected the raw newline samples.
+- The browser result records DOM lengths and preservation flags; it does not attribute an unmeasured transformation to application code.
+- The fixed bypass pair (a@b plus a one-space password) was blocked by actual Signup errors.
+- 004281 was format-valid and preserved. 4280, padded and fullwidth codes were blocked.
+- All 26 document loads were intentional test setup. This run is not SPA-switch evidence.
+- No local non-GET/HEAD request occurred during this browser attack run. This does not claim that every possible network request was audited.
+
+Findings, not invented security incidents
+-----------------------------------------
+a@b is blocked; a@b.c passes the current coarse email-shape rule. That is not proof of deliverability or ownership.
+A 300-character email local part and a Unicode email sample pass that same coarse rule in the validator tests; backend/email-provider policy is not implemented.
+Signup whitespace-only passwords are blocked; meaningful leading/trailing spaces are allowed and preserved by the validator.
+Login has a presence-only password rule, so a one-character or one-space value can reach unavailable feedback. No credentials are checked and no login occurs.
+Six zeros pass code format, not verification. No real OTP challenge exists.
+
+Not tested / limits
+-------------------
+The browser subset is 26 of the 70 cases; the remaining cases have function-level evidence only.
+This task did not perform Windows Narrator testing, password-manager/autofill testing, real account lookup, SMTP delivery, expiry/rate-limit checks, database operations or real authentication.
+No claim is made about arbitrary huge input sizes, all Unicode sequences, all browsers/devices or a real registration API.
+The separate direct HTTP fixture result is recorded in 16-direct-request-command-and-response.txt.
