@@ -1,14 +1,16 @@
 # StitchTrack Platform Terms of Service
 
-**v1.0 candidate | Owner content review | NOT APPROVED | NOT PUBLIC**
+**v1.0 candidate — NOT APPROVED / NOT PUBLIC**
+
+Owner content review; no legal or publication approval is asserted.
 
 No effective date has been assigned. These proposed Terms have not been accepted by users and do not form a published service contract. Operational provisions below describe the intended V1 once the relevant features are implemented, reviewed and enabled.
 
 ## 1. Operator and scope
 
-StitchTrack is being developed as a company-operated Nigerian service for independent tailors, small fashion studios and their clients. The product name does not establish incorporation, CAC registration or a verified legal entity.
+StitchTrack is being developed for independent tailors, small fashion studios and their clients in Nigeria. It will operate through a Nigerian company registered before public launch, and the actual registered company will be the contracting operator. StitchTrack is the product brand, not necessarily that company's legal name. This is an intended launch arrangement, not confirmation of incorporation or CAC registration.
 
-[OWNER DECISION REQUIRED: Confirm the contracting operator's legal name, legal form and registration status, appropriate service address, authority to contract, and monitored service/complaints contact for the release.]
+[OWNER DECISION REQUIRED: Supply the registered company's actual legal name, registration number/status and legal form, appropriate service address, authority to contract, and working service/complaints contact for the release.]
 
 The current release is an informational website and UI-only authentication interface. It does not create accounts, authenticate users, verify email ownership or provide operational tailoring workflows. Local form checks and unavailable-action messages are not registration or acceptance of these candidate Terms.
 
@@ -16,9 +18,9 @@ The current release is an informational website and UI-only authentication inter
 
 The proposed operational registration flow will require affirmative acceptance of a specific approved Platform Terms version. A local draft-review checkbox does not establish that acceptance. Privacy information and any purpose-specific privacy consent are separate from agreeing to a service contract.
 
-The proposed Terms cover platform use by tailors and authorized clients. A person acting for a tailoring business must have authority to do so.
+Tailoring businesses will contract with the registered platform operator for platform services. Authorized clients will access their linked records under applicable platform-use conditions; their garment agreements remain with the tailor. A person acting for a tailoring business must have authority to do so. A separate business Data Processing Agreement is to be prepared and reviewed before operational launch for applicable processing on the business's behalf; it is not created or signed by this candidate.
 
-[OWNER DECISION REQUIRED: Confirm the contracting parties, user eligibility and capacity requirements, including how any clients lacking legal capacity would be handled, without assuming an age threshold.]
+[OWNER DECISION REQUIRED: Confirm the exact contractual identities and representation authority, client platform-use arrangements, and eligibility/capacity rules, including how clients lacking legal capacity would be handled, without assuming an age threshold.]
 
 For operational accounts, users will be expected to keep their contact details accurate, protect passwords, verification codes and invitations, and report suspected unauthorized access through the confirmed service channel. These responsibilities do not remove the operator's own security duties or make a user automatically liable for every action taken through a compromised account.
 
@@ -68,9 +70,9 @@ Customer pictures are intended for private or access-controlled storage, not unr
 
 Features described as planned are not currently available. Email receipt can depend on delivery services and recipient systems. No uninterrupted-availability or perpetual-storage guarantee is made. The pilot's free status and these limitations do not remove applicable duties concerning the service actually supplied.
 
-Material changes to platform functionality or approved Terms would be explained to affected users through the confirmed notice process. Changes would not be represented as consent to unrelated processing or as retrospective changes to garment agreements. Where fresh agreement is required, it would be requested separately.
+Material changes to platform functionality or approved Terms would be explained to affected users through the confirmed notice process. Material Terms changes would require appropriate notice and fresh acceptance of the updated version. Changes would not be represented as consent to unrelated processing or as retrospective changes to garment agreements.
 
-[OWNER DECISION REQUIRED: Confirm the process for pilot changes or discontinuation, material-change notices, version access and any required reacceptance, including the communication channel and fair notice arrangements.]
+[OWNER DECISION REQUIRED: Confirm the process for pilot changes/discontinuation, notice delivery and fair notice arrangements, version access, and the mechanism for fresh acceptance of material Terms changes.]
 
 ## 8. Suspension and closure
 
@@ -84,7 +86,7 @@ No working closure, customer-record export or deletion feature is supplied by th
 
 ## 9. Complaints and disputes
 
-Platform access, record-handling and service complaints would use the operator's confirmed complaints channel. Privacy requests are addressed separately in the Privacy Policy. Do not send passwords or verification codes with a complaint.
+Platform access, misuse, record-integrity and service complaints would use the operator's confirmed complaints channel. Operational procedures would address platform misuse and record-integrity issues without automatically adjudicating garment-workmanship disputes. Privacy requests are addressed separately in the Privacy Policy. Do not send passwords or verification codes with a complaint.
 
 A tailoring-quality, delivery or direct-payment dispute concerns the tailor-client relationship and relevant agreement evidence. StitchTrack is not an automatic adjudicator, guarantor of workmanship or payment intermediary. Reporting an issue to the platform would not itself approve a change, determine liability or trigger a refund.
 
@@ -99,5 +101,7 @@ The [Privacy Policy candidate](privacy-policy-v1.0-candidate.md) explains curren
 Nothing in these proposed Terms excludes rights or remedies that cannot lawfully be excluded, or excuses the operator's own unlawful conduct. The intended service must respect applicable Nigerian consumer-protection and data-protection requirements. No liability cap, blanket indemnity or waiver is introduced.
 
 Publication requires a verified operator, completed factual/legal review and approval of the exact text and version. This candidate has no effective date and has not replaced the historical v0.2 preview. It is not served as public Terms.
+
+**Internal operating direction:** the [legal and operating decision record](legal-operating-decisions.md) separates agreed direction from unresolved facts and provisional planning figures. Those figures are not incorporated here as binding response, export, retention or notice commitments.
 
 **Owner review references, not an approval:** product facts come from the read-only [PRD](../../docs/PRD.md). Fairness and statutory-rights review uses the [FCCPA 2018](https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf) and [FCCPC consumer-rights guidance](https://fccpc.gov.ng/consumers/consumer-rights-responsibilities/rights-responsibilities/). Qualified Nigerian review must confirm application and enforceability for the identified operator and release.

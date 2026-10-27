@@ -1,14 +1,16 @@
 # StitchTrack Privacy Policy
 
-**v1.0 candidate | Owner content review | NOT APPROVED | NOT PUBLIC**
+**v1.0 candidate — NOT APPROVED / NOT PUBLIC**
+
+Owner content review; no legal or publication approval is asserted.
 
 No effective date has been assigned. This is a proposed notice for owner and qualified review, not a published policy or a claim of legal compliance. It has not been accepted by users. Planned processing below must not be presented as operational before the relevant features and arrangements are enabled.
 
 ## 1. Scope, operator and current service
 
-StitchTrack is being developed for company operation in Nigeria, with a free initial operational pilot. The product name does not establish incorporation, registration or a verified legal entity.
+StitchTrack will operate through a Nigerian company registered before public launch, with a free initial operational pilot. StitchTrack is the product brand, not necessarily the company's legal name. This is the intended launch arrangement, not confirmation of incorporation, registration or a verified legal identity.
 
-[OWNER DECISION REQUIRED: Identify the actual controller for current website processing and the intended operating entity, verified legal status and appropriate address; reconcile these identities with the contracting operator in the Platform Terms.]
+[OWNER DECISION REQUIRED: Identify the actual controller for current website processing and supply the intended registered operator's legal name, registration number/status and appropriate address; reconcile these identities with the contracting operator in the Platform Terms.]
 
 The current website includes UI-only authentication forms. Email/password and code values are checked locally for feedback; those components do not send them to an authentication endpoint, create accounts or sessions, deliver emails or save application-managed credential records. Password visibility changes the local display only. Browser-managed autofill/password storage is a separate user/browser function.
 
@@ -27,19 +29,19 @@ Loading pages and assets involves technical requests. The precise hosting, reque
 | Notifications | Reminder intents, email attempts/failures and in-app notification/read records. | Provide planned tailor delivery reminders and relevant account-access messages; avoid obsolete or duplicate reminders. |
 | Necessary website operation, security and requests | Only the technical request, session, support or rights-request information justified by implemented functions. | Operate and protect the service, investigate reported issues and respond to lawful requests. The actual fields and logs require confirmation. |
 
-The defined V1 purposes do not include unrelated marketing, AI training or runtime AI features. Picture and measurement processing requires particular care; this candidate does not assume that every image is biometric data or settle whether particular records require additional safeguards.
+The initial pilot will not introduce advertising tracking or AI processing of customer records without a separately approved decision and PRD consistency review. This candidate authorizes neither. Picture and measurement processing requires particular care; this candidate does not assume that every image is biometric data or settle whether particular records require additional safeguards.
 
 ## 3. Responsibilities by activity
 
 The proposed allocation is activity-specific:
 
-- The operator is expected to determine the purposes of its own account, access-security and service-administration processing.
-- A tailoring business is expected to determine why it maintains its customer and garment records. StitchTrack may process those records on the business's documented instructions.
+- For the planned company-operated service, StitchTrack would generally determine purposes for platform accounts, authentication, security and platform administration.
+- Tailoring businesses generally determine purposes for their customer and garment records. StitchTrack would process those records on their behalf where appropriate, under documented instructions.
 - Global client identity, business-link authorization, complaint handling and preservation of disputed evidence need a separate allocation rather than an assumption that one label covers everything.
 
 These are preliminary positions, not finalized legal classifications. Holding an account or accepting platform Terms does not determine every controller/processor role.
 
-The role allocation and any required written arrangements remain subject to the purpose-by-purpose review below.
+A separate business Data Processing Agreement is to be prepared and reviewed before operational launch for applicable processor activities. It is distinct from Platform Terms and tailor-client garment agreements; this candidate does not create or sign it. The role allocation and written arrangements remain subject to the purpose-by-purpose legal review below.
 
 ## 4. Purposes and lawful bases requiring confirmation
 
@@ -110,7 +112,7 @@ An individual may complain to the [Nigeria Data Protection Commission](https://n
 
 Operational V1 requires server-side authentication and business/client authorization, protection of credentials and private pictures, and controlled access to agreement history. These are requirements to implement and verify, not a claim that the current forms or future provider arrangements already supply them. No absolute security or breach-prevention guarantee is made.
 
-The intended incident process would assess suspected unauthorized access, contain the issue, preserve necessary evidence and determine required notifications to affected people and the NDPC. It must distinguish the operator's own responsibilities from assistance owed to a business acting as controller.
+An incident-response procedure is to be established before processing real customer data. The intended process would assess suspected unauthorized access, contain the issue, preserve necessary evidence and determine required notifications to affected people and the NDPC. It must distinguish the operator's own responsibilities from assistance owed to a business acting as controller.
 
 [OWNER DECISION REQUIRED: Confirm incident-reporting and escalation channels, responsible decision-makers, investigation arrangements and the applicable notification process before operational processing.]
 
@@ -122,4 +124,6 @@ The notice-delivery and contact arrangements above must cover material updates a
 
 This remains an unapproved v1.0 candidate without an effective date. It is not published at /privacy, does not replace the historical v0.2 preview, and creates no acceptance record. The [Platform Terms candidate](platform-terms-v1.0-candidate.md) separately addresses the proposed service contract.
 
-**Owner review references, not approval:** product facts come from the read-only [PRD](../../docs/PRD.md). Review uses the Act linked above and relevant [operative GAID 2025 guidance](https://ndpc.gov.ng/wp-content/uploads/2025/07/NDP-ACT-GAID-2025-MARCH-20TH.pdf), including privacy-information requirements. Direct NDPC Act/GAID retrieval returned HTTP 403 during this revision; the Act was read through its government-hosted NCC copy and official indexed GAID information was consulted, not a full-text GAID review. Qualified Nigerian review must resolve the placeholders and applicable registration, DPO, impact-assessment and incident obligations before claiming compliance.
+**Internal operating direction:** the [legal and operating decision record](legal-operating-decisions.md) records the agreed approach to provider disclosure, notice delivery for portal and non-portal clients, rights requests and controlled retention. Its provisional acknowledgement, log-retention and closure-export figures are internal targets, not published deadlines or final retention periods.
+
+**Owner review references, not approval:** product facts come from the read-only [PRD](../../docs/PRD.md). Review uses the Act linked above and relevant [operative GAID 2025 guidance](https://ndpc.gov.ng/wp-content/uploads/2025/07/NDP-ACT-GAID-2025-MARCH-20TH.pdf), including privacy-information requirements. The earlier candidate review recorded HTTP 403 for direct NDPC Act/GAID retrieval; the Act was read through its government-hosted NCC copy and official indexed GAID information was consulted, not a full-text GAID review. Qualified Nigerian review must resolve the placeholders and applicable registration, DPO, impact-assessment and incident obligations before claiming compliance.
