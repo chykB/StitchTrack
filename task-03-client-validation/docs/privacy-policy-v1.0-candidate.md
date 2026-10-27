@@ -2,83 +2,124 @@
 
 **v1.0 candidate | Owner content review | NOT APPROVED | NOT PUBLIC**
 
-No effective date has been assigned. This candidate describes verified application behaviour separately from planned operational V1 processing. It is not a published privacy notice or a claim of legal compliance.
+No effective date has been assigned. This is a proposed notice for owner and qualified review, not a published policy or a claim of legal compliance. It has not been accepted by users. Planned processing below must not be presented as operational before the relevant features and arrangements are enabled.
 
-## 1. Scope and company-operated service
+## 1. Scope, operator and current service
 
-StitchTrack is being developed for company operation in Nigeria. The planned initial operational pilot is free. The product name does not establish incorporation, registration or a verified company identity.
+StitchTrack is being developed for company operation in Nigeria, with a free initial operational pilot. The product name does not establish incorporation, registration or a verified legal entity.
 
-This document distinguishes the current informational website and UI-only authentication forms from the planned service for tailoring businesses and their clients.
+[OWNER DECISION REQUIRED: Identify the actual controller for current website processing and the intended operating entity, verified legal status and appropriate address; reconcile these identities with the contracting operator in the Platform Terms.]
 
-## 2. Current email and password forms
+The current website includes UI-only authentication forms. Email/password and code values are checked locally for feedback; those components do not send them to an authentication endpoint, create accounts or sessions, deliver emails or save application-managed credential records. Password visibility changes the local display only. Browser-managed autofill/password storage is a separate user/browser function.
 
-Email and password values are read in the browser to check the current form rules and display feedback. They remain in transient form and component memory. The authentication components do not send them to an authentication endpoint, log them, write them to application-managed persistent storage, create accounts or sessions, or deliver emails.
+Loading pages and assets involves technical requests. The precise hosting, request logs, cookies and other technical processing depend on the actual release configuration and require the inventory below. This candidate makes no claim that all infrastructure is free of logs or storage. The remainder describes the intended operational service, not today's account processing.
 
-The password visibility control changes only whether the typed password is displayed. Browser password-manager storage or autofill is controlled separately by the browser and user; the application does not implement that storage.
+## 2. Information, sources and intended purposes
 
-The opt-in local development preview includes an acknowledgement of unapproved v0.2 drafts. Its checked state is local and is not saved as an acceptance record. The preview does not collect contractual acceptance or consent to unrelated processing.
+| Intended processing | Information and source | Service purpose |
+| --- | --- | --- |
+| Tailor registration and account access | Email, protected password representation and relevant account/session information supplied or generated through account flows. | Create an account, verify the tailor's email, authenticate access and support recovery. Plaintext passwords must not be logged or persistently stored. |
+| Email verification and recovery | Email, invitations/challenges, verification attempts and related delivery/security records. | Deliver and check six-digit email codes, manage expiry/reuse/attempt controls and restore authorized access. No code is currently issued or checked against a real challenge. |
+| Business-managed client records | Client name, phone number and optional email supplied by the tailoring business. | Maintain the business's customer record and, where secure access is established, invite the client to view authorized records. These are not additional tailor-signup fields. |
+| Invitations and client access | Invitation, email verification, authorized business links and relevant session information. | Establish each client-business relationship without client password registration. A shared email or phone number alone does not authorize access. |
+| Garment records and agreement history | Measurements and versions, garment descriptions, fabric/style pictures, notes, submitted agreements and client decisions supplied through authorized workflows. | Present and preserve what the tailor and client agreed for each clothes item, including controlled changes. |
+| Payments and work progress | Tailor-entered payment/reversal records, fittings, adjustments, approved dates and delivery events. | Show work progress and recorded balances. StitchTrack does not receive or independently verify direct client-to-tailor payments. |
+| Notifications | Reminder intents, email attempts/failures and in-app notification/read records. | Provide planned tailor delivery reminders and relevant account-access messages; avoid obsolete or duplicate reminders. |
+| Necessary website operation, security and requests | Only the technical request, session, support or rights-request information justified by implemented functions. | Operate and protect the service, investigate reported issues and respond to lawful requests. The actual fields and logs require confirmation. |
 
-## 3. Separate synthetic-data assessment experiment
+The defined V1 purposes do not include unrelated marketing, AI training or runtime AI features. Picture and measurement processing requires particular care; this candidate does not assume that every image is biometric data or settle whether particular records require additional safeguards.
 
-A separate assessment tool can write a synthetic name and enquiry, a database identifier, a request identifier and a creation timestamp to an explicitly configured assessment PostgreSQL database. It is disabled by default, restricted to local development and unavailable in production. It does not create customer accounts, tailoring orders or authentication sessions.
+## 3. Responsibilities by activity
 
-The endpoint emits structured request logs containing time, request identifier, method, assessment path, HTTP status, duration and outcome, plus the record identifier and creation time on success. Its application log allow-list excludes enquiry contents, passwords and database credentials. This is distinct from infrastructure or development-server logging.
+The proposed allocation is activity-specific:
 
-The tool is intended only for synthetic input. It must not be used for real customer information or credentials. Its records are not automatically deleted by the application; cleanup requires a separately reviewed process. Describing authentication as UI-only does not mean this separate experiment cannot persist data.
+- The operator is expected to determine the purposes of its own account, access-security and service-administration processing.
+- A tailoring business is expected to determine why it maintains its customer and garment records. StitchTrack may process those records on the business's documented instructions.
+- Global client identity, business-link authorization, complaint handling and preservation of disputed evidence need a separate allocation rather than an assumption that one label covers everything.
 
-## 4. Technical requests and storage
+These are preliminary positions, not finalized legal classifications. Holding an account or accepting platform Terms does not determine every controller/processor role.
 
-Loading the website involves ordinary browser/server requests for pages and assets. Request information is distinct from the email and password values checked locally. The application serves its DM Sans font from a local website asset.
+The role allocation and any required written arrangements remain subject to the purpose-by-purpose review below.
 
-The inspected authentication components do not implement analytics, marketing tracking or authentication cookies. This is not a claim that every browser, development server or future hosting configuration is free of cookies, storage or logs.
+## 4. Purposes and lawful bases requiring confirmation
 
-## 5. Planned operational V1 information
+Under the [Nigeria Data Protection Act 2023](https://ncc.gov.ng/media/1084/view), processing needs an applicable lawful basis. The following are review proposals, not final selections:
 
-The following describes intended functionality, not current customer-data collection:
-
-| Information and source | Intended purpose |
+| Purpose | Basis to assess before operational use |
 | --- | --- |
-| Tailor email and protected credential data supplied through future account flows | Account access and recovery. Plaintext password logging or persistent storage is not part of the design. |
-| Client name, phone and optional email supplied by a tailor | Maintain business-owned customer records. These are not extra tailor-signup fields. |
-| Client invitation, verification and session information | Verify email control and authorize each business relationship without client password registration. |
-| Measurements, garment descriptions, fabric/style pictures and agreement versions supplied through authorized workflows | Present and preserve what the tailor and client agreed for each clothes item. |
-| Fitting, adjustment, delivery and tailor-entered manual payment records | Track work, delivery commitments and payments made directly to the tailor. StitchTrack does not receive or verify those payments. |
-| Delivery-reminder intents, email attempts/failures and in-app notification records | Provide the PRD's planned tailor reminders and record their delivery/read state. |
+| Requested tailor account access, verification and recovery | Contract necessity or requested pre-contract steps where the individual is party to that contract; confirm the actual relationship. |
+| Necessary service security and limited technical records | Legitimate interests, subject to necessity, balancing and safeguards; identify any actual legal duty separately. |
+| Business-managed client records, garment agreements, payments and delivery/reminder processing | The responsible controller must establish the basis for each purpose. A business's contract with StitchTrack alone does not justify every use of a client's information. |
+| Rights requests, compliance and dispute evidence | Confirm specific legal obligations and any justified, limited legitimate-interest processing; do not use these labels to authorize indefinite retention. |
 
-The planned purposes above do not include marketing, AI training or runtime AI features.
+[OWNER DECISION REQUIRED: Confirm each activity's controller/processor allocation, written arrangements, lawful basis and necessity, including any sensitive-data/capacity safeguards, required assessments and separate consent mechanism.]
 
-## 6. Responsibilities, purposes and privacy choices
+Accepting Platform Terms or reading this notice is not universal privacy consent. Any processing relying on consent needs its own specific, informed mechanism and applicable withdrawal process. No optional marketing consent or blanket authorization is created by this candidate.
 
-For the planned company-operated service, account-related processing and business-managed customer records have different responsibilities. The company is expected to determine purposes and means for its own account processing. A tailoring business may determine the purposes of its customer records while the service handles them on that business's instructions. Responsibilities depend on the particular activity, not simply on who holds a platform account.
+## 5. Client information collected by tailors
 
-The current form purpose is local validation and feedback. The planned operational purposes are those listed above. Accepting platform Terms does not by itself establish a lawful basis for every purpose or for every client's information. A tailor's service contract with StitchTrack does not automatically provide a basis for all processing about that tailor's customers.
+A client record may exist before the client receives an invitation, and a client without email may never use the portal. Privacy information therefore cannot depend solely on successful portal registration.
 
-Reading a Privacy Policy is not blanket consent. Where processing relies on consent, it must be specific to that purpose and subject to the applicable withdrawal rights.
+The intended approach is for the tailoring business to provide appropriate collection-point information identifying its role and the use of StitchTrack. Platform information would also accompany the invitation/access journey where used. The client should be able to understand the sources, purposes, recipients and available rights without being required to approve a garment agreement first. This is a proposed notice-delivery arrangement, not an existing feature.
 
-## 7. Access boundaries
+[OWNER DECISION REQUIRED: Confirm notice text, responsible sender, collection-point timing and delivery, invitation/portal presentation, accessible alternatives for non-portal clients, and material-update notices for website users, tailors and clients.]
 
-Planned customer records are restricted to the authorized tailoring business and securely linked clients. A shared email address or phone number does not authorize access. No customer portal or operational business-isolation workflow is currently available.
+## 6. Recipients and service providers
 
-## 8. Retention, corrections and deletion
+The intended access model limits business records to the authorized tailoring business and securely linked clients. A client's access across several businesses does not give one business access to another's records.
 
-The authentication interface does not create an account record or a durable acknowledgement record to retain. This does not determine retention of browser-managed information, technical logs or the separate assessment records.
+Necessary recipient categories may include hosting/database and backup providers, email delivery providers, access-controlled image-storage providers, and people handling authorized support or legal obligations. These are categories to verify, not confirmation that any provider is appointed or receives data today. Access would need to be limited to the relevant purpose and responsibility.
 
-Operational V1 is designed to preserve submitted agreement versions and exact historical references rather than overwrite them. That principle is subject to applicable privacy rights and controlled retention; it is not permission for indefinite storage.
+[OWNER DECISION REQUIRED: Confirm hosting, database/backup, SMTP/email and image-provider arrangements; list actual recipients/categories, purposes and roles, and inventory the release's technical logs/cookies and necessary support access.]
 
-Customer images are intended to use private or access-controlled storage. Eligible image deletion will be governed by a reviewed retention policy, with notice and lawful dispute/retention exceptions, while keeping the minimum necessary non-image agreement history and showing when original images are no longer available. The PRD's proposed image timetable is not an active deletion schedule or a fixed promise in this candidate.
+No provider brand, hosting location, processor contract or external recipient is inferred from a library or a proposed product technology. Disclosure required by a legal request would need its own lawful justification; this policy is not permission for unrestricted sharing.
 
-The current application does not implement customer image uploads, account deletion, record export or automated customer-data deletion. No immediate deletion or permanent image-storage guarantee is made.
+## 7. International transfers
 
-## 9. Rights and security
+Provider storage, email handling or remote support could involve access outside Nigeria, but no destination is confirmed here. This candidate is not an assurance of Nigeria-only processing or evidence of an approved transfer mechanism.
 
-Depending on the processing and applicable law, individuals have rights to information, access, correction, restriction, objection, erasure and portability, and to withdraw consent where consent is the basis. These rights can have legal conditions and limits. They do not depend on the existence of a self-service account screen.
+Any such processing would require the applicable transfer conditions and protections to be established before use. See the [NDPC's cross-border guidance](https://ndpc.gov.ng/faqs/); the mechanism must match the actual recipient and activity, not merely a generic consent clause.
 
-An individual may complain to the [Nigeria Data Protection Commission](https://ndpc.gov.ng/). Contacting platform support is not a condition of exercising that right and does not waive other legal remedies.
+[OWNER DECISION REQUIRED: Identify storage and remote-access countries for each recipient, confirm applicable transfer grounds/safeguards and required disclosures, and explain how people can obtain relevant protection information.]
 
-The current forms do not establish real authenticated access. Operational V1 requires server-side authorization, business/client isolation and protection of private records. These are requirements to verify before customer use, not a claim that the current interface supplies them or that any system is immune from incidents.
+## 8. Retention, closure and deletion
 
-## 10. Policy versions and acceptance
+The intended approach is to retain information only for justified service purposes and applicable legal/evidence needs, with reviewable deletion triggers and limited holds. Code validity is not itself a complete retention policy for verification/security records.
 
-This candidate has not been published at /privacy and has not been substituted for the v0.2 text in the assessment preview. Its version label is not an effective date or legal approval.
+Submitted agreement versions are intended to preserve exact historical references. Corrections and privacy requests must be handled without silently falsifying another person's approved agreement. Evidence preservation does not authorize blanket refusal of rights or indefinite storage.
 
-Platform Terms acceptance, receipt of privacy information and consent for a particular processing purpose are different actions. A local assessment acknowledgement is not acceptance of a later policy or evidence that an account was created.
+Images are intended for private or access-controlled storage, with reviewed notice/deletion arrangements and lawful exceptions. After eligible images are deleted, minimum necessary non-image agreement history would remain and show that the original pictures are unavailable. The PRD's proposed image timetable is still subject to review; this candidate does not adopt it as an active retention promise.
+
+Account closure, ending one business link and erasing personal data are different actions. Their effects on lawful access, pending orders and other people's records must be reconciled. The present interface implements no customer-image upload, account closure, record export or automated customer-data deletion.
+
+[OWNER DECISION REQUIRED: Approve category-specific retention periods or concrete criteria and triggers for accounts/challenges/sessions, business/agreement records, images, payments/delivery/notifications, logs, requests and backups; confirm holds, closure effects and deletion propagation.]
+
+## 9. Personal-data rights and requests
+
+Subject to applicable conditions, people may request information/access, correction, erasure or restriction, object to processing, request portability and withdraw consent where consent is the basis. Rights concerning solely automated decisions may also apply where the legal conditions are met; the current forms do not make operational account-access decisions. The [NDPC's rights information](https://ndpc.gov.ng/) describes the regulatory framework.
+
+A working account screen is not a condition of exercising applicable rights. The proposed process would identify the relevant records and authority, seek only necessary identity information, explain any lawful limitation and respond within applicable legal periods. Do not include passwords or verification codes in a request.
+
+For business-controlled records, the tailoring business may need to decide the request while the operator assists under the relevant arrangement. A person should receive a clear route to the responsible party rather than be told that every request belongs to someone else.
+
+[OWNER DECISION REQUIRED: Supply a monitored privacy/request contact and accessible request process, necessary identity checks, routing between operator and businesses, and responsibility for responses and complaints.]
+
+An individual may complain to the [Nigeria Data Protection Commission](https://ndpc.gov.ng/). Contacting platform support first is not presented as a condition or waiver of that right.
+
+## 10. Security and incident handling
+
+Operational V1 requires server-side authentication and business/client authorization, protection of credentials and private pictures, and controlled access to agreement history. These are requirements to implement and verify, not a claim that the current forms or future provider arrangements already supply them. No absolute security or breach-prevention guarantee is made.
+
+The intended incident process would assess suspected unauthorized access, contain the issue, preserve necessary evidence and determine required notifications to affected people and the NDPC. It must distinguish the operator's own responsibilities from assistance owed to a business acting as controller.
+
+[OWNER DECISION REQUIRED: Confirm incident-reporting and escalation channels, responsible decision-makers, investigation arrangements and the applicable notification process before operational processing.]
+
+## 11. Notice versions and publication
+
+Material changes would be explained through a confirmed communication process appropriate to the affected processing. A revised notice is not automatic consent to a new purpose or a retrospective change to a garment agreement.
+
+The notice-delivery and contact arrangements above must cover material updates as well as initial collection.
+
+This remains an unapproved v1.0 candidate without an effective date. It is not published at /privacy, does not replace the historical v0.2 preview, and creates no acceptance record. The [Platform Terms candidate](platform-terms-v1.0-candidate.md) separately addresses the proposed service contract.
+
+**Owner review references, not approval:** product facts come from the read-only [PRD](../../docs/PRD.md). Review uses the Act linked above and relevant [operative GAID 2025 guidance](https://ndpc.gov.ng/wp-content/uploads/2025/07/NDP-ACT-GAID-2025-MARCH-20TH.pdf), including privacy-information requirements. Direct NDPC Act/GAID retrieval returned HTTP 403 during this revision; the Act was read through its government-hosted NCC copy and official indexed GAID information was consulted, not a full-text GAID review. Qualified Nigerian review must resolve the placeholders and applicable registration, DPO, impact-assessment and incident obligations before claiming compliance.
