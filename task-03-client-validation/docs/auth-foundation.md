@@ -6,11 +6,13 @@ I started from a clean working tree on main at commit `6803d2c2af119e9936285f615
 
 This foundation adds **three separate authentication page routes**:
 
-| Route | Source | Fields |
+The source entries below are verified Git object references at foundation commit `cb31dc9`, not live working-tree paths. For example, inspect Signup with `git show 'cb31dc9:app/(auth)/signup/page.tsx'`.
+
+| Route | Source at `cb31dc9` | Fields |
 | --- | --- | --- |
-| /signup | [signup/page.tsx](../../app/%28auth%29/signup/page.tsx) | Email address and password |
-| /login | [login/page.tsx](../../app/%28auth%29/login/page.tsx) | Email address and password |
-| /forgot-password | [forgot-password/page.tsx](../../app/%28auth%29/forgot-password/page.tsx) | Email address |
+| /signup | `cb31dc9:app/(auth)/signup/page.tsx` | Email address and password |
+| /login | `cb31dc9:app/(auth)/login/page.tsx` | Email address and password |
+| /forgot-password | `cb31dc9:app/(auth)/forgot-password/page.tsx` | Email address |
 
 The later milestone will consolidate these into one route controlled by a URL query parameter. That work is **not implemented**. The genuine timeline is zero before this foundation, three afterward, and one only after the later consolidation is approved and verified.
 

@@ -161,4 +161,4 @@ For the comparison, preserve the payload bytes but account for the future endpoi
 
 The fixture is not a product feature and must not be wired into Signup. It should be removed after its evidence purpose is complete, in a separately reviewed cleanup, while preserving the payload and historical investigation records. The temporary runtime files are the API route and its isolated handler; fixture-only tests can be retired with them. The attack matrix can remain as a regression baseline against the real validation policy.
 
-Step 9 rollback and Task Four integrations have not started.
+Step 9 rollback is complete. The [rollback record](rollback.md) and [evidence 17](../evidence/17-commit-list-and-rollback.txt) show temporary commit `3009fe1` reversed by `c019741`, preserving checkpoint `bcd1b37`; documentation commit `c1e6180` records the exercise. This does not change the synthetic HTTP fixture's scope or prove real registration security. Task Four integrations have not started.
