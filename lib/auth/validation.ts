@@ -1,11 +1,14 @@
 import type { AuthMode } from "./state";
+import type { ZodType } from "zod";
+import {
+  nameSchema, emailSchema, signupPasswordSchema, loginPasswordSchema,
+  signupSchema, loginSchema, resetSchema, PASSWORD_GUIDANCE,
+} from "./schemas.ts";
+export { PASSWORD_MIN, PASSWORD_GUIDANCE } from "./schemas.ts";
 
 export type AuthField = "name" | "email" | "password";
 export type AuthValues = { name?: string; email: string; password: string };
 export type AuthErrors = Partial<Record<AuthField | "draftAcknowledgement", string>>;
-export const PASSWORD_MIN = 12;
-export const PASSWORD_GUIDANCE =
-  "Use at least 12 characters. Letters, numbers, symbols and spaces are allowed.";
 
 export type ValidationState = {
   values: AuthValues;
@@ -31,31 +34,22 @@ export function initialValidationState(): ValidationState {
   };
 }
 
+function firstFieldError(schema: ZodType<string>, value: string): string | undefined {
+  const result = schema.safeParse(value);
+  return result.success ? undefined : result.error.issues[0]?.message;
+}
+
 export function nameError(value: string): string | undefined {
-  // Check blankness only; preserve spelling, punctuation and spacing.
-  if (/^[\s\p{White_Space}]*$/u.test(value)) return "Enter your name.";
+  return firstFieldError(nameSchema, value);
 }
 
 export function emailError(value: string): string | undefined {
-  // Ignore surrounding email whitespace for this syntax check only; preserve the input.
-  const email = value.trim();
-  if (!email) return "Enter your email address.";
-  // Deliberately a basic public-email shape check, not an RFC parser or ownership proof.
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email)) {
-    return "Enter an email address like you@example.com.";
-  }
+  return firstFieldError(emailSchema, value);
 }
 
 export function passwordError(mode: AuthMode, value: string): string | undefined {
   if (mode === "reset") return;
-  if (!value) return "Enter your password.";
-  if (mode !== "signup") return;
-  if (/[\p{Cc}\p{Zl}\p{Zp}]/u.test(value)) {
-    return "Remove tabs, line breaks or other control characters from your password.";
-  }
-  if (/^[\s\p{White_Space}]+$/u.test(value)) return "Choose a password that is not only whitespace.";
-  const length = Array.from(value).length;
-  if (length < PASSWORD_MIN) return PASSWORD_GUIDANCE;
+  return firstFieldError(mode === "signup" ? signupPasswordSchema : loginPasswordSchema, value);
 }
 
 export function passwordGuidance(mode: AuthMode, state: ValidationState): string | undefined {
@@ -85,10 +79,20 @@ export function validateAuthValues(mode: AuthMode, values: AuthValues): AuthErro
 export function validateAssessmentForm(
   mode: AuthMode, values: AuthValues, acknowledged: boolean, requireDraftAcknowledgement = false,
 ): AuthErrors {
-  const errors = validateAuthValues(mode, values);
-  if (mode === "signup") {
-    const name = nameError(values.name ?? "");
-    if (name) errors.name = name;
+  // Project the known UI fields. Future HTTP boundaries must parse their full
+  // unknown request with the strict schema and use its successful data output.
+  const result = mode === "signup" ? signupSchema.safeParse({
+    name: values.name ?? "", email: values.email, password: values.password,
+  }) : mode === "login" ? loginSchema.safeParse({ email: values.email, password: values.password }) :
+    resetSchema.safeParse({ email: values.email });
+  const errors: AuthErrors = {};
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      const field = issue.path[0];
+      if ((field === "name" || field === "email" || field === "password") && !errors[field]) {
+        errors[field] = issue.message;
+      }
+    }
   }
   if (mode === "signup" && requireDraftAcknowledgement && acknowledged !== true) {
     errors.draftAcknowledgement = "Review the draft Platform Terms before continuing.";
