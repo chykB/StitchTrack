@@ -4,9 +4,9 @@
 
 Task Four moves StitchTrack from the [Task Three UI](../task-03-client-validation/README.md) towards server validation, secure credentials, sessions and email verification. The [PRD](../docs/PRD.md) is authoritative and read-only. Baseline: commit 1aab84c on feat/task-03-auth-foundation. The owner's supplied requirements define the assessment; no assessment PDF was available.
 
-**Slice 1 was documentation only.** The [schema and authentication design](docs/schema.md) remains a proposal, not Prisma implementation or a deployed database. A subsequent owner-approved database-free alignment adds Your name to Signup. No Task Four server-security experiment or evidence is complete.
+**Slice 1 was documentation only.** The [schema and authentication design](docs/schema.md) remains a proposal, not Prisma implementation or a deployed database. A subsequent owner-approved database-free alignment adds Your name to Signup. The owner has captured hashing Evidence 07 and 08; other Task Four evidence remains pending.
 
-Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Better Auth, Argon2id integration, real registration, sessions, SMTP and background delivery are not implemented. Source declares only Task Two's AssessmentEnquiry; actual database contents and migration history remain unverified for Task Four.
+Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Shared Zod validation and canonical email output are implemented. Standalone server-only Argon2id utilities and an owner-run benchmark are now available; see [hashing design and evidence commands](docs/hashing.md). The owner installed @node-rs/argon2 2.2.2; its pending package changes are preserved. Better Auth integration, real registration, sessions, SMTP and background delivery remain unimplemented, and the owner's genuine hashing evidence is linked in the checklist below. Source declares only Task Two's AssessmentEnquiry; actual database contents and migration history remain unverified for Task Four.
 
 ## Assessment versus product scope
 
@@ -30,9 +30,9 @@ Each slice needs separate approval. Current documentation does not authorize pac
 
 ## Genuine evidence checklist
 
-All evidence is **pending** under task-04-server-security/evidence/. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
+Evidence 07 and 08 are **captured** under task-04-server-security/evidence/; the remaining entries are pending. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
 
-| Pending | No. | Required evidence and format |
+| Status | No. | Required evidence and format |
 | --- | --- | --- |
 | [ ] | 01 | Owner's paper schema photograph — JPG. |
 | [ ] | 02 | Actual database state before migrations — PNG. |
@@ -40,8 +40,8 @@ All evidence is **pending** under task-04-server-security/evidence/. Numbers/for
 | [ ] | 04 | Required-column failure on populated disposable data — TXT. |
 | [ ] | 05 | Nullable → backfill → required correction — TXT. |
 | [ ] | 06 | Actual disposable-database drift error — TXT. |
-| [ ] | 07 | Two different Argon2id hashes of one synthetic password — TXT. |
-| [ ] | 08 | Owner-machine Argon2id/SHA-256 timings and guesses-per-second arithmetic — TXT. |
+| [x] | 07 | [Two different Argon2id hashes, both verifying](evidence/07-hash-twice-different.txt) — genuine owner capture, TXT. |
+| [x] | 08 | [Owner-machine Argon2id/SHA-256 timings and arithmetic](evidence/08-timing-argon-vs-sha.txt) — local sequential measurements, TXT. |
 | [ ] | 09 | Consistent email normalization — PNG. |
 | [ ] | 10 | Isolated password-trimming comparison and explicit product divergence — PNG. |
 | [ ] | 11 | Measured request timings with/without validation in a safe comparison — TXT. |
@@ -60,7 +60,7 @@ All evidence is **pending** under task-04-server-security/evidence/. Numbers/for
 
 Evidence 24, the seven-minute walkthrough, is optional. Automatic-fail safeguards: never store passwords with SHA/MD5; capture real local hashing timings and arithmetic, a real migration failure and the IP-only limitation; document at least four genuinely deferred controls. SHA-256 belongs only in the synthetic timing comparison.
 
-Only this README and docs/schema.md are created in Slice 1. Pending documentation: docs/migrations.md, docs/hashing.md, docs/validation-placement.md, docs/rate-limiting.md, docs/breach-check.md, docs/verification-design.md, docs/email-copy.md, docs/not-implemented.md, docs/defects.md and docs/interview-answers.md (19 answers, maximum 200 words each).
+Only this README and docs/schema.md are created in Slice 1. Pending documentation: docs/migrations.md, docs/validation-placement.md, docs/rate-limiting.md, docs/breach-check.md, docs/verification-design.md, docs/email-copy.md, docs/not-implemented.md, docs/defects.md and docs/interview-answers.md (19 answers, maximum 200 words each).
 
 ## Database ownership and release restrictions
 
