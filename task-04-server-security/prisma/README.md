@@ -14,7 +14,7 @@ The owner reports PostgreSQL 16, a successful password-authenticated connection 
 
 ## Current owner-controlled phase
 
-Initial migration/Evidence 03 is complete at owner commit 1201216. The new [required-column failure runbook](../docs/required-column-failure.md) is prepared for review only. TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED=true selects the exact checksum-gated failure candidate and synthetic seed; TASK04_INITIAL_DEPLOY_CONFIRMED must be unset. With the new candidate present, the old initial-only gate intentionally rejects deploy. No resolution/reset/generation command is enabled. Approve the recovery plan before owner execution.
+Initial migration/Evidence 03 is complete at owner commit 1201216; the genuine [required-column failure](../docs/required-column-failure.md)/Evidence 04 is committed at b3af65d. Two synthetic users remain and name is absent. Do not rerun the seed or deploy. The [Evidence 05 recovery runbook](../docs/required-column-recovery.md) prepares three guarded owner-only SQL operations, outside Prisma migration history; no recovery has been executed. Its confirmation flag cannot enable Prisma deployment or resolution. The isolated model intentionally remains transitional until genuine recovery results are reviewed. migrate resolve/reset/generation remain blocked.
 
 ## Dedicated configuration
 

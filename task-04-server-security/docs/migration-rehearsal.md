@@ -1,6 +1,6 @@
 # Owner-only initial SQL rehearsal and evidence sequence
 
-**Initial Prisma deployment and Evidence 03 are owner-verified complete, committed at 1201216. The earlier commands below are historical and must not be rerun. Continue with the separately prepared [Evidence 04 review](required-column-failure.md).** Read the [migration review](migrations.md), [initial SQL](../prisma/migrations/20261028_task04_initial/migration.sql) and [helper](../scripts/rehearse-initial-shadow.sh) before running anything. This is a one-time empty-schema SQL rehearsal on the dedicated disposable shadow, not a Prisma migration or account/payment workflow.
+**Initial Prisma deployment and Evidence 03 are owner-verified complete, committed at 1201216. The earlier commands below are historical and must not be rerun. The owner has also captured the genuine required-column failure at b3af65d; continue with the prepared [Evidence 05 recovery](required-column-recovery.md). Do not repeat Evidence 04.** Read the [migration review](migrations.md), [initial SQL](../prisma/migrations/20261028_task04_initial/migration.sql) and [helper](../scripts/rehearse-initial-shadow.sh) before running anything. This is a one-time empty-schema SQL rehearsal on the dedicated disposable shadow, not a Prisma migration or account/payment workflow.
 
 ## Scope and prerequisites
 

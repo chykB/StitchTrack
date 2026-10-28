@@ -1,6 +1,6 @@
 # Evidence 04: genuine required-column Prisma migration failure
 
-**Prepared for owner review; not executed. Evidence 04/05 has not been created.** The initial migration 20261028_task04_initial is owner-verified applied; [Evidence 03](../evidence/03-initial-migration.txt) is committed at 1201216. Its SQL checksum remains 1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501. The User table still has only id, emailCanonical and createdAt.
+**Historical Evidence 04 procedure: completed by the owner and committed at b3af65d. Do not rerun the seed or failure attempt below.** [Evidence 04](../evidence/04-required-column-failure.txt) records P3018/PostgreSQL 23502. The owner verifies two synthetic users remain and User.name is absent. Continue with the separately prepared [Evidence 05 three-step recovery](required-column-recovery.md); it has not been executed. Initial migration/Evidence 03 remains committed at 1201216. All expectations and execution instructions below describe the earlier failure preparation, not a new authorization to repeat it.
 
 ## Artifacts and exact scope
 
