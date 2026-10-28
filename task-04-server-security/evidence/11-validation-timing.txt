@@ -1,0 +1,203 @@
+EVIDENCE 11 - owner HTTP comparison, fixed synthetic fixture; not real registration
+Started: 2026-10-28T17:08:47Z
+Source HEAD: 552b607
+Uncommitted source paths, if any:
+task-04-server-security/README.md
+Server configuration: next dev on 127.0.0.1:3106; ENABLE_AUTH_VALIDATION_TIMING=true; no auth/DB/email work
+Command: TASK04_VALIDATION_TIMING_CONFIRMED=true NODE_USE_ENV_PROXY=0 node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON task-04-server-security/experiments/validation-timing/measure.mjs --owner-measure
+Owner HTTP comparison started: 2026-10-28T17:08:47.676Z
+Node 24.22.1 OS linux 5.15.167.4-microsoft-standard-WSL2 x64
+Target: http://127.0.0.1:3106/api/assessment/validation-timing (fixed synthetic fixture; NOT registration)
+Same POST body per operation; baseline retains envelope/JSON/fixed-payload guards but omits shared Zod schemas.
+5 warm-ups per variant/operation excluded; 30 measured alternating-order pairs per operation; sequential requests.
+No hashing, database, SMTP or authentication service. Server handler timing excludes response serialization/framework routing.
+{"operation":"signup","pair":1,"variant":"baseline","status":200,"clientMs":6.525849999999991,"handlerMs":0.398965,"schemaMs":0}
+{"operation":"signup","pair":1,"variant":"validated","status":200,"clientMs":7.906475,"handlerMs":0.886169,"schemaMs":0.164236}
+{"operation":"signup","pair":2,"variant":"validated","status":200,"clientMs":12.282236000000012,"handlerMs":1.023384,"schemaMs":0.178225}
+{"operation":"signup","pair":2,"variant":"baseline","status":200,"clientMs":13.970401000000038,"handlerMs":0.381953,"schemaMs":0}
+{"operation":"signup","pair":3,"variant":"baseline","status":200,"clientMs":9.135978000000023,"handlerMs":0.617427,"schemaMs":0}
+{"operation":"signup","pair":3,"variant":"validated","status":200,"clientMs":7.554450999999972,"handlerMs":0.651955,"schemaMs":0.110817}
+{"operation":"signup","pair":4,"variant":"validated","status":200,"clientMs":8.266609000000017,"handlerMs":0.8334,"schemaMs":0.173444}
+{"operation":"signup","pair":4,"variant":"baseline","status":200,"clientMs":9.025113000000147,"handlerMs":0.625689,"schemaMs":0}
+{"operation":"signup","pair":5,"variant":"baseline","status":200,"clientMs":8.2769330000001,"handlerMs":0.678093,"schemaMs":0}
+{"operation":"signup","pair":5,"variant":"validated","status":200,"clientMs":6.9070919999999205,"handlerMs":0.419009,"schemaMs":0.053274}
+{"operation":"signup","pair":6,"variant":"validated","status":200,"clientMs":8.376060000000052,"handlerMs":0.882799,"schemaMs":0.121718}
+{"operation":"signup","pair":6,"variant":"baseline","status":200,"clientMs":7.271934999999985,"handlerMs":0.386564,"schemaMs":0}
+{"operation":"signup","pair":7,"variant":"baseline","status":200,"clientMs":6.27746900000011,"handlerMs":0.339844,"schemaMs":0}
+{"operation":"signup","pair":7,"variant":"validated","status":200,"clientMs":7.133399999999938,"handlerMs":0.43152,"schemaMs":0.040867}
+{"operation":"signup","pair":8,"variant":"validated","status":200,"clientMs":8.834937999999966,"handlerMs":0.443887,"schemaMs":0.03735}
+{"operation":"signup","pair":8,"variant":"baseline","status":200,"clientMs":8.762815000000046,"handlerMs":0.405806,"schemaMs":0}
+{"operation":"signup","pair":9,"variant":"baseline","status":200,"clientMs":11.567223000000013,"handlerMs":0.589427,"schemaMs":0}
+{"operation":"signup","pair":9,"variant":"validated","status":200,"clientMs":7.464257000000089,"handlerMs":0.477105,"schemaMs":0.036814}
+{"operation":"signup","pair":10,"variant":"validated","status":200,"clientMs":7.970686000000114,"handlerMs":0.392071,"schemaMs":0.039684}
+{"operation":"signup","pair":10,"variant":"baseline","status":200,"clientMs":8.438255000000026,"handlerMs":0.689169,"schemaMs":0}
+{"operation":"signup","pair":11,"variant":"baseline","status":200,"clientMs":8.390334000000166,"handlerMs":0.405982,"schemaMs":0}
+{"operation":"signup","pair":11,"variant":"validated","status":200,"clientMs":8.140511999999944,"handlerMs":0.41632,"schemaMs":0.036817}
+{"operation":"signup","pair":12,"variant":"validated","status":200,"clientMs":9.472187000000076,"handlerMs":0.649112,"schemaMs":0.061942}
+{"operation":"signup","pair":12,"variant":"baseline","status":200,"clientMs":7.754781999999977,"handlerMs":0.478765,"schemaMs":0}
+{"operation":"signup","pair":13,"variant":"baseline","status":200,"clientMs":9.232987999999978,"handlerMs":0.534371,"schemaMs":0}
+{"operation":"signup","pair":13,"variant":"validated","status":200,"clientMs":8.452739999999949,"handlerMs":0.704336,"schemaMs":0.065758}
+{"operation":"signup","pair":14,"variant":"validated","status":200,"clientMs":7.3406649999999445,"handlerMs":0.384323,"schemaMs":0.035906}
+{"operation":"signup","pair":14,"variant":"baseline","status":200,"clientMs":6.296115999999984,"handlerMs":0.465159,"schemaMs":0}
+{"operation":"signup","pair":15,"variant":"baseline","status":200,"clientMs":9.259900000000016,"handlerMs":0.70719,"schemaMs":0}
+{"operation":"signup","pair":15,"variant":"validated","status":200,"clientMs":6.856454999999869,"handlerMs":0.377716,"schemaMs":0.031501}
+{"operation":"signup","pair":16,"variant":"validated","status":200,"clientMs":6.607769999999846,"handlerMs":0.529548,"schemaMs":0.046952}
+{"operation":"signup","pair":16,"variant":"baseline","status":200,"clientMs":7.39907200000016,"handlerMs":0.415322,"schemaMs":0}
+{"operation":"signup","pair":17,"variant":"baseline","status":200,"clientMs":7.2070269999999255,"handlerMs":0.347302,"schemaMs":0}
+{"operation":"signup","pair":17,"variant":"validated","status":200,"clientMs":8.338260999999875,"handlerMs":0.434927,"schemaMs":0.033938}
+{"operation":"signup","pair":18,"variant":"validated","status":200,"clientMs":9.894057999999859,"handlerMs":0.688048,"schemaMs":0.053457}
+{"operation":"signup","pair":18,"variant":"baseline","status":200,"clientMs":5.60850900000014,"handlerMs":0.350135,"schemaMs":0}
+{"operation":"signup","pair":19,"variant":"baseline","status":200,"clientMs":7.61218800000006,"handlerMs":0.741096,"schemaMs":0}
+{"operation":"signup","pair":19,"variant":"validated","status":200,"clientMs":7.284624000000122,"handlerMs":0.411299,"schemaMs":0.031954}
+{"operation":"signup","pair":20,"variant":"validated","status":200,"clientMs":9.716846999999916,"handlerMs":1.01995,"schemaMs":0.061868}
+{"operation":"signup","pair":20,"variant":"baseline","status":200,"clientMs":7.297896999999921,"handlerMs":0.373311,"schemaMs":0}
+{"operation":"signup","pair":21,"variant":"baseline","status":200,"clientMs":10.019428999999946,"handlerMs":1.158176,"schemaMs":0}
+{"operation":"signup","pair":21,"variant":"validated","status":200,"clientMs":8.879803000000038,"handlerMs":0.411572,"schemaMs":0.054428}
+{"operation":"signup","pair":22,"variant":"validated","status":200,"clientMs":9.602905000000192,"handlerMs":0.534222,"schemaMs":0.03768}
+{"operation":"signup","pair":22,"variant":"baseline","status":200,"clientMs":7.699561000000131,"handlerMs":0.449186,"schemaMs":0}
+{"operation":"signup","pair":23,"variant":"baseline","status":200,"clientMs":12.680933000000095,"handlerMs":0.645443,"schemaMs":0}
+{"operation":"signup","pair":23,"variant":"validated","status":200,"clientMs":18.05978099999993,"handlerMs":0.640834,"schemaMs":0.084536}
+{"operation":"signup","pair":24,"variant":"validated","status":200,"clientMs":8.016044999999849,"handlerMs":0.563303,"schemaMs":0.050632}
+{"operation":"signup","pair":24,"variant":"baseline","status":200,"clientMs":9.135536999999886,"handlerMs":0.812042,"schemaMs":0}
+{"operation":"signup","pair":25,"variant":"baseline","status":200,"clientMs":9.055714999999964,"handlerMs":0.530636,"schemaMs":0}
+{"operation":"signup","pair":25,"variant":"validated","status":200,"clientMs":7.594421000000011,"handlerMs":0.732109,"schemaMs":0.06279}
+{"operation":"signup","pair":26,"variant":"validated","status":200,"clientMs":8.332622000000129,"handlerMs":0.612091,"schemaMs":0.050574}
+{"operation":"signup","pair":26,"variant":"baseline","status":200,"clientMs":5.093727000000172,"handlerMs":0.316651,"schemaMs":0}
+{"operation":"signup","pair":27,"variant":"baseline","status":200,"clientMs":7.034973000000036,"handlerMs":0.473969,"schemaMs":0}
+{"operation":"signup","pair":27,"variant":"validated","status":200,"clientMs":6.373389000000088,"handlerMs":0.365814,"schemaMs":0.036184}
+{"operation":"signup","pair":28,"variant":"validated","status":200,"clientMs":5.54594800000018,"handlerMs":0.372549,"schemaMs":0.033544}
+{"operation":"signup","pair":28,"variant":"baseline","status":200,"clientMs":5.999121999999943,"handlerMs":0.478717,"schemaMs":0}
+{"operation":"signup","pair":29,"variant":"baseline","status":200,"clientMs":7.4746140000002015,"handlerMs":0.537183,"schemaMs":0}
+{"operation":"signup","pair":29,"variant":"validated","status":200,"clientMs":7.159746999999925,"handlerMs":0.562187,"schemaMs":0.050007}
+{"operation":"signup","pair":30,"variant":"validated","status":200,"clientMs":5.959728999999925,"handlerMs":0.428032,"schemaMs":0.032207}
+{"operation":"signup","pair":30,"variant":"baseline","status":200,"clientMs":7.366326999999956,"handlerMs":0.541719,"schemaMs":0}
+SUMMARY signup {"baseline":{"client":{"n":30,"meanMs":8.229024100000037,"medianMs":7.727171500000054,"p95Ms":12.680933000000095},"handler":{"n":30,"meanMs":0.5291764,"medianMs":0.47874099999999997,"p95Ms":0.812042},"schema":{"n":30,"meanMs":0,"medianMs":0,"p95Ms":0}},"validated":{"client":{"n":30,"meanMs":8.344157099999991,"medianMs":7.993365499999982,"p95Ms":12.282236000000012},"handler":{"n":30,"meanMs":0.5759863666666667,"medianMs":0.5318849999999999,"p95Ms":1.01995},"schema":{"n":30,"meanMs":0.0636368,"medianMs":0.0502905,"p95Ms":0.173444}}}
+DELTA_MEANS_MS signup {"client":0.11513299999995397,"handler":0.0468099666666667}
+{"operation":"login","pair":1,"variant":"baseline","status":200,"clientMs":6.231579999999894,"handlerMs":0.415003,"schemaMs":0}
+{"operation":"login","pair":1,"variant":"validated","status":200,"clientMs":7.935983999999962,"handlerMs":0.74443,"schemaMs":0.068519}
+{"operation":"login","pair":2,"variant":"validated","status":200,"clientMs":9.605970999999954,"handlerMs":0.880745,"schemaMs":0.118664}
+{"operation":"login","pair":2,"variant":"baseline","status":200,"clientMs":8.641995000000179,"handlerMs":0.395423,"schemaMs":0}
+{"operation":"login","pair":3,"variant":"baseline","status":200,"clientMs":6.460014999999885,"handlerMs":0.464371,"schemaMs":0}
+{"operation":"login","pair":3,"variant":"validated","status":200,"clientMs":7.883520999999973,"handlerMs":0.420666,"schemaMs":0.059622}
+{"operation":"login","pair":4,"variant":"validated","status":200,"clientMs":9.655820999999833,"handlerMs":0.913485,"schemaMs":0.048495}
+{"operation":"login","pair":4,"variant":"baseline","status":200,"clientMs":6.53864899999985,"handlerMs":0.340109,"schemaMs":0}
+{"operation":"login","pair":5,"variant":"baseline","status":200,"clientMs":6.5446609999999055,"handlerMs":0.352833,"schemaMs":0}
+{"operation":"login","pair":5,"variant":"validated","status":200,"clientMs":7.22922699999981,"handlerMs":1.204798,"schemaMs":0.10894}
+{"operation":"login","pair":6,"variant":"validated","status":200,"clientMs":7.165524000000005,"handlerMs":0.405138,"schemaMs":0.04055}
+{"operation":"login","pair":6,"variant":"baseline","status":200,"clientMs":7.279166999999916,"handlerMs":0.402258,"schemaMs":0}
+{"operation":"login","pair":7,"variant":"baseline","status":200,"clientMs":9.967245000000048,"handlerMs":0.396759,"schemaMs":0}
+{"operation":"login","pair":7,"variant":"validated","status":200,"clientMs":7.279480000000149,"handlerMs":0.626723,"schemaMs":0.054793}
+{"operation":"login","pair":8,"variant":"validated","status":200,"clientMs":6.495216000000028,"handlerMs":0.355004,"schemaMs":0.033761}
+{"operation":"login","pair":8,"variant":"baseline","status":200,"clientMs":7.349386000000095,"handlerMs":0.379468,"schemaMs":0}
+{"operation":"login","pair":9,"variant":"baseline","status":200,"clientMs":6.734425999999985,"handlerMs":0.313159,"schemaMs":0}
+{"operation":"login","pair":9,"variant":"validated","status":200,"clientMs":6.2380269999998745,"handlerMs":0.427917,"schemaMs":0.082885}
+{"operation":"login","pair":10,"variant":"validated","status":200,"clientMs":8.246053000000074,"handlerMs":0.72278,"schemaMs":0.056482}
+{"operation":"login","pair":10,"variant":"baseline","status":200,"clientMs":10.261219999999867,"handlerMs":0.694177,"schemaMs":0}
+{"operation":"login","pair":11,"variant":"baseline","status":200,"clientMs":5.824413999999933,"handlerMs":0.339551,"schemaMs":0}
+{"operation":"login","pair":11,"variant":"validated","status":200,"clientMs":6.6038059999998495,"handlerMs":0.384217,"schemaMs":0.034809}
+{"operation":"login","pair":12,"variant":"validated","status":200,"clientMs":9.138928999999962,"handlerMs":0.502053,"schemaMs":0.106465}
+{"operation":"login","pair":12,"variant":"baseline","status":200,"clientMs":6.342770999999857,"handlerMs":0.367616,"schemaMs":0}
+{"operation":"login","pair":13,"variant":"baseline","status":200,"clientMs":7.97638199999983,"handlerMs":0.425054,"schemaMs":0}
+{"operation":"login","pair":13,"variant":"validated","status":200,"clientMs":7.268271000000141,"handlerMs":0.419824,"schemaMs":0.035929}
+{"operation":"login","pair":14,"variant":"validated","status":200,"clientMs":10.27859699999999,"handlerMs":0.76907,"schemaMs":0.0591}
+{"operation":"login","pair":14,"variant":"baseline","status":200,"clientMs":6.807932000000164,"handlerMs":0.348467,"schemaMs":0}
+{"operation":"login","pair":15,"variant":"baseline","status":200,"clientMs":9.927335000000085,"handlerMs":1.427648,"schemaMs":0}
+{"operation":"login","pair":15,"variant":"validated","status":200,"clientMs":7.752301999999872,"handlerMs":0.447445,"schemaMs":0.035278}
+{"operation":"login","pair":16,"variant":"validated","status":200,"clientMs":8.889511999999968,"handlerMs":0.424193,"schemaMs":0.034223}
+{"operation":"login","pair":16,"variant":"baseline","status":200,"clientMs":6.003760000000057,"handlerMs":0.34801,"schemaMs":0}
+{"operation":"login","pair":17,"variant":"baseline","status":200,"clientMs":8.899415999999974,"handlerMs":0.434191,"schemaMs":0}
+{"operation":"login","pair":17,"variant":"validated","status":200,"clientMs":10.58134700000005,"handlerMs":0.364966,"schemaMs":0.030467}
+{"operation":"login","pair":18,"variant":"validated","status":200,"clientMs":7.859714000000167,"handlerMs":0.729262,"schemaMs":0.035285}
+{"operation":"login","pair":18,"variant":"baseline","status":200,"clientMs":6.087365000000091,"handlerMs":0.368672,"schemaMs":0}
+{"operation":"login","pair":19,"variant":"baseline","status":200,"clientMs":8.554748999999902,"handlerMs":0.358046,"schemaMs":0}
+{"operation":"login","pair":19,"variant":"validated","status":200,"clientMs":6.498575999999957,"handlerMs":0.37153,"schemaMs":0.031645}
+{"operation":"login","pair":20,"variant":"validated","status":200,"clientMs":6.300807999999961,"handlerMs":0.474854,"schemaMs":0.043363}
+{"operation":"login","pair":20,"variant":"baseline","status":200,"clientMs":6.627836000000116,"handlerMs":0.316868,"schemaMs":0}
+{"operation":"login","pair":21,"variant":"baseline","status":200,"clientMs":7.980107999999973,"handlerMs":0.611826,"schemaMs":0}
+{"operation":"login","pair":21,"variant":"validated","status":200,"clientMs":7.234155000000101,"handlerMs":0.474278,"schemaMs":0.037494}
+{"operation":"login","pair":22,"variant":"validated","status":200,"clientMs":6.937601000000086,"handlerMs":0.636981,"schemaMs":0.052339}
+{"operation":"login","pair":22,"variant":"baseline","status":200,"clientMs":6.842774999999847,"handlerMs":0.410996,"schemaMs":0}
+{"operation":"login","pair":23,"variant":"baseline","status":200,"clientMs":7.702569999999923,"handlerMs":0.688166,"schemaMs":0}
+{"operation":"login","pair":23,"variant":"validated","status":200,"clientMs":9.759378999999853,"handlerMs":0.767026,"schemaMs":0.052981}
+{"operation":"login","pair":24,"variant":"validated","status":200,"clientMs":8.84693500000003,"handlerMs":1.103803,"schemaMs":0.063403}
+{"operation":"login","pair":24,"variant":"baseline","status":200,"clientMs":8.498013000000128,"handlerMs":0.335937,"schemaMs":0}
+{"operation":"login","pair":25,"variant":"baseline","status":200,"clientMs":7.423201999999947,"handlerMs":0.366523,"schemaMs":0}
+{"operation":"login","pair":25,"variant":"validated","status":200,"clientMs":7.8094710000000305,"handlerMs":0.371013,"schemaMs":0.032528}
+{"operation":"login","pair":26,"variant":"validated","status":200,"clientMs":7.747517000000016,"handlerMs":0.384821,"schemaMs":0.032521}
+{"operation":"login","pair":26,"variant":"baseline","status":200,"clientMs":6.801635000000033,"handlerMs":0.328836,"schemaMs":0}
+{"operation":"login","pair":27,"variant":"baseline","status":200,"clientMs":8.243974999999864,"handlerMs":0.319511,"schemaMs":0}
+{"operation":"login","pair":27,"variant":"validated","status":200,"clientMs":7.338357999999971,"handlerMs":0.389413,"schemaMs":0.034789}
+{"operation":"login","pair":28,"variant":"validated","status":200,"clientMs":9.826035000000047,"handlerMs":0.558073,"schemaMs":0.184467}
+{"operation":"login","pair":28,"variant":"baseline","status":200,"clientMs":13.298880000000281,"handlerMs":0.351048,"schemaMs":0}
+{"operation":"login","pair":29,"variant":"baseline","status":200,"clientMs":7.833385999999791,"handlerMs":0.363635,"schemaMs":0}
+{"operation":"login","pair":29,"variant":"validated","status":200,"clientMs":8.256115000000136,"handlerMs":0.729628,"schemaMs":0.051762}
+{"operation":"login","pair":30,"variant":"validated","status":200,"clientMs":6.791913999999906,"handlerMs":0.522517,"schemaMs":0.071194}
+{"operation":"login","pair":30,"variant":"baseline","status":200,"clientMs":6.320412000000033,"handlerMs":0.413637,"schemaMs":0}
+SUMMARY login {"baseline":{"client":{"n":30,"meanMs":7.666841999999982,"medianMs":7.314276500000005,"p95Ms":10.261219999999867},"handler":{"n":30,"meanMs":0.43592660000000016,"medianMs":0.368144,"p95Ms":0.694177},"schema":{"n":30,"meanMs":0,"medianMs":0,"p95Ms":0}},"validated":{"client":{"n":30,"meanMs":7.9818055333333255,"medianMs":7.780886499999951,"p95Ms":10.27859699999999},"handler":{"n":30,"meanMs":0.5842217666666668,"medianMs":0.4884535,"p95Ms":1.103803},"schema":{"n":30,"meanMs":0.057758433333333324,"medianMs":0.050128500000000006,"p95Ms":0.118664}}}
+DELTA_MEANS_MS login {"client":0.31496353333334337,"handler":0.14829516666666664}
+{"operation":"reset","pair":1,"variant":"baseline","status":200,"clientMs":6.993423999999777,"handlerMs":0.341569,"schemaMs":0}
+{"operation":"reset","pair":1,"variant":"validated","status":200,"clientMs":7.153341000000182,"handlerMs":0.378999,"schemaMs":0.035991}
+{"operation":"reset","pair":2,"variant":"validated","status":200,"clientMs":6.453878000000259,"handlerMs":0.359456,"schemaMs":0.039987}
+{"operation":"reset","pair":2,"variant":"baseline","status":200,"clientMs":6.754609999999957,"handlerMs":0.320159,"schemaMs":0}
+{"operation":"reset","pair":3,"variant":"baseline","status":200,"clientMs":8.111445000000003,"handlerMs":0.592774,"schemaMs":0}
+{"operation":"reset","pair":3,"variant":"validated","status":200,"clientMs":6.936263000000054,"handlerMs":0.351738,"schemaMs":0.043476}
+{"operation":"reset","pair":4,"variant":"validated","status":200,"clientMs":7.055206999999882,"handlerMs":0.381611,"schemaMs":0.030099}
+{"operation":"reset","pair":4,"variant":"baseline","status":200,"clientMs":8.341522000000168,"handlerMs":0.50386,"schemaMs":0}
+{"operation":"reset","pair":5,"variant":"baseline","status":200,"clientMs":7.700440999999955,"handlerMs":0.395055,"schemaMs":0}
+{"operation":"reset","pair":5,"variant":"validated","status":200,"clientMs":7.423331999999846,"handlerMs":0.389107,"schemaMs":0.02894}
+{"operation":"reset","pair":6,"variant":"validated","status":200,"clientMs":7.2269609999998465,"handlerMs":0.412957,"schemaMs":0.029948}
+{"operation":"reset","pair":6,"variant":"baseline","status":200,"clientMs":9.797279999999773,"handlerMs":0.897047,"schemaMs":0}
+{"operation":"reset","pair":7,"variant":"baseline","status":200,"clientMs":7.451242000000093,"handlerMs":0.607824,"schemaMs":0}
+{"operation":"reset","pair":7,"variant":"validated","status":200,"clientMs":6.037949000000026,"handlerMs":0.432673,"schemaMs":0.029019}
+{"operation":"reset","pair":8,"variant":"validated","status":200,"clientMs":5.997911000000386,"handlerMs":0.35157,"schemaMs":0.026783}
+{"operation":"reset","pair":8,"variant":"baseline","status":200,"clientMs":6.803863000000092,"handlerMs":0.378391,"schemaMs":0}
+{"operation":"reset","pair":9,"variant":"baseline","status":200,"clientMs":6.3282170000002225,"handlerMs":0.320662,"schemaMs":0}
+{"operation":"reset","pair":9,"variant":"validated","status":200,"clientMs":8.824184999999943,"handlerMs":0.742634,"schemaMs":0.031032}
+{"operation":"reset","pair":10,"variant":"validated","status":200,"clientMs":5.899517999999716,"handlerMs":0.408248,"schemaMs":0.028837}
+{"operation":"reset","pair":10,"variant":"baseline","status":200,"clientMs":6.183983999999782,"handlerMs":0.492515,"schemaMs":0}
+{"operation":"reset","pair":11,"variant":"baseline","status":200,"clientMs":6.648624999999811,"handlerMs":0.358388,"schemaMs":0}
+{"operation":"reset","pair":11,"variant":"validated","status":200,"clientMs":5.708151000000271,"handlerMs":0.408371,"schemaMs":0.02955}
+{"operation":"reset","pair":12,"variant":"validated","status":200,"clientMs":9.005252999999811,"handlerMs":0.818124,"schemaMs":0.055296}
+{"operation":"reset","pair":12,"variant":"baseline","status":200,"clientMs":10.59602199999972,"handlerMs":0.706436,"schemaMs":0}
+{"operation":"reset","pair":13,"variant":"baseline","status":200,"clientMs":6.777475999999751,"handlerMs":0.401585,"schemaMs":0}
+{"operation":"reset","pair":13,"variant":"validated","status":200,"clientMs":5.398760999999922,"handlerMs":0.398826,"schemaMs":0.029118}
+{"operation":"reset","pair":14,"variant":"validated","status":200,"clientMs":7.528443000000152,"handlerMs":1.057492,"schemaMs":0.132551}
+{"operation":"reset","pair":14,"variant":"baseline","status":200,"clientMs":9.781149000000369,"handlerMs":0.728056,"schemaMs":0}
+{"operation":"reset","pair":15,"variant":"baseline","status":200,"clientMs":9.030387999999675,"handlerMs":0.545923,"schemaMs":0}
+{"operation":"reset","pair":15,"variant":"validated","status":200,"clientMs":5.07881099999986,"handlerMs":0.393896,"schemaMs":0.027848}
+{"operation":"reset","pair":16,"variant":"validated","status":200,"clientMs":6.176002000000153,"handlerMs":0.656543,"schemaMs":0.043645}
+{"operation":"reset","pair":16,"variant":"baseline","status":200,"clientMs":8.97430600000007,"handlerMs":0.703073,"schemaMs":0}
+{"operation":"reset","pair":17,"variant":"baseline","status":200,"clientMs":8.743978999999854,"handlerMs":0.51754,"schemaMs":0}
+{"operation":"reset","pair":17,"variant":"validated","status":200,"clientMs":5.887850999999955,"handlerMs":0.431388,"schemaMs":0.029832}
+{"operation":"reset","pair":18,"variant":"validated","status":200,"clientMs":6.183289000000059,"handlerMs":0.361503,"schemaMs":0.026667}
+{"operation":"reset","pair":18,"variant":"baseline","status":200,"clientMs":12.491927999999916,"handlerMs":0.353592,"schemaMs":0}
+{"operation":"reset","pair":19,"variant":"baseline","status":200,"clientMs":4.432290000000194,"handlerMs":0.346089,"schemaMs":0}
+{"operation":"reset","pair":19,"variant":"validated","status":200,"clientMs":6.47008599999981,"handlerMs":0.376734,"schemaMs":0.028784}
+{"operation":"reset","pair":20,"variant":"validated","status":200,"clientMs":5.369905999999901,"handlerMs":0.344596,"schemaMs":0.027911}
+{"operation":"reset","pair":20,"variant":"baseline","status":200,"clientMs":4.789105000000291,"handlerMs":0.327953,"schemaMs":0}
+{"operation":"reset","pair":21,"variant":"baseline","status":200,"clientMs":5.450172000000293,"handlerMs":0.376312,"schemaMs":0}
+{"operation":"reset","pair":21,"variant":"validated","status":200,"clientMs":5.287894000000051,"handlerMs":0.365985,"schemaMs":0.028385}
+{"operation":"reset","pair":22,"variant":"validated","status":200,"clientMs":5.783137000000352,"handlerMs":0.548641,"schemaMs":0.042252}
+{"operation":"reset","pair":22,"variant":"baseline","status":200,"clientMs":7.683644000000186,"handlerMs":0.636948,"schemaMs":0}
+{"operation":"reset","pair":23,"variant":"baseline","status":200,"clientMs":6.871028999999908,"handlerMs":0.482434,"schemaMs":0}
+{"operation":"reset","pair":23,"variant":"validated","status":200,"clientMs":5.77886800000033,"handlerMs":0.512953,"schemaMs":0.06517}
+{"operation":"reset","pair":24,"variant":"validated","status":200,"clientMs":7.144796999999926,"handlerMs":0.568844,"schemaMs":0.065582}
+{"operation":"reset","pair":24,"variant":"baseline","status":200,"clientMs":7.217662999999902,"handlerMs":0.457245,"schemaMs":0}
+{"operation":"reset","pair":25,"variant":"baseline","status":200,"clientMs":6.617957999999817,"handlerMs":0.390595,"schemaMs":0}
+{"operation":"reset","pair":25,"variant":"validated","status":200,"clientMs":5.620660999999927,"handlerMs":0.393385,"schemaMs":0.028897}
+{"operation":"reset","pair":26,"variant":"validated","status":200,"clientMs":6.249580000000151,"handlerMs":0.43414,"schemaMs":0.033301}
+{"operation":"reset","pair":26,"variant":"baseline","status":200,"clientMs":6.539847999999893,"handlerMs":0.474047,"schemaMs":0}
+{"operation":"reset","pair":27,"variant":"baseline","status":200,"clientMs":6.556174000000283,"handlerMs":0.439336,"schemaMs":0}
+{"operation":"reset","pair":27,"variant":"validated","status":200,"clientMs":6.113605999999891,"handlerMs":0.438036,"schemaMs":0.029743}
+{"operation":"reset","pair":28,"variant":"validated","status":200,"clientMs":5.966813999999886,"handlerMs":0.392415,"schemaMs":0.028688}
+{"operation":"reset","pair":28,"variant":"baseline","status":200,"clientMs":9.767264000000068,"handlerMs":0.652274,"schemaMs":0}
+{"operation":"reset","pair":29,"variant":"baseline","status":200,"clientMs":6.907885000000078,"handlerMs":0.626094,"schemaMs":0}
+{"operation":"reset","pair":29,"variant":"validated","status":200,"clientMs":7.899295000000166,"handlerMs":0.947655,"schemaMs":0.058295}
+{"operation":"reset","pair":30,"variant":"validated","status":200,"clientMs":7.227993999999853,"handlerMs":0.39427,"schemaMs":0.029075}
+{"operation":"reset","pair":30,"variant":"baseline","status":200,"clientMs":6.051942000000054,"handlerMs":0.355207,"schemaMs":0}
+SUMMARY reset {"baseline":{"client":{"n":30,"meanMs":7.546495833333332,"medianMs":6.950654499999928,"p95Ms":10.59602199999972},"handler":{"n":30,"meanMs":0.4909661000000001,"medianMs":0.465646,"p95Ms":0.728056},"schema":{"n":30,"meanMs":0,"medianMs":0,"p95Ms":0}},"validated":{"client":{"n":30,"meanMs":6.4962581333333524,"medianMs":6.179645500000106,"p95Ms":8.824184999999943},"handler":{"n":30,"meanMs":0.4817596666666667,"medianMs":0.40353700000000003,"p95Ms":0.947655},"schema":{"n":30,"meanMs":0.0388234,"medianMs":0.0297875,"p95Ms":0.065582}}}
+DELTA_MEANS_MS reset {"client":-1.0502376999999798,"handler":-0.00920643333333343}
+Measurements complete. Interpret noise/negative deltas honestly; these are not real registration timings.
+measurement_exit_status=0
+run_exit_status=0
+capture_exit_status=0
