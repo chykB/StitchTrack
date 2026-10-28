@@ -1,0 +1,33 @@
+Evidence 14: Actual source-IP bypass
+Captured: 2026-10-28T19:18:43Z
+Actual HTTP POST http://127.0.0.1:3108/api/auth/signup; kernel localAddress=127.0.0.1; fixed synthetic fixture; no forwarded-IP headers
+HTTP 429 client socket.localAddress=127.0.0.1
+x-stitchtrack-observed-peer: 127.0.0.1
+x-stitchtrack-rate-instance: ccfa244b-8691-45f7-9b31-819df5b98673
+ratelimit-limit: 5
+ratelimit-remaining: 0
+ratelimit-reset: 468
+retry-after: 468
+cache-control: no-store
+{"assessmentFixture":"ip-rate-limit-v1","error":"rate_limited","message":"Too many requests. Please wait before trying again.","retryAfterSeconds":468,"accountCreated":false,"sessionCreated":false,"persisted":false,"emailSent":false}
+Actual HTTP POST http://127.0.0.1:3108/api/auth/signup; kernel localAddress=127.0.0.2; fixed synthetic fixture; no forwarded-IP headers
+HTTP 200 client socket.localAddress=127.0.0.2
+x-stitchtrack-observed-peer: 127.0.0.2
+x-stitchtrack-rate-instance: ccfa244b-8691-45f7-9b31-819df5b98673
+ratelimit-limit: 5
+ratelimit-remaining: 4
+ratelimit-reset: 600
+cache-control: no-store
+{"assessmentFixture":"ip-rate-limit-v1","outcome":"assessment_request_admitted","operation":"signup","accountCreated":false,"sessionCreated":false,"persisted":false,"emailSent":false}
+Actual HTTP POST http://127.0.0.1:3108/api/auth/signup; kernel localAddress=127.0.0.1; fixed synthetic fixture; no forwarded-IP headers
+HTTP 429 client socket.localAddress=127.0.0.1
+x-stitchtrack-observed-peer: 127.0.0.1
+x-stitchtrack-rate-instance: ccfa244b-8691-45f7-9b31-819df5b98673
+ratelimit-limit: 5
+ratelimit-remaining: 0
+ratelimit-reset: 468
+retry-after: 468
+cache-control: no-store
+{"assessmentFixture":"ip-rate-limit-v1","error":"rate_limited","message":"Too many requests. Please wait before trying again.","retryAfterSeconds":468,"accountCreated":false,"sessionCreated":false,"persisted":false,"emailSent":false}
+Actual source-IP bypass observed: alternate peer admitted while original peer remains blocked in the same process. No authentication performed.
+run=0 capture=0
