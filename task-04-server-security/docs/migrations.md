@@ -1,8 +1,8 @@
 # Task Four initial migration review
 
-**Current state:** initial deployment/Evidence 03 is owner-verified at 1201216, genuine required-column failure/Evidence 04 at b3af65d, and three-step recovery/Evidence 05 at 528e166. The isolated model is aligned to 42 columns, including required TEXT name without a default; both executed SQL files/checksums are unchanged. The original failure is still unresolved. [Owner-only reconciliation](required-name-resolution.md) is prepared with exact-command/target/artifact guards, read-only pre/post checks and separate supplementary evidence. No agent database operation occurred.
+**Current state:** initial deployment/Evidence 03 is owner-verified at 1201216, genuine required-column failure/Evidence 04 at b3af65d, and three-step recovery/Evidence 05 at 528e166. The isolated model is aligned to 42 columns, including required TEXT name without a default; both executed SQL files/checksums are unchanged. The owner subsequently reconciled history and captured successful status in the [second resolution attempt](../evidence/05-required-column-resolution-attempt-02.txt), committed at 8464453; the original failed diagnostic remains. [Runtime drift Evidence 06](runtime-drift.md) is now prepared, not executed. The earlier reconciliation runbook is historical and must not be rerun. No agent database operation occurred.
 
-The initial-DDL review below is historical: its 41 columns and 14 CHECKs describe the original migration, not the recovered 42-column/15-CHECK database. Its application instructions are retained for context and must not be repeated. Current execution instructions are only in the reconciliation runbook; Task Four Step 3 remains incomplete until genuine reconciliation/status and drift Evidence 06 are reviewed.
+The initial-DDL review below is historical: its 41 columns and 14 CHECKs describe the original migration, not the recovered 42-column/15-CHECK database. Its application instructions are retained for context and must not be repeated. Current execution instructions are only in the runtime-drift runbook; Step 3 still needs genuine Evidence 06 and review. No earlier migration/reconciliation command should be repeated.
 
 ## Scope and prepared constraints
 
@@ -98,3 +98,7 @@ Keep finalized migration SQL/provider lock in version control only when the owne
 Offline checks cover configuration, model contracts, unchanged SQL hashes and prepared read-only history comparisons. They do not prove PostgreSQL execution, deparser output, resolution record shape, replay or concurrency safety. Owner evidence 03/04/05 supplies the actual earlier results. The [reconciliation runbook](required-name-resolution.md) prepares only the exact completed required-name migration for resolution; it records no successful result in advance.
 
 Prisma may retain the original failed row with a resolution timestamp and insert a separate applied record. Capture actual before/after history and preserve the original ID/logs rather than assuming in-place success. No tracking-table SQL edits, reset, retry, or modified migration checksum are authorized. Guarded migrate status checks history after resolution; drift Evidence 06 and all financial/retrieval writer gates remain separate.
+
+## Prepared runtime drift demonstration
+
+The [Evidence 06 runbook](runtime-drift.md) uses a Git-ignored copy of the isolated schema, a separate generation-only config and the same real Prisma Client read before/during/after an extra nonexistent field. It changes no database structure or history and leaves the canonical model unchanged. All generation and database reads belong to the owner. Offline checks are not runtime evidence; no missing-column error is claimed yet.

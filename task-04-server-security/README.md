@@ -4,7 +4,7 @@
 
 Task Four moves StitchTrack from the [Task Three UI](../task-03-client-validation/README.md) towards server validation, secure credentials, sessions and email verification. The [PRD](../docs/PRD.md) is authoritative and read-only. Baseline: commit 1aab84c on feat/task-03-auth-foundation. The owner's supplied requirements define the assessment; no assessment PDF was available.
 
-**Slice 1 was documentation only.** The isolated seven-table lab was subsequently implemented and owner-migrated. Evidence 03/04/05 records initial deployment, the genuine required-column failure and three-step recovery (latest 528e166). Its model now includes required TEXT User.name; [failed-history reconciliation](docs/required-name-resolution.md) is prepared, not executed. The [product schema](docs/product-schema-proposal.md) remains a proposal, separate from the lab. Paper/initial-state evidence and hashing Evidence 07/08 are captured; remaining experiments are pending.
+**Slice 1 was documentation only.** The isolated seven-table lab was subsequently implemented and owner-migrated. Evidence 03/04/05 records initial deployment, the genuine required-column failure and three-step recovery (latest 528e166). Its model now includes required TEXT User.name. The owner completed reconciliation/status at 8464453 in the [second resolution attempt](evidence/05-required-column-resolution-attempt-02.txt). [Runtime drift Evidence 06](docs/runtime-drift.md) is prepared, not executed. The [product schema](docs/product-schema-proposal.md) remains a proposal, separate from the lab. Paper/initial-state evidence and hashing Evidence 07/08 are captured; remaining experiments are pending.
 
 Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Shared Zod validation and canonical email output are implemented. Standalone server-only Argon2id utilities and an owner-run benchmark are now available; see [hashing design and evidence commands](docs/hashing.md). The owner installed @node-rs/argon2 2.2.2; its pending package changes are preserved. Better Auth integration, real registration, sessions, SMTP and background delivery remain unimplemented, and the owner's genuine hashing evidence is linked in the checklist below. The root product schema still declares only Task Two's AssessmentEnquiry. Task Four has its own isolated schema/config/history; owner evidence establishes the lab state, with resolution/status still pending.
 
@@ -30,7 +30,7 @@ Each slice needs separate approval. Current documentation does not authorize pac
 
 ## Genuine evidence checklist
 
-Evidence 01-05, 07 and 08 are **captured** under task-04-server-security/evidence/; the remaining entries and supplementary reconciliation are pending. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
+Evidence 01-05, 07 and 08 are **captured** under task-04-server-security/evidence/; the remaining entries are pending; the successful reconciliation supplement is also captured. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
 
 | Status | No. | Required evidence and format |
 | --- | --- | --- |
@@ -72,6 +72,6 @@ Public onboarding remains disabled until launch readiness; no Task Four backend 
 
 Real customer processing, SMTP sending and worker operation require separate readiness approval. Task Three's [accessibility shortfall](../task-03-client-validation/docs/accessibility-audit.md) remains disclosed; optional recordings are not mandatory and this task does not complete missing observations.
 
-Next: review the isolated model alignment and owner-only reconciliation preparation. Capture its real supplementary results before planning drift Evidence 06.
+Next: review the owner-only runtime drift preparation and capture genuine Evidence 06 before continuing server-security slices.
 
 Assumptions: none. Proposed choices require review before implementation.

@@ -14,7 +14,7 @@ The owner reports PostgreSQL 16, a successful password-authenticated connection 
 
 ## Current owner-controlled phase
 
-Initial migration/Evidence 03 is complete at 1201216, the genuine failure/Evidence 04 at b3af65d, and the three-step recovery/Evidence 05 at 528e166. Both named synthetic users and the original failed diagnostic remain. Do not rerun seed, deploy or recovery. The model is now aligned; [owner-only reconciliation](../docs/required-name-resolution.md) is prepared, not executed. Only the exact candidate --applied command can pass with its separate exclusive confirmation and target/hash guards. Independent read-only checks and a new supplementary log are required; reset/generation remain blocked.
+Initial migration/Evidence 03, genuine failure/Evidence 04 and three-step recovery/Evidence 05 are complete. Reconciliation/status succeeded in the owner's [second attempt](../evidence/05-required-column-resolution-attempt-02.txt), committed at 8464453; the earlier authentication-failed capture is preserved separately. Do not repeat these operations. [Evidence 06 runtime drift](../docs/runtime-drift.md) is prepared only, using an ignored schema copy and a separate generation-only config. This migration config still blocks generate/reset/db push and unrelated commands; the new isolated config does not expose a datasource or migration command.
 
 ## Dedicated configuration
 
