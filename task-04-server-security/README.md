@@ -4,7 +4,7 @@
 
 Task Four moves StitchTrack from the [Task Three UI](../task-03-client-validation/README.md) towards server validation, secure credentials, sessions and email verification. The [PRD](../docs/PRD.md) is authoritative and read-only. Baseline: commit 1aab84c on feat/task-03-auth-foundation. The owner's supplied requirements define the assessment; no assessment PDF was available.
 
-**Slice 1 was documentation only.** The isolated seven-table lab was subsequently implemented and owner-migrated. Evidence 03/04/05 records initial deployment, the genuine required-column failure and three-step recovery (latest 528e166). Its model now includes required TEXT User.name. The owner completed reconciliation/status at 8464453 in the [second resolution attempt](evidence/05-required-column-resolution-attempt-02.txt). [Runtime drift Evidence 06](evidence/06-drift-error.txt) is completed and committed at ca554f1. [Step 5 normalization/trimming](docs/normalization-and-trimming.md) evidence is captured at 552b607, with the isolated-experiment/product-policy limitations retained. [Step 6 server validation](docs/validation-placement.md) is prepared; owner HTTP timing Evidence 11 remains pending. The [product schema](docs/product-schema-proposal.md) remains a proposal, separate from the lab. Paper/initial-state evidence and hashing Evidence 07/08 are captured; remaining experiments are pending.
+**Slice 1 was documentation only.** The isolated seven-table lab was subsequently implemented and owner-migrated. Evidence 03/04/05 records initial deployment, the genuine required-column failure and three-step recovery (latest 528e166). Its model now includes required TEXT User.name. The owner completed reconciliation/status at 8464453 in the [second resolution attempt](evidence/05-required-column-resolution-attempt-02.txt). [Runtime drift Evidence 06](evidence/06-drift-error.txt) is completed and committed at ca554f1. [Step 5 normalization/trimming](docs/normalization-and-trimming.md) evidence is captured at 552b607, with the isolated-experiment/product-policy limitations retained. [Step 6 server validation](docs/validation-placement.md) has captured HTTP timing Evidence 11; Evidence 12 compares the synthetic Task Three fixture with the validation-only Signup boundary. Neither proves functional authentication. [Step 8 rate limiting](docs/rate-limiting.md) now has an isolated default-off socket adapter and owner source-IP capture procedure; Evidence 13/14 remains pending. The [product schema](docs/product-schema-proposal.md) remains a proposal, separate from the lab. Paper/initial-state evidence and hashing Evidence 07/08 are captured; remaining experiments are pending.
 
 Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Shared Zod validation and canonical email output are implemented. Standalone server-only Argon2id utilities and an owner-run benchmark are now available; see [hashing design and evidence commands](docs/hashing.md). The owner installed @node-rs/argon2 2.2.2; its pending package changes are preserved. Better Auth integration, real registration, sessions, SMTP and background delivery remain unimplemented, and the owner's genuine hashing evidence is linked in the checklist below. The root product schema still declares only Task Two's AssessmentEnquiry. Task Four has its own isolated schema/config/history; owner evidence establishes the reconciled lab state and completed runtime drift correction.
 
@@ -30,7 +30,7 @@ Each slice needs separate approval. Current documentation does not authorize pac
 
 ## Genuine evidence checklist
 
-Evidence 01-10 are **captured** under task-04-server-security/evidence/; the remaining entries are pending; the successful reconciliation supplement is also captured. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
+Evidence 01-12 are **captured** under task-04-server-security/evidence/; the remaining entries are pending; the successful reconciliation supplement is also captured. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
 
 | Status | No. | Required evidence and format |
 | --- | --- | --- |
@@ -44,10 +44,10 @@ Evidence 01-10 are **captured** under task-04-server-security/evidence/; the rem
 | [x] | 08 | [Owner-machine Argon2id/SHA-256 timings and arithmetic](evidence/08-timing-argon-vs-sha.txt) — local sequential measurements, TXT. |
 | [x] | 09 | [Isolated email normalization](evidence/09-email-normalization.png) - owner PNG; real registration processing remains unimplemented. |
 | [x] | 10 | [Isolated password-trimming comparison](evidence/10-password-trimming-experiment.png) - owner PNG; product policy unchanged, assessment divergence unresolved. |
-| [ ] | 11 | Measured request timings with/without validation in a safe comparison — TXT. |
-| [ ] | 12 | Actual direct-request before/after responses, identifying both endpoints — TXT. |
-| [ ] | 13 | Triggered rate limit and HTTP status — PNG. |
-| [ ] | 14 | Controlled client-IP change bypassing an IP-only limit — PNG. |
+| [x] | 11 | [Measured HTTP validation timings](evidence/11-validation-timing.txt) - controlled synthetic comparison, not functional registration, TXT. |
+| [x] | 12 | [Actual direct-request before/after](evidence/12-direct-request-before-and-after.txt) - synthetic fixture versus validation-only boundary, TXT. |
+| [ ] | 13 | 13-rate-limit-triggered.png - owner actual HTTP 429 capture; [procedure](docs/rate-limiting.md#owner-procedure-genuine-evidence-13-and-14). |
+| [ ] | 14 | 14-rate-limit-defeated.txt - owner actual source-IP bypass, TXT (current owner-supplied requirement). |
 | [ ] | 15 | Known-compromised synthetic password rejected — PNG. |
 | [ ] | 16 | Actual SMTP failure — TXT. |
 | [ ] | 17 | Actual SMTP success — TXT. |
@@ -60,7 +60,7 @@ Evidence 01-10 are **captured** under task-04-server-security/evidence/; the rem
 
 Evidence 24, the seven-minute walkthrough, is optional. Automatic-fail safeguards: never store passwords with SHA/MD5; capture real local hashing timings and arithmetic, a real migration failure and the IP-only limitation; document at least four genuinely deferred controls. SHA-256 belongs only in the synthetic timing comparison.
 
-Slice 1 began with this README and docs/schema.md; the thirteen product specifications now live in docs/product-schema-proposal.md. Pending documentation: docs/rate-limiting.md, docs/breach-check.md, docs/verification-design.md, docs/email-copy.md, docs/not-implemented.md, docs/defects.md and docs/interview-answers.md (19 answers, maximum 200 words each).
+Slice 1 began with this README and docs/schema.md; the thirteen product specifications now live in docs/product-schema-proposal.md. Rate-limit design and capture instructions: [docs/rate-limiting.md](docs/rate-limiting.md). Pending documentation: docs/breach-check.md, docs/verification-design.md, docs/email-copy.md, docs/not-implemented.md, docs/defects.md and docs/interview-answers.md (19 answers, maximum 200 words each).
 
 ## Database ownership and release restrictions
 
@@ -72,6 +72,6 @@ Public onboarding remains disabled until launch readiness. Task Four now has loc
 
 Real customer processing, SMTP sending and worker operation require separate readiness approval. Task Three's [accessibility shortfall](../task-03-client-validation/docs/accessibility-audit.md) remains disclosed; optional recordings are not mandatory and this task does not complete missing observations.
 
-Next: review the guarded Step 6 validation-only routes and controlled HTTP comparison, then collect Evidence 11. Functional registration/login/reset remain unavailable; the historical real-auth timing baseline is absent. Step 7 comparison and the password-trimming compliance gap remain open.
+Next: review the isolated Step 8 adapter and owner procedure, then capture genuine Evidence 13/14. Functional registration/login/reset remain unavailable; the historical real-auth timing baseline is absent. Evidence 11/12 retains its narrowed scope, and the password-trimming compliance gap remains open.
 
 Assumptions: none. Proposed choices require review before implementation.
