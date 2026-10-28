@@ -191,15 +191,38 @@ export function assertTaskFourRequiredNameFailure(
 export function assertTaskFourDeploy(env: TaskFourEnvironment = process.env): void {
   const initial = env.TASK04_INITIAL_DEPLOY_CONFIRMED === "true";
   const failure = env.TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED === "true";
+  if (env.TASK04_REQUIRED_NAME_RESOLVE_CONFIRMED === "true") throw new Error("Resolution confirmation cannot authorize deploy.");
   if (initial === failure) throw new Error("Select exactly one owner-approved Task Four deployment phase.");
   if (failure) assertTaskFourRequiredNameFailure(env);
   else assertTaskFourInitialDeploy(env);
 }
 
-export type TaskFourCommand = "validate" | "status" | "deploy";
+// Resolution never executes DDL. The owner wrapper must independently inspect
+// live schema/data/history before using this exact metadata-only command.
+export function assertTaskFourRequiredNameResolution(
+  env: TaskFourEnvironment = process.env,
+  review?: RequiredNameReview,
+): void {
+  if (env.NODE_ENV === "production" || env.TASK04_REQUIRED_NAME_RESOLVE_CONFIRMED !== "true" ||
+      [env.TASK04_INITIAL_DEPLOY_CONFIRMED, env.TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED,
+       env.TASK04_REQUIRED_COLUMN_RECOVERY_CONFIRMED].includes("true")) {
+    throw new Error("Required-name resolution needs separate exclusive owner confirmation.");
+  }
+  // Reuse the existing immutable artifact review, not its execution permission.
+  assertTaskFourRequiredNameFailure({ NODE_ENV: env.NODE_ENV,
+    TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED: "true" }, review);
+  taskFourDatasource(env);
+}
 
-// Only reviewed owner-confirmed deploy phases are admitted; reset/generation stay blocked.
+export type TaskFourCommand = "validate" | "status" | "deploy" | "resolve-required-name";
+
+// Reviewed deploy phases and one exact resolution shape only; reset/generation stay blocked.
 export function taskFourCommand(args: readonly string[]): TaskFourCommand {
+  if (args.length === 6 && args[0] === "migrate" && args[1] === "resolve" &&
+      args[2] === "--applied" && args[3] === TASK_FOUR_REQUIRED_NAME_MIGRATION &&
+      args[4] === "--config" && args[5] === "task-04-server-security/prisma/prisma.config.ts") {
+    return "resolve-required-name";
+  }
   const operands: string[] = [];
   let configSeen = false;
   let selectedConfig: string | undefined;
@@ -223,5 +246,5 @@ export function taskFourCommand(args: readonly string[]): TaskFourCommand {
 }
 
 function commandError(): Error {
-  return new Error("Task Four permits only validate, migrate status and explicitly configured reviewed migrate deploy; reset, generation and unrelated commands remain blocked.");
+  return new Error("Task Four permits only validate, migrate status and explicitly configured reviewed migrate deploy or exact confirmed required-name resolution; reset, generation and unrelated commands remain blocked.");
 }

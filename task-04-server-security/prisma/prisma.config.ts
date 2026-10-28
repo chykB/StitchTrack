@@ -1,8 +1,9 @@
 import { defineConfig } from "prisma/config";
-import { taskFourCommand, taskFourDatasource, assertTaskFourDeploy } from "./config.ts";
+import { taskFourCommand, taskFourDatasource, assertTaskFourDeploy, assertTaskFourRequiredNameResolution } from "./config.ts";
 
 const command = taskFourCommand(process.argv.slice(2));
 if (command === "deploy") assertTaskFourDeploy();
+if (command === "resolve-required-name") assertTaskFourRequiredNameResolution();
 
 export default defineConfig({
   schema: "./schema.prisma",
@@ -12,5 +13,5 @@ export default defineConfig({
   ...(command === "validate" ? {} : {
     datasource: taskFourDatasource(),
   }),
-  // Only reviewed deploy phases are enabled; no reset, generation, seed or URL fallback.
+  // Only reviewed deploy/exact resolution phases; no reset, generation, seed or URL fallback.
 });

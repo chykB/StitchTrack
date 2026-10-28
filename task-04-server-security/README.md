@@ -4,9 +4,9 @@
 
 Task Four moves StitchTrack from the [Task Three UI](../task-03-client-validation/README.md) towards server validation, secure credentials, sessions and email verification. The [PRD](../docs/PRD.md) is authoritative and read-only. Baseline: commit 1aab84c on feat/task-03-auth-foundation. The owner's supplied requirements define the assessment; no assessment PDF was available.
 
-**Slice 1 was documentation only.** The [assessment lab schema](docs/schema.md) and [product schema proposal](docs/product-schema-proposal.md) remain proposals, not Prisma implementation or a deployed database. A subsequent owner-approved database-free alignment adds Your name to Signup. The owner has captured hashing Evidence 07 and 08; other Task Four evidence remains pending.
+**Slice 1 was documentation only.** The isolated seven-table lab was subsequently implemented and owner-migrated. Evidence 03/04/05 records initial deployment, the genuine required-column failure and three-step recovery (latest 528e166). Its model now includes required TEXT User.name; [failed-history reconciliation](docs/required-name-resolution.md) is prepared, not executed. The [product schema](docs/product-schema-proposal.md) remains a proposal, separate from the lab. Paper/initial-state evidence and hashing Evidence 07/08 are captured; remaining experiments are pending.
 
-Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Shared Zod validation and canonical email output are implemented. Standalone server-only Argon2id utilities and an owner-run benchmark are now available; see [hashing design and evidence commands](docs/hashing.md). The owner installed @node-rs/argon2 2.2.2; its pending package changes are preserved. Better Auth integration, real registration, sessions, SMTP and background delivery remain unimplemented, and the owner's genuine hashing evidence is linked in the checklist below. Source declares only Task Two's AssessmentEnquiry; actual database contents and migration history remain unverified for Task Four.
+Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Shared Zod validation and canonical email output are implemented. Standalone server-only Argon2id utilities and an owner-run benchmark are now available; see [hashing design and evidence commands](docs/hashing.md). The owner installed @node-rs/argon2 2.2.2; its pending package changes are preserved. Better Auth integration, real registration, sessions, SMTP and background delivery remain unimplemented, and the owner's genuine hashing evidence is linked in the checklist below. The root product schema still declares only Task Two's AssessmentEnquiry. Task Four has its own isolated schema/config/history; owner evidence establishes the lab state, with resolution/status still pending.
 
 ## Assessment versus product scope
 
@@ -30,15 +30,15 @@ Each slice needs separate approval. Current documentation does not authorize pac
 
 ## Genuine evidence checklist
 
-Evidence 07 and 08 are **captured** under task-04-server-security/evidence/; the remaining entries are pending. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
+Evidence 01-05, 07 and 08 are **captured** under task-04-server-security/evidence/; the remaining entries and supplementary reconciliation are pending. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
 
 | Status | No. | Required evidence and format |
 | --- | --- | --- |
-| [ ] | 01 | Owner's paper schema photograph — JPG. |
-| [ ] | 02 | Actual database state before migrations — PNG. |
-| [ ] | 03 | Initial migration and full sanitized output — TXT. |
-| [ ] | 04 | Required-column failure on populated disposable data — TXT. |
-| [ ] | 05 | Nullable → backfill → required correction — TXT. |
+| [x] | 01 | [Owner's paper schema photograph](evidence/01-schema-drawing.jpg) - owner capture. |
+| [x] | 02 | [Actual database state before migrations](evidence/02-database-state-before.png) - owner capture. |
+| [x] | 03 | [Initial migration and full output](evidence/03-initial-migration.txt) - owner capture. |
+| [x] | 04 | [Genuine required-column failure](evidence/04-required-column-failure.txt) - owner capture. |
+| [x] | 05 | [Nullable/backfill/required recovery](evidence/05-required-column-three-steps.txt) - owner capture. |
 | [ ] | 06 | Actual disposable-database drift error — TXT. |
 | [x] | 07 | [Two different Argon2id hashes, both verifying](evidence/07-hash-twice-different.txt) — genuine owner capture, TXT. |
 | [x] | 08 | [Owner-machine Argon2id/SHA-256 timings and arithmetic](evidence/08-timing-argon-vs-sha.txt) — local sequential measurements, TXT. |
@@ -60,7 +60,7 @@ Evidence 07 and 08 are **captured** under task-04-server-security/evidence/; the
 
 Evidence 24, the seven-minute walkthrough, is optional. Automatic-fail safeguards: never store passwords with SHA/MD5; capture real local hashing timings and arithmetic, a real migration failure and the IP-only limitation; document at least four genuinely deferred controls. SHA-256 belongs only in the synthetic timing comparison.
 
-Slice 1 began with this README and docs/schema.md; the thirteen product specifications now live in docs/product-schema-proposal.md. Pending documentation: docs/migrations.md, docs/validation-placement.md, docs/rate-limiting.md, docs/breach-check.md, docs/verification-design.md, docs/email-copy.md, docs/not-implemented.md, docs/defects.md and docs/interview-answers.md (19 answers, maximum 200 words each).
+Slice 1 began with this README and docs/schema.md; the thirteen product specifications now live in docs/product-schema-proposal.md. Pending documentation: docs/validation-placement.md, docs/rate-limiting.md, docs/breach-check.md, docs/verification-design.md, docs/email-copy.md, docs/not-implemented.md, docs/defects.md and docs/interview-answers.md (19 answers, maximum 200 words each).
 
 ## Database ownership and release restrictions
 
@@ -72,6 +72,6 @@ Public onboarding remains disabled until launch readiness; no Task Four backend 
 
 Real customer processing, SMTP sending and worker operation require separate readiness approval. Task Three's [accessibility shortfall](../task-03-client-validation/docs/accessibility-audit.md) remains disclosed; optional recordings are not mandatory and this task does not complete missing observations.
 
-Next: review the schema, owner paper evidence and Slice 2 gates before implementation.
+Next: review the isolated model alignment and owner-only reconciliation preparation. Capture its real supplementary results before planning drift Evidence 06.
 
 Assumptions: none. Proposed choices require review before implementation.

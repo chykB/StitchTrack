@@ -1,6 +1,6 @@
 // Synthetic Task Four laboratory only. No application client is generated.
-// Initial migration stage intentionally omits User.name; final design requires
-// name TEXT NOT NULL. See README.md for the staged migration and SQL checklist.
+// Aligned after owner-verified Evidence 05 recovery; applied SQL stays unchanged.
+// The nonblank name CHECK is maintained in reviewed SQL, not Prisma DSL.
 datasource db {
   provider = "postgresql"
   schemas  = ["task04_test"]
@@ -9,6 +9,7 @@ datasource db {
 model User {
   id             String              @id @db.Text
   emailCanonical String              @unique @db.Text
+  name           String              @db.Text
   createdAt      DateTime            @db.Timestamptz(3)
   sessions       Session[]
   paymentIntents PaymentIntent[]

@@ -1,6 +1,6 @@
 # Evidence 05: three-step required-column recovery
 
-**Prepared for owner review. No SQL, evidence capture or Prisma resolution was executed.** The owner verifies Evidence 04 at commit b3af65d: P3018/PostgreSQL 23502, two preserved synthetic users and no User.name. The [failed migration](../prisma/migrations/20261028_task04_user_name/migration.sql) and [initial migration](../prisma/migrations/20261028_task04_initial/migration.sql) remain unchanged. Their live failed/successful history is checked again by each prepared step.
+**Historical recovery procedure: completed by the owner and committed as 528e166. Do not rerun the capture/SQL below.** [Evidence 05](../evidence/05-required-column-three-steps.txt) records all three successful operations. The agent executed none; Prisma resolution remains pending in the new [reconciliation runbook](required-name-resolution.md). The owner verifies Evidence 04 at commit b3af65d: P3018/PostgreSQL 23502, two preserved synthetic users and no User.name. The [failed migration](../prisma/migrations/20261028_task04_user_name/migration.sql) and [initial migration](../prisma/migrations/20261028_task04_initial/migration.sql) remain unchanged. Their live failed/successful history is checked again by each prepared step.
 
 ## Recovery implementation and safeguards
 
@@ -115,16 +115,8 @@ After the three real steps, verify User has exactly four columns, name is Postgr
 
 No new name index, Prisma migration record or payment/retrieval behaviour is intended. The final lab has 42 scalar columns and one additional CHECK, with its previous indexes/FKs unchanged. No SQL parser/database test or fresh replay has been performed by the agent; source checks are not runtime proof.
 
-## Subsequent model alignment and guarded resolution - DISABLED
+## Subsequent model alignment and guarded resolution
 
-Only after reviewing the genuine recovery results, align the isolated User model with `name String @db.Text` (required, no default or name index), remove the transitional omission note and run separately approved database-free schema checks. Do not change root/product models or generate a live client prematurely. This slice deliberately leaves the isolated Prisma model unchanged while recovery is pending.
+The owner has completed and verified this recovery. The isolated model now includes `name String @db.Text` without a default or name index. Both executed migrations and Evidence 03/04/05 remain unchanged.
 
-Then prepare an exact-migration guarded resolution path after independently checking both unchanged SQL hashes and the completed live schema/data. The future owner command is:
-
-```bash
-./node_modules/.bin/prisma migrate resolve --applied 20261028_task04_user_name --config task-04-server-security/prisma/prisma.config.ts
-```
-
-**It remains rejected by the current command allow-list. Do not run it now.** The resolution will not execute the DDL; it must only reconcile work already completed and verified. Capture that later real command/output and before/after history in a supplementary continuation, preserving this three-step evidence. Confirm Prisma retains the original failed record ID and original logs; it may update resolution metadata/add an applied record. No direct tracking-table edits, deleting/replacing the failure, reset, --rolled-back retry or editing either migration is approved.
-
-This follows Prisma's [manual completion recovery](https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/patching-and-hotfixing#option-2-manually-complete-migration-and-resolve-as-applied). See [PostgreSQL locking](https://www.postgresql.org/docs/16/explicit-locking.html) and [psql includes/variables](https://www.postgresql.org/docs/16/app-psql.html). The original failed migration can still replay on a fresh empty User table later; replay/verification is future owner-controlled work, not a result claimed here.
+Continue only with the separately prepared [owner-only reconciliation runbook](required-name-resolution.md), which enables the exact candidate --applied command under a new exclusive confirmation, independent read-only checks and supplementary evidence capture. Resolution has not been executed by the agent or recorded as complete. Do not repeat these three recovery operations. Prisma history changes, actual status and continued diagnostic preservation remain to be captured by the owner.

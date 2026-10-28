@@ -4,7 +4,7 @@ This is the isolated synthetic laboratory, not application authentication or pay
 
 ## Initial stage and isolation
 
-[schema.prisma](schema.prisma) contains seven models, **41 scalar columns and seven FK definitions**, all assigned to task04_test. Initial User.name is deliberately absent: the owner's final design has 42 columns including nonblank name TEXT NOT NULL. Do not silently add it, provide a default or backfill now; that is the later owner-controlled required-column failure and nullable/backfill/required exercise. The final drawing describes the target, not this transitional state.
+[schema.prisma](schema.prisma) contains seven models, **42 scalar columns and seven FK definitions**, all assigned to task04_test. User.name is now required TEXT without a default or index, aligned after the owner's three-step recovery/Evidence 05 (528e166). The original 41-column initial migration and the failed required-name migration are preserved unchanged; the nonblank CHECK remains SQL-managed. No client is generated.
 
 Types/nullability, PKs, supporting composite UNIQUE keys and both correlated Payment FKs follow the reference. PaymentIntent and PaymentAttempt each have at most one Payment through the unique paymentIntentId/successfulAttemptId fields. No duplicate owner FK or redundant composite unique index is added. Prisma 7.10.1 requires extra composite unique indexes for singular composite back-relations. This schema deliberately uses collection back-relations instead: the existing single-column unique keys still enforce the documented database 0..1 cardinalities. This is an ORM representation limitation, not permission for multiple receipts. All FK delete/update actions are Restrict. IDs and timestamps are supplied explicitly by the controlled writer; no unapproved generator/default is introduced.
 
@@ -14,7 +14,7 @@ The owner reports PostgreSQL 16, a successful password-authenticated connection 
 
 ## Current owner-controlled phase
 
-Initial migration/Evidence 03 is complete at owner commit 1201216; the genuine [required-column failure](../docs/required-column-failure.md)/Evidence 04 is committed at b3af65d. Two synthetic users remain and name is absent. Do not rerun the seed or deploy. The [Evidence 05 recovery runbook](../docs/required-column-recovery.md) prepares three guarded owner-only SQL operations, outside Prisma migration history; no recovery has been executed. Its confirmation flag cannot enable Prisma deployment or resolution. The isolated model intentionally remains transitional until genuine recovery results are reviewed. migrate resolve/reset/generation remain blocked.
+Initial migration/Evidence 03 is complete at 1201216, the genuine failure/Evidence 04 at b3af65d, and the three-step recovery/Evidence 05 at 528e166. Both named synthetic users and the original failed diagnostic remain. Do not rerun seed, deploy or recovery. The model is now aligned; [owner-only reconciliation](../docs/required-name-resolution.md) is prepared, not executed. Only the exact candidate --applied command can pass with its separate exclusive confirmation and target/hash guards. Independent read-only checks and a new supplementary log are required; reset/generation remain blocked.
 
 ## Dedicated configuration
 
@@ -26,8 +26,9 @@ Use only [prisma.config.ts](prisma.config.ts), whose paths are relative to this 
 | TASK04_EXPECTED_HOST | Owner-confirmed local endpoint: localhost, 127.0.0.1 or [::1]. Must match the URL host. |
 | TASK04_EXPECTED_PORT | Owner-confirmed explicit port, 1-65535, matching the URL. |
 | TASK04_DATABASE_CONFIRMED | Exactly true, after owner target/privilege verification. |
-| TASK04_INITIAL_DEPLOY_CONFIRMED | Historical initial-only flag; leave unset for Evidence 04. With the additional candidate present it cannot admit deploy. |
-| TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED | Exactly true only for the prepared owner-reviewed required-column failure phase. Mutually exclusive with the initial flag; artifacts/checksums are pinned. |
+| TASK04_INITIAL_DEPLOY_CONFIRMED | Historical initial-only flag; leave unset during reconciliation. |
+| TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED | Historical failure-phase flag; leave unset during reconciliation. |
+| TASK04_REQUIRED_NAME_RESOLVE_CONFIRMED | Exactly true only for the reviewed reconciliation wrapper/exact command; initial, failure and recovery confirmations must be unset. No reset/generation or deploy authorization. |
 | TASK04_SHADOW_DATABASE_URL | Private password-authenticated URL for database stitchtrack_task04_shadow, role stitchtrack_task04_shadow_app, host 127.0.0.1, explicit port 5432 and exactly one schema=task04_test parameter. |
 
 Set those variables privately in the owner's WSL shell. No dotenv file is read automatically and no fallback to DATABASE_URL, EXPERIMENT_DATABASE_URL or generic SHADOW_DATABASE_URL exists. The dedicated main and shadow URLs are independently checked and mapped to Prisma 7 datasource.url and datasource.shadowDatabaseUrl. NODE_ENV=production is rejected for database-targeted use. Only schema and one optional sslmode (disable, require, verify-full) are allowed URL parameters; duplicates, alternate hosts/search paths/services and mismatched identities are rejected without printing input. Passwords with URL-reserved characters must be percent-encoded by the owner.
@@ -44,7 +45,7 @@ Database-connected commands are **owner-run** status and the separately guarded 
 ./node_modules/.bin/prisma migrate status --config task-04-server-security/prisma/prisma.config.ts
 ```
 
-Status does not apply migrations. An absent history/table is possible before the first migration; preserve the actual output rather than claiming success. The config rejects generate, db push/execute/pull, migrate dev/reset/resolve/diff and overrides such as --schema. Do not use the root npm Prisma scripts for this lab.
+Status does not apply migrations. An absent history/table is possible before the first migration; preserve the actual output rather than claiming success. The config rejects generate, db push/execute/pull, migrate dev/reset/diff, all other resolution shapes/names and overrides such as --schema. Do not use the root npm Prisma scripts for this lab.
 
 ## SQL and writer requirements before any migration approval
 
@@ -86,6 +87,4 @@ The shadow role's database CREATE privilege permits creating task04_test there; 
 
 The main role must retain its restrictions and sufficient ownership/DDL rights within the existing task04_test schema. Review any generated CREATE SCHEMA statements against that pre-provisioned main schema. The database/schema/role allow-list is configuration validation, not proof that a server has not been repurposed; the owner must keep the shadow exclusive and reconfirm its disposable status before future reset/replay.
 
-**Current deployment phase: Evidence 04 preparation only.** The old initial-only gate is intentionally closed by the additional reviewed candidate. Only an explicitly confirmed required-column experiment can now use deploy; see the [owner sequence and recovery decision](../docs/required-column-failure.md). validate/status remain available, while reset, resolve, dev, diff, direct Prisma SQL and generation remain blocked. Main/shadow target guards and applied initial SQL are unchanged.
-
-Next: review the synthetic seed and pending required-column migration and approve the recovery strategy before any owner execution. Do not rerun the historical Evidence 03 capture block. The owner will capture genuine Evidence 04; Evidence 05 and its exact narrowly guarded resolution require a separate approved slice. Financial/retrieval writers remain unimplemented and gated.
+**Current phase: model aligned; failed history reconciliation prepared.** Use the [exact owner-only sequence](../docs/required-name-resolution.md), including pre/post schema/user/history checks and supplementary capture. Resolution/status do not replay the shadow or execute the recovered DDL. Do not repeat historical migration/failure commands or use root npm Prisma scripts. Financial/retrieval writers and drift Evidence 06 remain separate, unimplemented work.

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { taskFourDatabaseUrl, taskFourShadowDatabaseUrl, taskFourDatasource, taskFourCommand, assertTaskFourInitialDeploy, assertTaskFourRequiredNameFailure, assertTaskFourDeploy, TaskFourConfigurationError } from "../prisma/config.ts";
+import { taskFourDatabaseUrl, taskFourShadowDatabaseUrl, taskFourDatasource, taskFourCommand, assertTaskFourInitialDeploy, assertTaskFourRequiredNameFailure, assertTaskFourDeploy, assertTaskFourRequiredNameResolution, TaskFourConfigurationError } from "../prisma/config.ts";
 
 // Synthetic in-memory URL only. Tests never create a client/socket or read .env.
 function fixture() {
@@ -301,9 +301,62 @@ test("required-column phase admits only its exact reviewed artifacts and confirm
 
 test("failure phase does not enable resolution, reset, direct SQL, generation or URL overrides", () => {
   for (const args of [
-    ["migrate", "resolve", "--applied", "20261028_task04_user_name", "--config", "task-04-server-security/prisma/prisma.config.ts"],
     ["migrate", "resolve", "--rolled-back", "20261028_task04_user_name"],
     ["migrate", "reset"], ["migrate", "dev"], ["migrate", "diff"],
     ["db", "push"], ["db", "execute"], ["generate"], [...deployArgs, "--url=other"],
   ]) assert.throws(() => taskFourCommand(args), /Task Four permits only/);
+});
+
+const resolveArgs = ["migrate", "resolve", "--applied", "20261028_task04_user_name", "--config", "task-04-server-security/prisma/prisma.config.ts"];
+
+test("resolution accepts only the exact migration, switch and config command shape", () => {
+  assert.equal(taskFourCommand(resolveArgs), "resolve-required-name");
+  for (const args of [
+    ["migrate", "resolve", "--applied", "20261028_task04_initial", ...resolveArgs.slice(4)],
+    ["migrate", "resolve", "--rolled-back", ...resolveArgs.slice(3)],
+    [...resolveArgs.slice(0, 4)], [...resolveArgs, "--force"], [...resolveArgs, "--url=other"],
+    [...resolveArgs.slice(0, 5), "prisma.config.ts"],
+    [...resolveArgs.slice(0, 4), "--config=task-04-server-security/prisma/prisma.config.ts"],
+    [...resolveArgs.slice(4), ...resolveArgs.slice(0, 4)],
+    [...resolveArgs, ...resolveArgs.slice(4)],
+  ]) assert.throws(() => taskFourCommand(args), /Task Four permits only/);
+});
+
+test("resolution needs exclusive confirmation, exact artifacts and both validated targets", () => {
+  const env = { ...shadowFixture(), TASK04_REQUIRED_NAME_RESOLVE_CONFIRMED: "true" };
+  assert.doesNotThrow(() => assertTaskFourRequiredNameResolution(env));
+  for (const value of [undefined, "false", "TRUE", " true "]) {
+    assert.throws(() => assertTaskFourRequiredNameResolution({ ...env, TASK04_REQUIRED_NAME_RESOLVE_CONFIRMED: value }));
+  }
+  for (const flag of ["TASK04_INITIAL_DEPLOY_CONFIRMED", "TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED", "TASK04_REQUIRED_COLUMN_RECOVERY_CONFIRMED"]) {
+    assert.throws(() => assertTaskFourRequiredNameResolution({ ...env, [flag]: "true" }));
+  }
+  assert.throws(() => assertTaskFourRequiredNameResolution({ ...env, NODE_ENV: "production" }));
+  for (const key of ["TASK04_DATABASE_URL", "TASK04_SHADOW_DATABASE_URL", "TASK04_DATABASE_CONFIRMED"]) {
+    assert.throws(() => assertTaskFourRequiredNameResolution({ ...env, [key]: undefined }));
+  }
+  assert.throws(() => assertTaskFourRequiredNameResolution({ ...env, TASK04_DATABASE_URL: env.TASK04_SHADOW_DATABASE_URL }));
+  for (const review of [{ ...requiredNameReview, failureSha256: "0".repeat(64) },
+    { ...requiredNameReview, sqlSha256: "0".repeat(64) },
+    { ...requiredNameReview, entries: [...requiredNameReview.entries, "unreviewed_next"] }]) {
+    assert.throws(() => assertTaskFourRequiredNameResolution(env, review));
+  }
+  assert.throws(() => assertTaskFourDeploy(env));
+  assert.throws(() => assertTaskFourDeploy({ ...env, TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED: "true" }));
+});
+
+test("actual resolution config remains offline while enforcing its independent guard", () => {
+  checkConfigImport(resolveArgs, { ...shadowFixture(), TASK04_REQUIRED_NAME_RESOLVE_CONFIRMED: "true" }, `
+    assert.equal(new URL(config.datasource.url).pathname, "/stitchtrack_assessment");
+    assert.equal(new URL(config.datasource.url).searchParams.get("schema"), "task04_test");
+  `);
+  const url = new URL("../prisma/prisma.config.ts", import.meta.url).href;
+  for (const env of [shadowFixture(), { ...shadowFixture(), TASK04_REQUIRED_COLUMN_RECOVERY_CONFIRMED: "true" }]) {
+    const result = spawnSync(process.execPath, ["--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--input-type=module", "--eval",
+      `process.argv=[process.execPath,"synthetic-prisma",...${JSON.stringify(resolveArgs)}]; await import(${JSON.stringify(url)});`],
+      { env, encoding: "utf8", timeout: 15000 });
+    assert.ifError(result.error); assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /exclusive owner confirmation/);
+    assert.doesNotMatch(result.stderr, /synthetic-only|postgresql:/);
+  }
 });

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { taskFourCommand, assertTaskFourDeploy } from "../prisma/config.ts";
+import { taskFourCommand, assertTaskFourDeploy, assertTaskFourRequiredNameResolution } from "../prisma/config.ts";
 
 const base = new URL("../experiments/required-column/recovery/", import.meta.url);
 const read = name => readFileSync(new URL(name, base), "utf8");
@@ -59,7 +59,6 @@ test("source manifest pins both unchanged migrations and all six recovery SQL in
 test("manual recovery confirmation cannot authorize Prisma resolution or deployment", () => {
   const env = { TASK04_REQUIRED_COLUMN_RECOVERY_CONFIRMED: "true" };
   assert.throws(() => assertTaskFourDeploy(env), /exactly one/u);
-  for (const mode of ["--applied", "--rolled-back"]) {
-    assert.throws(() => taskFourCommand(["migrate", "resolve", mode, "20261028_task04_user_name", "--config", "task-04-server-security/prisma/prisma.config.ts"]), /Task Four permits only/u);
-  }
+  assert.throws(() => assertTaskFourRequiredNameResolution(env), /exclusive owner confirmation/u);
+  assert.throws(() => taskFourCommand(["migrate", "resolve", "--rolled-back", "20261028_task04_user_name", "--config", "task-04-server-security/prisma/prisma.config.ts"]), /Task Four permits only/u);
 });
