@@ -1,7 +1,7 @@
 import "server-only";
 import { localAssessmentRequest, type Environment } from "../assessment/config.ts";
 import { authJson, validateAuthRequest, type AuthOperation } from "./request.server.ts";
-import {checkPwnedPassword, type BreachCheckResult} from "./breach-check.server.ts";
+import {checkPwnedPasswordForDevelopmentPreview, type BreachCheckResult} from "./breach-check.server.ts";
 
 // Genuine HTTP validation boundaries, not functioning authentication endpoints.
 export async function previewAuthRequest(request:Request,operation:AuthOperation,env:Environment,
@@ -15,7 +15,9 @@ export async function previewAuthRequest(request:Request,operation:AuthOperation
     // A future real registration service must require the prerequisite unconditionally.
     if(input.operation==="signup" && env.ENABLE_AUTH_BREACH_CHECK==="true") {
       let result:BreachCheckResult="unavailable";
-      try {result=await (dependencies.checkPassword ?? checkPwnedPassword)(input.data.password);} catch { /* Fail closed. */ }
+      try {result=await (dependencies.checkPassword
+        ? dependencies.checkPassword(input.data.password)
+        : checkPwnedPasswordForDevelopmentPreview(input.data.password,env));} catch { /* Fail closed. */ }
       if(result==="breached") return authJson({error:"password_breached",fields:["password"],
         message:"This password has appeared in a data breach. Choose a different password.",...noActions},422);
       if(result!=="not_found") return authJson({error:"password_check_unavailable",

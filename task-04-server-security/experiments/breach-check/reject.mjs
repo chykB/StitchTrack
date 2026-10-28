@@ -32,7 +32,7 @@ async function requestRejection() {
         catch {reject(new Error("Unexpected response format; raw response omitted."));}
       });
     });
-    req.setTimeout(15_000, () => req.destroy());
+    req.setTimeout(30_000, () => req.destroy());
     req.on("error", () => reject(new Error("Local HTTP request failed; no automatic retry.")));
     req.end(body);
   });

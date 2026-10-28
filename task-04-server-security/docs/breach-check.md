@@ -18,11 +18,19 @@ The checker is [breach-check.server.ts](../../lib/auth/breach-check.server.ts); 
 
 The binary digest necessarily exists transiently in server memory for the comparison. No full hexadecimal digest is constructed by the checker; the binary buffer is cleared after deriving the prefix/suffix. Passwords and fragments are not logged, written to disk/database, cached by application code or exposed in responses. JavaScript strings/garbage collection prevent a secure-memory-erasure guarantee. A fixed public synthetic password in tests/the owner driver is test data, never a stored user credential.
 
-SHA-1 here is a lookup identifier, **never credential storage or authentication verification**. Existing Argon2id hashing remains the credential-storage design. The protocol reference is [HIBP Pwned Passwords documentation](https://haveibeenpwned.com/API/v3#PwnedPasswords); it was not fetched during this no-live-request task. Live service compatibility still needs owner execution.
+SHA-1 here is a lookup identifier, **never credential storage or authentication verification**. Existing Argon2id hashing remains the credential-storage design. The protocol reference is [HIBP Pwned Passwords documentation](https://haveibeenpwned.com/API/v3#PwnedPasswords); it was not fetched during this no-live-request task. Owner network diagnostics are recorded below; the updated preview still needs an end-to-end owner rejection test.
 
 ## Failure policy and HTTP behaviour
 
-The default three-second deadline covers fetching headers and reading the response body. Abort plus a deadline race bounds waiting even when an injected transport ignores cancellation. There are no automatic retries. Tests may inject a shorter deadline; callers cannot raise it above three seconds through this API.
+The general checkPwnedPassword function retains its default and maximum of **three seconds**, covering response headers and body reading. It does not read an environment timeout override. Tests may inject a shorter deadline. Abort plus a deadline race bounds waiting even when an injected transport ignores cancellation; there are no automatic retries.
+
+A separate checkPwnedPasswordForDevelopmentPreview wrapper allows an explicit AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS setting from 1 to **20000 milliseconds**, defaulting to 3000 when absent. It requires the actual Node process and supplied preview configuration both to be development, plus ENABLE_AUTH_VALIDATION_PREVIEW=true and ENABLE_AUTH_BREACH_CHECK=true. The Signup boundary also retains its loopback-host restriction. Production/test/unset runtimes cannot activate this wrapper, even if supplied a development-shaped configuration. Invalid, noninteger or over-limit settings fail closed. This allowance is only for the opt-in local preview, not a production timeout-policy change. Login and Reset remain unchanged.
+
+### Owner-reported connection findings
+
+The owner reports direct curl returned HTTP 200 in **6.11 seconds**; default Node fetch failed with ETIMEDOUT/ENETUNREACH; Node fetch with --dns-result-order=ipv4first --no-network-family-autoselection returned HTTP 200 in **4.17 seconds**. The current Signup attempt returned 503 password_check_unavailable. These are owner-verified network observations, not requests independently repeated by the agent or proof of a completed Signup breach rejection. Both successful diagnostic durations exceed three seconds, which motivates an explicit development allowance rather than weakening the normal checker.
+
+The owner startup command below applies those IPv4 flags through NODE_OPTIONS to the local Next process and children only. It keeps the HTTPS hostname, certificate validation and k-anonymity protocol unchanged; no IP pinning, custom TLS agent or TLS-verification bypass is introduced. The flags address this reported connection path, not a universal production networking requirement. The 20-second HIBP deadline and 30-second owner HTTP timeout cover different layers; cold compilation or other overhead can still make the evidence request fail.
 
 The response must be HTTP 200, nonredirected, text/plain, nonempty, valid UTF-8 and within a two-MiB streamed/advertised limit. Parsing accepts LF/CRLF and an optional final newline, caps the range at 20,000 rows, and rejects malformed/duplicate suffix records, invalid counts and an all-padding response. Every row is checked, so a partially malformed range is never interpreted as a clean result. These are defensive bounds, not a claim that a well-formed but incomplete upstream dataset can be detected.
 
@@ -53,7 +61,10 @@ Terminal A:
 
 ```bash
 cd /home/bmalik/stitchtrack
-ENABLE_AUTH_VALIDATION_PREVIEW=true ENABLE_AUTH_BREACH_CHECK=true ./node_modules/.bin/next dev --hostname 127.0.0.1 --port 3110
+NODE_OPTIONS='--dns-result-order=ipv4first --no-network-family-autoselection' \
+  ENABLE_AUTH_VALIDATION_PREVIEW=true ENABLE_AUTH_BREACH_CHECK=true \
+  AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS=20000 \
+  ./node_modules/.bin/next dev --hostname 127.0.0.1 --port 3110
 ```
 
 Next sets NODE_ENV=development. Do not start the Step 8 adapter for this test; that adapter never calls HIBP. If an existing Next development process holds this checkout's lock, arrange an owner-controlled maintenance window and stop it normally before starting this process. Do not remove lock files, kill unrelated services or silently use another server. Keep the listener local and wait for Ready. No database flags, secrets or SMTP setup are required.
@@ -66,7 +77,7 @@ TASK04_BREACH_EVIDENCE_CONFIRMED=true node --disable-warning=MODULE_TYPELESS_PAC
 printf 'owner_check_exit_status=%s\n' "$?"
 ```
 
-The [owner driver](../experiments/breach-check/reject.mjs) has a fixed loopback destination and a 15-second local HTTP timeout, no redirect handling and no automatic retry. It accepts only an actual 422 password_breached response with the expected password field/message, no-store, no cookies and all account-action indicators false. It prints the actual status and safe validated response, never request contents or unexpected raw server output. It starts no service and makes no request on import.
+The [owner driver](../experiments/breach-check/reject.mjs) has a fixed loopback destination and a 30-second local HTTP timeout, no redirect handling and no automatic retry. It accepts only an actual 422 password_breached response with the expected password field/message, no-store, no cookies and all account-action indicators false. It prints the actual status and safe validated response, never request contents or unexpected raw server output. It starts no service and makes no request on import.
 
 Personally capture that terminal command, HTTP 422, rejection message and exit status as **task-04-server-security/evidence/15-breached-password-rejected.png**. Check that the displayed target is /api/auth/signup. The screenshot must come from this unmocked owner-started Next server, not unit-test output. Do not overwrite any existing screenshot. A 503, timeout or different response is an unsuccessful/pending demonstration; preserve the observation and investigate rather than manufacturing a rejection. Stop the opt-in server normally after capture.
 
@@ -74,7 +85,7 @@ The local request sends only public synthetic form values to the first-party loo
 
 ## Tests and limitations
 
-[Focused offline tests](../tests/breach-check.test.mjs) inject fetch responses for breached/no-match/zero-count-padding, exact password bytes, invalid basic inputs, HTTP/network failures, malformed/oversized/duplicate ranges, UTF-8 errors and stalled fetch/body deadlines. Integration tests verify validation-before-lookup, gate-off/production behaviour, Signup-only invocation, field feedback, safe errors and unchanged unavailable-action semantics. The owner driver is tested without making HTTP requests. Existing validation and rate-limit regressions also pass; none establishes live provider availability or creates Evidence 15.
+[Focused offline tests](../tests/breach-check.test.mjs) inject fetch responses for breached/no-match/zero-count-padding, exact password bytes, invalid basic inputs, HTTP/network failures, malformed/oversized/duplicate ranges, UTF-8 errors and stalled fetch/body deadlines. Integration tests verify validation-before-lookup, gate-off/production behaviour, Signup-only invocation, field feedback, safe errors and unchanged unavailable-action semantics. Timeout tests verify the unchanged three-second general checker, explicit 20-second preview maximum, invalid-setting rejection and the independent actual-runtime gate; they use injected responses and do not wait 20 seconds or call HIBP. The owner driver is tested without making HTTP requests. Existing validation and rate-limit regressions also pass; none establishes live provider availability or creates Evidence 15.
 
 ```bash
 node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test task-04-server-security/tests/breach-check.test.mjs task-04-server-security/tests/request-validation.test.mjs task-04-server-security/tests/rate-limiting.test.mjs

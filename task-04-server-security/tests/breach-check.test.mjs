@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import "../../scripts/register-server-only.mjs";
-const {checkPwnedPassword, BREACH_RANGE_MAX_BYTES} = await import("../../lib/auth/breach-check.server.ts");
+const {checkPwnedPassword, checkPwnedPasswordForDevelopmentPreview, BREACH_CHECK_TIMEOUT_MS, BREACH_PREVIEW_MAX_TIMEOUT_MS, BREACH_RANGE_MAX_BYTES} = await import("../../lib/auth/breach-check.server.ts");
 const {previewAuthRequest} = await import("../../lib/auth/validation-preview.server.ts");
 const {authorizeEvidence, verifyRejection} = await import("../experiments/breach-check/reject.mjs");
 const password = "password1234"; // Public synthetic test value, never a real credential.
@@ -90,6 +90,58 @@ test("deadline includes fetch and stalled body reads, even if injected transport
   assert.equal(await checkPwnedPassword(password, {timeoutMs: 10, fetcher: async () => response(new ReadableStream({cancel() {cancelled = true;}}))}), "unavailable");
   assert.equal(cancelled, true);
   for (const timeoutMs of [0, -1, 3001, Infinity, NaN]) assert.equal(await checkPwnedPassword(password, {timeoutMs, fetcher: async () => assert.fail()}), "unavailable");
+});
+function nodeEnvironment(t, value) {
+  const previous = process.env.NODE_ENV;
+  if (value === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = value;
+  t.after(() => {if (previous === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previous;});
+}
+test("default checker stays at three seconds; only explicit development preview can use up to twenty", async t => {
+  nodeEnvironment(t, "development");
+  const nativeTimeout = globalThis.setTimeout, delays = [];
+  t.mock.method(globalThis, "setTimeout", (callback, delay, ...args) => {delays.push(delay); return nativeTimeout(callback, delay, ...args);});
+  const dependencies = {fetcher: async () => response(suffixFor(password) + ":1")};
+  assert.equal(BREACH_CHECK_TIMEOUT_MS, 3000); assert.equal(BREACH_PREVIEW_MAX_TIMEOUT_MS, 20000);
+  assert.equal(await checkPwnedPassword(password, dependencies), "breached");
+  assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, enabled, dependencies), "breached");
+  assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "20000"}, dependencies), "breached");
+  assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "3001"}, dependencies), "breached");
+  assert.deepEqual(delays, [3000, 3000, 20000, 3001]);
+  assert.equal(await checkPwnedPassword(password, {...dependencies, timeoutMs: 20000}), "unavailable");
+});
+test("extended preview denies invalid configuration and missing opt-ins before lookup", async t => {
+  nodeEnvironment(t, "development");
+  const dependencies = {fetcher: async () => assert.fail("Invalid preview settings queried")};
+  for (const raw of ["20001", "200000", "0", "-1", "1.5", "NaN", "Infinity", "", " 20000", "020000"]) {
+    assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: raw}, dependencies), "unavailable");
+  }
+  for (const config of [{}, {...enabled, NODE_ENV: "production"}, {...enabled, NODE_ENV: "test"},
+    {...enabled, ENABLE_AUTH_VALIDATION_PREVIEW: "false"}, {...enabled, ENABLE_AUTH_BREACH_CHECK: "false"}]) {
+    assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, config, dependencies), "unavailable");
+  }
+});
+test("actual production/test/unset runtime cannot enable extended preview even with a development configuration", async t => {
+  nodeEnvironment(t, "production");
+  const config = {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "20000"};
+  for (const runtime of ["production", "test", undefined]) {
+    if (runtime === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = runtime;
+    assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, config, {fetcher: async () => assert.fail("Runtime gate bypassed")}), "unavailable");
+  }
+  const res = await previewAuthRequest(request(), "signup", {...config, NODE_ENV: "production"}, {checkPassword: async () => assert.fail("Production boundary queried")});
+  assert.equal(res.status, 404);
+});
+test("development preview retains deadline abort and fail-closed response validation", async t => {
+  nodeEnvironment(t, "development");
+  let signal;
+  assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "10"},
+    {fetcher: async (_, options) => {signal = options.signal; return await new Promise(() => {});}}), "unavailable");
+  assert.equal(signal.aborted, true);
+  assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "20000"},
+    {fetcher: async () => response("malformed range")}), "unavailable");
+});
+test("Evidence 15 driver has thirty-second local HTTP timeout without making a request", () => {
+  const source = readFileSync(new URL("../experiments/breach-check/reject.mjs", import.meta.url), "utf8");
+  assert.match(source, /req\.setTimeout\(30_000, /u);
 });
 test("signup basic validation precedes breach checks and denied gates never query", async () => {
   let calls = 0; const dependencies = {checkPassword: async () => {calls++; return "breached";}};

@@ -3,6 +3,7 @@ import {createHash} from "node:crypto";
 import {signupPasswordSchema} from "./schemas.ts";
 
 export const BREACH_CHECK_TIMEOUT_MS = 3_000;
+export const BREACH_PREVIEW_MAX_TIMEOUT_MS = 20_000;
 export const BREACH_RANGE_MAX_BYTES = 2 * 1024 * 1024;
 const RANGE_BASE = "https://api.pwnedpasswords.com/range/";
 export type BreachCheckResult = "breached" | "not_found" | "unavailable";
@@ -10,11 +11,32 @@ export type BreachCheckDependencies = {fetcher?: typeof fetch; timeoutMs?: numbe
 
 // Signup-only prerequisite. No logging, caching, persistence or credential storage.
 // SHA-1 serves only HIBP's lookup protocol; credential storage remains Argon2id.
-export async function checkPwnedPassword(password: string,
+export function checkPwnedPassword(password: string,
   dependencies: BreachCheckDependencies = {}): Promise<BreachCheckResult> {
+  return checkPasswordRange(password, dependencies, BREACH_CHECK_TIMEOUT_MS);
+}
+
+// Separate opt-in preview entry point. The normal checker never inherits an
+// environment override, even in development. Production cannot enable this wrapper.
+export function checkPwnedPasswordForDevelopmentPreview(password: string,
+  env: Readonly<Record<string, string | undefined>>,
+  dependencies: Pick<BreachCheckDependencies, "fetcher"> = {}): Promise<BreachCheckResult> {
+  if (process.env.NODE_ENV !== "development" || env.NODE_ENV !== "development" ||
+      env.ENABLE_AUTH_VALIDATION_PREVIEW !== "true" || env.ENABLE_AUTH_BREACH_CHECK !== "true") {
+    return Promise.resolve("unavailable");
+  }
+  const raw = env.AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS;
+  if (raw !== undefined && !/^[1-9][0-9]{0,4}$/u.test(raw)) return Promise.resolve("unavailable");
+  const timeoutMs = raw === undefined ? BREACH_CHECK_TIMEOUT_MS : Number(raw);
+  if (timeoutMs > BREACH_PREVIEW_MAX_TIMEOUT_MS) return Promise.resolve("unavailable");
+  return checkPasswordRange(password, {...dependencies, timeoutMs}, BREACH_PREVIEW_MAX_TIMEOUT_MS);
+}
+
+async function checkPasswordRange(password: string, dependencies: BreachCheckDependencies,
+  maximumTimeoutMs: number): Promise<BreachCheckResult> {
   if (typeof password !== "string" || !password.isWellFormed() || !signupPasswordSchema.safeParse(password).success) return "unavailable";
   const timeoutMs = dependencies.timeoutMs ?? BREACH_CHECK_TIMEOUT_MS;
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > BREACH_CHECK_TIMEOUT_MS) return "unavailable";
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > maximumTimeoutMs) return "unavailable";
   // No trim/case/Unicode transform. Avoid constructing a full hexadecimal digest.
   const digest = createHash("sha1").update(password, "utf8").digest();
   const prefix = (digest.subarray(0, 2).toString("hex") + (digest[2] >>> 4).toString(16)).toUpperCase();
