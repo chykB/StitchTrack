@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { taskFourDatabaseUrl, taskFourShadowDatabaseUrl, taskFourDatasource, taskFourCommand, assertTaskFourInitialDeploy, TaskFourConfigurationError } from "../prisma/config.ts";
+import { taskFourDatabaseUrl, taskFourShadowDatabaseUrl, taskFourDatasource, taskFourCommand, assertTaskFourInitialDeploy, assertTaskFourRequiredNameFailure, assertTaskFourDeploy, TaskFourConfigurationError } from "../prisma/config.ts";
 
 // Synthetic in-memory URL only. Tests never create a client/socket or read .env.
 function fixture() {
@@ -237,7 +237,7 @@ test("deploy permits only the isolated config and no additional execution flags"
 
 test("initial deployment requires explicit confirmation and exact reviewed files", () => {
   const confirmed = { ...shadowFixture(), TASK04_INITIAL_DEPLOY_CONFIRMED: "true" };
-  assert.doesNotThrow(() => assertTaskFourInitialDeploy(confirmed)); // Real local files; no SQL execution.
+  assert.throws(() => assertTaskFourInitialDeploy(confirmed)); // New candidate intentionally closes the old initial-only gate.
   assert.doesNotThrow(() => assertTaskFourInitialDeploy(confirmed, approvedReview));
   for (const value of [undefined, "false", "TRUE", " true "]) {
     assert.throws(() => assertTaskFourInitialDeploy({ ...confirmed, TASK04_INITIAL_DEPLOY_CONFIRMED: value }, approvedReview), /explicit owner confirmation/);
@@ -252,8 +252,8 @@ test("initial deployment requires explicit confirmation and exact reviewed files
   ]) assert.throws(() => assertTaskFourInitialDeploy(confirmed, review), /only the reviewed initial migration/);
 });
 
-test("actual deploy config constructs only the guarded main datasource without executing Prisma", () => {
-  checkConfigImport(deployArgs, { ...shadowFixture(), TASK04_INITIAL_DEPLOY_CONFIRMED: "true" }, `
+test("actual failure-phase config constructs only the guarded main datasource without executing Prisma", () => {
+  checkConfigImport(deployArgs, { ...shadowFixture(), TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED: "true" }, `
     assert.equal(new URL(config.datasource.url).pathname, "/stitchtrack_assessment");
     assert.equal(new URL(config.datasource.url).username, "stitchtrack_task04_test_app");
     assert.equal(new URL(config.datasource.url).searchParams.get("schema"), "task04_test");
@@ -268,4 +268,42 @@ test("deploy confirmation never bypasses main/role/schema or credential guards",
     { ...confirmed, TASK04_DATABASE_URL: undefined },
     { ...confirmed, TASK04_SHADOW_DATABASE_URL: undefined },
   ]) assert.throws(() => taskFourDatasource(env), TaskFourConfigurationError);
+});
+
+const requiredNameReview = {
+  ...approvedReview,
+  entries: [...approvedReview.entries, "20261028_task04_user_name"],
+  failureEntries: ["migration.sql"],
+  failureSha256: "482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33",
+  seedSha256: "83c98b132026fa160c581a74b744055aaeab76bd807176e551473d62144820c9",
+};
+
+test("required-column phase admits only its exact reviewed artifacts and confirmation", () => {
+  const env = { ...shadowFixture(), TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED: "true" };
+  assert.doesNotThrow(() => assertTaskFourRequiredNameFailure(env)); // Files only; no Prisma CLI/DB.
+  assert.doesNotThrow(() => assertTaskFourRequiredNameFailure(env, requiredNameReview));
+  assert.doesNotThrow(() => assertTaskFourDeploy(env));
+  for (const value of [undefined, "false", "TRUE", " true "]) {
+    assert.throws(() => assertTaskFourRequiredNameFailure({ ...env, TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED: value }, requiredNameReview));
+  }
+  assert.throws(() => assertTaskFourDeploy({ ...env, TASK04_INITIAL_DEPLOY_CONFIRMED: "true" }), /exactly one/);
+  assert.throws(() => assertTaskFourDeploy({}), /exactly one/);
+  assert.throws(() => assertTaskFourRequiredNameFailure({ ...env, NODE_ENV: "production" }, requiredNameReview));
+  for (const review of [
+    { ...requiredNameReview, entries: [...requiredNameReview.entries, "unreviewed_next"] },
+    { ...requiredNameReview, sqlSha256: "0".repeat(64) },
+    { ...requiredNameReview, failureSha256: "0".repeat(64) },
+    { ...requiredNameReview, seedSha256: "0".repeat(64) },
+    { ...requiredNameReview, failureEntries: ["migration.sql", "other.sql"] },
+    { ...requiredNameReview, provider: 'provider = "sqlite"' },
+  ]) assert.throws(() => assertTaskFourRequiredNameFailure(env, review));
+});
+
+test("failure phase does not enable resolution, reset, direct SQL, generation or URL overrides", () => {
+  for (const args of [
+    ["migrate", "resolve", "--applied", "20261028_task04_user_name", "--config", "task-04-server-security/prisma/prisma.config.ts"],
+    ["migrate", "resolve", "--rolled-back", "20261028_task04_user_name"],
+    ["migrate", "reset"], ["migrate", "dev"], ["migrate", "diff"],
+    ["db", "push"], ["db", "execute"], ["generate"], [...deployArgs, "--url=other"],
+  ]) assert.throws(() => taskFourCommand(args), /Task Four permits only/);
 });

@@ -12,6 +12,10 @@ There are **19 declared B-tree PK/unique/secondary indexes**. The twentieth inde
 
 The owner reports PostgreSQL 16, a successful password-authenticated connection to stitchtrack_assessment as stitchtrack_task04_test_app, the isolated task04_test schema, and denial of public creation, new-schema creation and Task Two table access. Evidence 02 was owner-captured. These are owner-reported checks, not agent database tests. Schema isolation shares database resources; restricted privileges remain essential.
 
+## Current owner-controlled phase
+
+Initial migration/Evidence 03 is complete at owner commit 1201216. The new [required-column failure runbook](../docs/required-column-failure.md) is prepared for review only. TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED=true selects the exact checksum-gated failure candidate and synthetic seed; TASK04_INITIAL_DEPLOY_CONFIRMED must be unset. With the new candidate present, the old initial-only gate intentionally rejects deploy. No resolution/reset/generation command is enabled. Approve the recovery plan before owner execution.
+
 ## Dedicated configuration
 
 Use only [prisma.config.ts](prisma.config.ts), whose paths are relative to this directory. Its migrations path is [migrations/](migrations/); it does not read Task Two's history. Intended tracking is task04_test._prisma_migrations; the owner must verify actual placement when migrations are eventually authorized.
@@ -22,7 +26,8 @@ Use only [prisma.config.ts](prisma.config.ts), whose paths are relative to this 
 | TASK04_EXPECTED_HOST | Owner-confirmed local endpoint: localhost, 127.0.0.1 or [::1]. Must match the URL host. |
 | TASK04_EXPECTED_PORT | Owner-confirmed explicit port, 1-65535, matching the URL. |
 | TASK04_DATABASE_CONFIRMED | Exactly true, after owner target/privilege verification. |
-| TASK04_INITIAL_DEPLOY_CONFIRMED | Exactly true only for the owner-approved initial deploy. Not needed for validate/status; the deploy gate also verifies the rehearsed SQL and sole migration. |
+| TASK04_INITIAL_DEPLOY_CONFIRMED | Historical initial-only flag; leave unset for Evidence 04. With the additional candidate present it cannot admit deploy. |
+| TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED | Exactly true only for the prepared owner-reviewed required-column failure phase. Mutually exclusive with the initial flag; artifacts/checksums are pinned. |
 | TASK04_SHADOW_DATABASE_URL | Private password-authenticated URL for database stitchtrack_task04_shadow, role stitchtrack_task04_shadow_app, host 127.0.0.1, explicit port 5432 and exactly one schema=task04_test parameter. |
 
 Set those variables privately in the owner's WSL shell. No dotenv file is read automatically and no fallback to DATABASE_URL, EXPERIMENT_DATABASE_URL or generic SHADOW_DATABASE_URL exists. The dedicated main and shadow URLs are independently checked and mapped to Prisma 7 datasource.url and datasource.shadowDatabaseUrl. NODE_ENV=production is rejected for database-targeted use. Only schema and one optional sslmode (disable, require, verify-full) are allowed URL parameters; duplicates, alternate hosts/search paths/services and mismatched identities are rejected without printing input. Passwords with URL-reserved characters must be percent-encoded by the owner.
@@ -81,6 +86,6 @@ The shadow role's database CREATE privilege permits creating task04_test there; 
 
 The main role must retain its restrictions and sufficient ownership/DDL rights within the existing task04_test schema. Review any generated CREATE SCHEMA statements against that pre-provisioned main schema. The database/schema/role allow-list is configuration validation, not proof that a server has not been repurposed; the owner must keep the shadow exclusive and reconfirm its disposable status before future reset/replay.
 
-**Only the rehearsed initial migrate deploy is now enabled for owner execution**, alongside validate/status. It needs TASK04_INITIAL_DEPLOY_CONFIRMED=true, the exact isolated --config path, the approved SQL checksum and no additional migrations. Use the [Evidence 03 runbook](../docs/migration-rehearsal.md#evidence-03---genuine-initial-prisma-deployment). Adding a valid shadow URL alone does not authorize deployment; dev (including --create-only), reset, resolve, diff and direct Prisma SQL execution remain blocked. The owner reports the identical SQL succeeded in the dedicated shadow rehearsal. Main deployment/Evidence 03 remains pending; the agent performed no migration, client generation, reset, backfill or drift operation.
+**Current deployment phase: Evidence 04 preparation only.** The old initial-only gate is intentionally closed by the additional reviewed candidate. Only an explicitly confirmed required-column experiment can now use deploy; see the [owner sequence and recovery decision](../docs/required-column-failure.md). validate/status remain available, while reset, resolve, dev, diff, direct Prisma SQL and generation remain blocked. Main/shadow target guards and applied initial SQL are unchanged.
 
-Next: the owner privately supplies the existing connection variables, reviews the [Evidence 03 capture block](../docs/migration-rehearsal.md#evidence-03---genuine-initial-prisma-deployment), and runs the explicitly confirmed initial deploy only on the intended assessment target. The successful external shadow log is not Evidence 03. Keep the initial User.name omission, main/shadow separation and later failure/recovery/drift evidence requirements. Financial and retrieval writers remain gated by their unresolved safeguards.
+Next: review the synthetic seed and pending required-column migration and approve the recovery strategy before any owner execution. Do not rerun the historical Evidence 03 capture block. The owner will capture genuine Evidence 04; Evidence 05 and its exact narrowly guarded resolution require a separate approved slice. Financial/retrieval writers remain unimplemented and gated.

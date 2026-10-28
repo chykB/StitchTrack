@@ -147,9 +147,58 @@ export function assertTaskFourInitialDeploy(
   }
 }
 
+export const TASK_FOUR_REQUIRED_NAME_MIGRATION = "20261028_task04_user_name";
+export const TASK_FOUR_REQUIRED_NAME_SHA256 = "482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33";
+export const TASK_FOUR_SEED_SHA256 = "83c98b132026fa160c581a74b744055aaeab76bd807176e551473d62144820c9";
+
+type RequiredNameReview = InitialDeployReview & Readonly<{
+  failureEntries: readonly string[];
+  failureSha256: string;
+  seedSha256: string;
+}>;
+
+function readRequiredNameReview(): RequiredNameReview {
+  const root = new URL("./migrations/", import.meta.url);
+  return {
+    ...readInitialDeployReview(),
+    failureEntries: readdirSync(new URL(TASK_FOUR_REQUIRED_NAME_MIGRATION + "/", root)),
+    failureSha256: createHash("sha256").update(readFileSync(new URL(TASK_FOUR_REQUIRED_NAME_MIGRATION + "/migration.sql", root))).digest("hex"),
+    seedSha256: createHash("sha256").update(readFileSync(new URL("../experiments/required-column/seed-users.sql", import.meta.url))).digest("hex"),
+  };
+}
+
+export function assertTaskFourRequiredNameFailure(
+  env: TaskFourEnvironment = process.env,
+  review?: RequiredNameReview,
+): void {
+  try {
+    if (env.NODE_ENV === "production" || env.TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED !== "true" ||
+        env.TASK04_INITIAL_DEPLOY_CONFIRMED === "true") throw new Error();
+    const inspected = review ?? readRequiredNameReview();
+    const allowed = new Set([".gitkeep", "migration_lock.toml", initialMigration, TASK_FOUR_REQUIRED_NAME_MIGRATION]);
+    if (inspected.entries.length !== allowed.size || new Set(inspected.entries).size !== allowed.size ||
+        inspected.entries.some(name => !allowed.has(name)) ||
+        inspected.migrationEntries.length !== 1 || inspected.migrationEntries[0] !== "migration.sql" ||
+        inspected.failureEntries.length !== 1 || inspected.failureEntries[0] !== "migration.sql" ||
+        inspected.sqlSha256 !== TASK_FOUR_INITIAL_SQL_SHA256 ||
+        inspected.failureSha256 !== TASK_FOUR_REQUIRED_NAME_SHA256 || inspected.seedSha256 !== TASK_FOUR_SEED_SHA256 ||
+        inspected.provider !== 'provider = "postgresql"') throw new Error();
+  } catch {
+    throw new Error("Required-column experiment needs exclusive owner confirmation and only the reviewed initial, failure and synthetic-seed artifacts.");
+  }
+}
+
+export function assertTaskFourDeploy(env: TaskFourEnvironment = process.env): void {
+  const initial = env.TASK04_INITIAL_DEPLOY_CONFIRMED === "true";
+  const failure = env.TASK04_REQUIRED_COLUMN_FAILURE_CONFIRMED === "true";
+  if (initial === failure) throw new Error("Select exactly one owner-approved Task Four deployment phase.");
+  if (failure) assertTaskFourRequiredNameFailure(env);
+  else assertTaskFourInitialDeploy(env);
+}
+
 export type TaskFourCommand = "validate" | "status" | "deploy";
 
-// Only the owner-approved initial deploy is added; reset/generation stay blocked.
+// Only reviewed owner-confirmed deploy phases are admitted; reset/generation stay blocked.
 export function taskFourCommand(args: readonly string[]): TaskFourCommand {
   const operands: string[] = [];
   let configSeen = false;
@@ -174,5 +223,5 @@ export function taskFourCommand(args: readonly string[]): TaskFourCommand {
 }
 
 function commandError(): Error {
-  return new Error("Task Four permits only validate, migrate status and explicitly configured initial migrate deploy; reset, generation and unrelated commands remain blocked.");
+  return new Error("Task Four permits only validate, migrate status and explicitly configured reviewed migrate deploy; reset, generation and unrelated commands remain blocked.");
 }

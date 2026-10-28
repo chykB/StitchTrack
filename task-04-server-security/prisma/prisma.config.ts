@@ -1,8 +1,8 @@
 import { defineConfig } from "prisma/config";
-import { taskFourCommand, taskFourDatasource, assertTaskFourInitialDeploy } from "./config.ts";
+import { taskFourCommand, taskFourDatasource, assertTaskFourDeploy } from "./config.ts";
 
 const command = taskFourCommand(process.argv.slice(2));
-if (command === "deploy") assertTaskFourInitialDeploy();
+if (command === "deploy") assertTaskFourDeploy();
 
 export default defineConfig({
   schema: "./schema.prisma",
@@ -12,5 +12,5 @@ export default defineConfig({
   ...(command === "validate" ? {} : {
     datasource: taskFourDatasource(),
   }),
-  // Only initial deploy is enabled; no reset, generation, seed or URL fallback.
+  // Only reviewed deploy phases are enabled; no reset, generation, seed or URL fallback.
 });

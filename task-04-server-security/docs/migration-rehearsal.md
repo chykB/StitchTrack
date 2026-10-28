@@ -1,6 +1,6 @@
 # Owner-only initial SQL rehearsal and evidence sequence
 
-**Owner-reported shadow rehearsal succeeded; genuine assessment deployment and Evidence 03 are still pending. No database command or evidence capture is performed by this update.** Read the [migration review](migrations.md), [initial SQL](../prisma/migrations/20261028_task04_initial/migration.sql) and [helper](../scripts/rehearse-initial-shadow.sh) before running anything. This is a one-time empty-schema SQL rehearsal on the dedicated disposable shadow, not a Prisma migration or account/payment workflow.
+**Initial Prisma deployment and Evidence 03 are owner-verified complete, committed at 1201216. The earlier commands below are historical and must not be rerun. Continue with the separately prepared [Evidence 04 review](required-column-failure.md).** Read the [migration review](migrations.md), [initial SQL](../prisma/migrations/20261028_task04_initial/migration.sql) and [helper](../scripts/rehearse-initial-shadow.sh) before running anything. This is a one-time empty-schema SQL rehearsal on the dedicated disposable shadow, not a Prisma migration or account/payment workflow.
 
 ## Scope and prerequisites
 
@@ -18,7 +18,7 @@ Do not rerun the successful rehearsal or reset the now-populated shadow. The his
 
 ## Evidence 03 - genuine initial Prisma deployment
 
-Only owner-executed migrate deploy is newly enabled, with the exact isolated --config path. It requires all five existing private TASK04 variables from the [setup notes](../prisma/README.md) plus TASK04_INITIAL_DEPLOY_CONFIRMED=true. Offline validate remains independent of credentials. The configuration checks the approved main/shadow URLs and rejects additional migration directories, changed initial SQL or provider metadata. No reset, dev, diff, resolve, generation or db push/execute command is enabled.
+Historical Evidence 03 procedure: at that stage only owner-executed initial migrate deploy was enabled, with the exact isolated --config path. It requires all five existing private TASK04 variables from the [setup notes](../prisma/README.md) plus TASK04_INITIAL_DEPLOY_CONFIRMED=true. Offline validate remains independent of credentials. The configuration checks the approved main/shadow URLs and rejects additional migration directories, changed initial SQL or provider metadata. No reset, dev, diff, resolve, generation or db push/execute command is enabled.
 
 The rehearsal log remains outside this repository and must not be renamed to Evidence 03. psql rehearsal did not create Prisma migration history. The real command to be recorded is:
 
@@ -184,4 +184,4 @@ Preserve migration name 20261028_task04_initial and SQL checksum 1b2b7b3a988511a
 
 The drift client/command does not exist yet: no generator, client or database query was added here. Expected error classes are planning expectations, not evidence. These future steps require their own reviewed commands, owner execution and authentic logs. If the assessor specifically requires a Prisma-recorded failed migration for Evidence 04, agree the isolated failed-history/recovery procedure before execution rather than relabelling a direct SQL error.
 
-Keep financial and retrieval tables empty until their deferred consistency/immutability and writer controls are approved and installed. The User-only migration exercises need no payment/retrieval writer or real authentication. Evidence 03-06 remains pending until those actual owner runs and captures occur. Neither optional rehearsal logging nor a source-only test completes them.
+Keep financial and retrieval tables empty until their deferred consistency/immutability and writer controls are approved and installed. The User-only migration exercises need no payment/retrieval writer or real authentication. Evidence 03 is now complete; Evidence 04-06 requires its own actual owner runs and captures. The detailed Evidence 04 preparation is in [required-column failure](required-column-failure.md). Neither optional rehearsal logging nor a source-only test completes them.
