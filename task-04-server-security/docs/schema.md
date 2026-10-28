@@ -1,320 +1,276 @@
-# Proposed StitchTrack schema and authentication architecture
+# Task Four schema: disposable assessment laboratory
 
-## 1. Authority and design status
+## 1. Scope and database boundaries
 
-**Proposal only: no new Prisma models, migrations or database operations.** Original design baseline: 1aab84c on feat/task-03-auth-foundation; the owner-approved name alignment was inspected from b5221bd. This design follows the owner's Task Four requirements, [AGENTS.md](../../AGENTS.md), the [product](../../.agent/rules/01-product.md), [engineering](../../.agent/rules/02-engineering.md) and [design](../../.agent/rules/03-design.md) rules, and the authoritative, read-only [PRD](../../docs/PRD.md), especially sections 2, 4, 6 and 7.
+**Proposed design only; no lab tables have been implemented or inspected in a database.** The owner's assessment requires at least five tables covering people, sessions, money, separate money attempts and retrieval chunks. This seven-table design covers those categories using synthetic records only. It does not authorize product financial processing or retrieval.
 
-The owner must draw the schema on paper and photograph it before implementation. This document is a drawing blueprint, not Evidence 01. Actual database state has not been inspected; source declarations are not a table inventory from PostgreSQL.
+PaymentIntent means a request to record one full synthetic external receipt; Payment is the recorded result, not evidence that money moved. Zero or one full Payment per intent fits that meaning; partial/multiple-payment workflows would require a different design. The thirteen proposed product tables and authentication constraints are maintained separately in the [product schema proposal](product-schema-proposal.md).
 
-| Domain | Existing, needed or deferred |
-| --- | --- |
-| Task Two AssessmentEnquiry | Existing source model/migration; preserved, separate from authentication. |
-| User, CredentialAccount, Session, VerificationChallenge | Proposed authentication core for Task Four. No implementation today. |
-| RateLimitBucket, EmailOutbox | Proposed shared abuse protection and durable background handoff before real endpoints/email. |
-| TermsVersion, TermsAcceptance | Future controlled integration, dependent on approval of actual legal text and release. |
-| Business, BusinessMember | Proposed ownership boundary before protected business features; no additional staff roles. |
-| Client, ClientInvitation, ClientAccountLink | Proposed relationship contracts for the later client workflow, not authorization to implement the whole portal now. |
-| Orders, garment agreements, manual payments | Deferred product milestones; only integrity/relationship boundaries below. |
-| Five Lab tables | Disposable synthetic assessment domain, not production product models. |
+The [PRD](../../docs/PRD.md) is authoritative and read-only. Follow [AGENTS.md](../../AGENTS.md) and the [product](../../.agent/rules/01-product.md), [engineering](../../.agent/rules/02-engineering.md) and [design](../../.agent/rules/03-design.md) rules.
 
-All names/columns are logical contracts. The selected Better Auth version and plugins may require different physical names, supported extra fields or an associated lifecycle record. Verify that mapping before Prisma implementation; do not assume adding columns changes plugin behaviour. Use one authentication authority, not a parallel custom password/session/OTP engine.
+Keep separate product development, product test and disposable Task Four laboratory targets, roles, configuration and migration histories, with no fallback between them. Lab FKs never cross into product or Task Two tables. Lab roles must not have product/Task Two privileges. Any shadow database for deliberate drift/failure work must also be independently verified as disposable.
 
-## 2. Existing source schema — unchanged
+The owner confirms actual server/database/role identity, privileges, population and migration history before operations and executes all migrations, backfills and drift exercises. Agents never operate on the development database; test-database operations require task-specific authorization. Keep generation/typecheck/build database-free. No database names, credentials or connection strings are prescribed.
 
-[prisma/schema.prisma](../../prisma/schema.prisma) declares AssessmentEnquiry, mapped to task_two_enquiries:
+Existing source declares only [AssessmentEnquiry](../../prisma/schema.prisma), mapped to task_two_enquiries. Preserve its [migration](../../prisma/migrations/20261023_task_two_enquiry/migration.sql), [Prisma configuration](../../prisma.config.ts) and [Task Two guard](../../lib/assessment/config.ts). It has no FK to these proposals. Its full specification is outside this reference; source declarations do not establish live database state.
 
-| Column | PostgreSQL type / nullability | Constraint and purpose |
+## 2. Types, keys and index conventions
+
+- Every column states its PostgreSQL type and NULL/NOT NULL status. Opaque identifiers use TEXT; event instants use TIMESTAMPTZ(3). Server-controlled times require a writer; updatedAt is not assumed to be automatic in PostgreSQL.
+- PK and UQ denote primary/unique keys; IX denotes a secondary index. All listed indexes are B-tree. Each table lists every proposed index separately, including PK/UNIQUE-created and partial indexes. No unlisted secondary indexes are implied.
+- Insert/delete maintains applicable index entries; key/predicate changes also maintain them. Other updates still cost row/WAL work; actual index writes depend on PostgreSQL update behaviour. Costs here are qualitative, not benchmark results.
+- Supporting UNIQUE tuples containing an already unique id deliberately provide exact composite FK targets. Partial uniqueness is not used as an FK target. Existing leading-key indexes cover the stated reverse-FK queries without duplicate indexes.
+- FKs enforce matching keys, not current authorization, expiry or cross-table lifecycle. Those rules need reviewed transactions and, where specified, deferred constraint triggers rather than ordinary CHECKs.
+- Referenced-row deletion defaults to RESTRICT; no destructive cascades are proposed. Disposal/retention require separate owner review; no retention period is inferred.
+- Repeated FK identifiers represent normalized relationships. Each table additionally discloses snapshots, derived facts and deliberate non-key duplication, or states that none is intended.
+
+## 3. Seven table specifications
+
+### L01. User
+
+Synthetic person in the disposable lab, not a real product identity or account.
+
+| Column | PostgreSQL type | Nullability | Key / meaning |
+| --- | --- | --- | --- |
+| id | TEXT | NOT NULL | Opaque synthetic primary key; never a product identity. |
+| name | TEXT | NOT NULL | Nonblank synthetic person's name; not indexed. |
+| emailCanonical | TEXT | NOT NULL | Unique nonblank synthetic identifier. |
+| createdAt | TIMESTAMPTZ(3) | NOT NULL | Server-controlled timestamp. |
+
+**Candidate keys:** PK(id); UQ(emailCanonical).
+
+**Constraints:** name must contain at least one non-whitespace character. No name-format restriction or name index is proposed. No product FK or password is required for this relational exercise.
+
+| Index (B-tree unless stated) | Why it exists | Write-performance cost |
 | --- | --- | --- |
-| id | SERIAL, NOT NULL | Primary key; generated receipt identifier. |
-| requestId | UUID, NOT NULL | Unique request receipt identifier. |
-| name | VARCHAR(80), NOT NULL | Synthetic assessment name. |
-| enquiry | VARCHAR(500), NOT NULL | Synthetic enquiry. |
-| createdAt | TIMESTAMPTZ(3), NOT NULL | Defaults to current time. |
+| PK(id) | Unique row identity and referenced-key lookup. | One index entry per inserted/deleted row; key changes require uniqueness checks and index maintenance. |
+| UQ(emailCanonical) | Prevent duplicate synthetic users and support identifier lookup. | Adds a unique B-tree entry/check on creation or email change. |
 
-There are no foreign keys or product relationships. PK/requestId B-tree indexes add insert costs; requestId uniqueness supports receipt lookup and prevents repeated identifiers. No product-data duplication is intentional. Applied migrations and historical records require reviewed cleanup, not automatic deletion.
+**Intentional duplication:** No non-key duplicated fact within the lab. A separate lab identity intentionally isolates the exercise; it is not copied from product User.
 
-The [migration file](../../prisma/migrations/20261023_task_two_enquiry/migration.sql) is source evidence, not proof of current database history. [prisma.config.ts](../../prisma.config.ts) uses [Task Two's explicit configuration guard](../../lib/assessment/config.ts). Preserve these files and their offline generation behaviour. Do not repurpose that connection for product authentication or assume the live database contains only this table.
+**Security and lifecycle:** Synthetic input only. Lab sessions confer no application access. Owner-controlled disposal follows evidence preservation.
 
-## 3. Database boundaries and table notation
+### L02. Session
 
-| Boundary | Purpose and ownership |
-| --- | --- |
-| Product development database | Owner-managed development; agents must not connect to or operate on it. No deliberate failure/drift exercise. |
-| Product test database | Separately verified synthetic authentication/integration target; no development fallback. Agent database operations require explicit task-specific permission. |
-| Disposable Task Four laboratory | Separate database, restricted role and independent migration/configuration history. Financial/chunk tables and deliberate migration failures stay here. Any shadow database must also be disposable and independently verified. |
+Synthetic session lifecycle illustration, not authentication.
 
-These are boundary descriptions, not invented database names. The owner verifies actual server/database/role identity, schemas, tables, existing rows, privileges and migration history before operations. Separate migration/application privileges where appropriate. The lab role must have no rights over product or Task Two data; no product customer records are copied into it.
+| Column | PostgreSQL type | Nullability | Key / meaning |
+| --- | --- | --- | --- |
+| id | TEXT | NOT NULL | Opaque synthetic primary key; never a product identity. |
+| userId | TEXT | NOT NULL | FK to Lab.User.id. |
+| tokenDigest | TEXT | NOT NULL | Unique synthetic token verifier; not a live bearer credential. |
+| createdAt | TIMESTAMPTZ(3) | NOT NULL | Server-controlled timestamp. |
+| expiresAt | TIMESTAMPTZ(3) | NOT NULL | Server-controlled timestamp. |
+| revokedAt | TIMESTAMPTZ(3) | NULL allowed | Server-controlled timestamp. |
 
-Future product and lab Prisma schemas/configurations need separate migration histories and client outputs from Task Two. Missing/mismatched explicit configuration must fail closed for database operations. No cross-database foreign keys or fallback connection is proposed. Generation, typechecking and builds must remain offline and not require real credentials. Final paths/configuration are future reviewed implementation work.
+**Candidate keys:** PK(id); UQ(tokenDigest).
 
-Notation for all proposed tables:
+**Constraints:** expiresAt > createdAt; optional revocation does not erase the historical row during the exercise.
 
-- A question mark after a type means nullable. Every other listed column is NOT NULL.
-- id TEXT PK means an opaque primary key compatible with the approved adapter; the generator remains to be verified. No guessed UUID-only restriction on library IDs.
-- time means TIMESTAMPTZ(3). Server-generated createdAt/updatedAt and event times are not trusted client assertions.
-- TEXT/request byte bounds and encoding must be reviewed before real processing; no arbitrary password truncation is implied. Checked state values may map to CHECK constraints or database enums after review.
-- PK/UNIQUE constraints create indexes and write costs. PostgreSQL does not automatically index all referencing FK columns. Avoid redundant indexes covered by a unique key's leading columns.
-- Default referential deletion is RESTRICT/NO ACTION. Do not cascade-delete approved agreements or actor history. Ephemeral cleanup and privacy/retention rules need separate approval; no final periods are invented here.
-- Each table below gives purpose, columns, keys/cardinality, indexes/write costs, duplication and lifecycle. All constraints are proposals until implemented and tested.
+| Index (B-tree unless stated) | Why it exists | Write-performance cost |
+| --- | --- | --- |
+| PK(id) | Unique row identity and referenced-key lookup. | One index entry per inserted/deleted row; key changes require uniqueness checks and index maintenance. |
+| UQ(tokenDigest) | Unambiguous synthetic session lookup and duplicate-verifier prevention. | Adds a uniqueness/index write on creation or rotation. |
+| IX(userId) | Retrieve/revoke a user's illustrative sessions and cover reverse FK checks. | Adds insert/delete/owner-key maintenance. |
+| IX(expiresAt) | Select expired lab sessions for lifecycle inspection/cleanup. | Adds insert/delete/expiry-update maintenance. |
 
-## 4. Proposed product tables
+**Intentional duplication:** No non-key fact is deliberately duplicated in another lab table. This server expiry is not copied from a real product session/cookie.
 
-### User — global identity; Task Four core
+**Security and lifecycle:** Never load these rows into Better Auth. Owner chooses actual synthetic lifecycle values and cleanup; no production session policy is established.
 
-**Columns:** id TEXT PK; name TEXT?; emailCanonical TEXT UNIQUE; emailVerified BOOLEAN default false; disabledAt time?; createdAt time; updatedAt time.
+### L03. PaymentIntent
 
-**Keys and relationships:** one User to zero/one CredentialAccount, many Sessions, BusinessMembers and ClientAccountLinks. An identity may participate in separately authorized business relationships. Global identity/email alone grants no business access and adds no third V1 user type.
+One immutable synthetic request to record a full externally paid receipt; not a charge request, gateway checkout or product payment feature.
 
-**Constraints:** emailCanonical is nonblank and unique under one consistent approved canonicalization policy. A case-sensitive index with inconsistent application lowercasing is insufficient. disabledAt blocks authentication/access independently of emailVerified. Owner-approved tailor Signup requires a nonblank personal/display name stored as User.name; it is not Business.name. Global nullability leaves the separate passwordless client-name mapping for later review and does not make the tailor Signup field optional. The future registration transaction must enforce the tailor requirement; no client password/name-registration form is introduced.
+| Column | PostgreSQL type | Nullability | Key / meaning |
+| --- | --- | --- | --- |
+| id | TEXT | NOT NULL | Opaque synthetic primary key; never a product identity. |
+| userId | TEXT | NOT NULL | FK to Lab.User.id; owner/requester of this synthetic recording intent. |
+| idempotencyKey | TEXT | NOT NULL | Caller-operation identifier scoped to that User. |
+| amount | NUMERIC(18,2) | NOT NULL | Positive intended synthetic receipt amount. |
+| currency | CHAR(3) | NOT NULL | Three uppercase ASCII letters; explicit synthetic test choice. |
+| createdAt | TIMESTAMPTZ(3) | NOT NULL | Server-controlled timestamp. |
 
-**Indexes/write cost:** PK and canonical-email uniqueness support identity lookup; registration/email changes maintain both. Names are not unique or indexed for authentication; duplicate personal names are legitimate. No extra state index initially; verification/suspension updates write the row.
+**Candidate keys:** PK(id); UQ(userId, idempotencyKey); UQ(id, amount, currency).
 
-**Duplication/security/lifecycle:** challenge/invitation destination snapshots deliberately repeat email. They do not become alternative authorization sources. Correcting email requires fresh verification and invalidation of relevant challenges, never reassignment of client links through matching. Closure/deletion and revocation need reviewed transactions/policy, not cascading deletion.
+**Constraints:** amount > 0; currency matches three uppercase ASCII letters. Intent financial fields/owner/idempotency key are immutable once attempts begin. Reusing the scoped key with a different amount/currency is rejected. This proposal allows exactly zero or one full Payment result, not partial/multiple payments per intent. Precision/currency choices are lab examples, not product commercial limits.
 
-### CredentialAccount — tailor password; Task Four core
+| Index (B-tree unless stated) | Why it exists | Write-performance cost |
+| --- | --- | --- |
+| PK(id) | Unique row identity and referenced-key lookup. | One index entry per inserted/deleted row; key changes require uniqueness checks and index maintenance. |
+| UQ(userId, idempotencyKey) | Resolve one user's replayed recording request without creating a second intent; covers user FK lookups. | Adds a uniqueness check/B-tree entry on creation; no redundant userId-only index. |
+| UQ(id, amount, currency) | Unconditional referenced key for exact Payment intent/amount/currency matching. | Repeats id in an additional index for composite FK integrity; adds storage and insert maintenance. |
 
-**Columns:** id TEXT PK; userId TEXT FK → User UNIQUE; providerId TEXT fixed to credential; accountId TEXT; passwordHash TEXT; createdAt time; updatedAt time.
+**Intentional duplication:** Payment deliberately repeats the immutable amount/currency as its self-contained receipt snapshot, constrained to match here. Idempotency key belongs only here; attempts reference intentId rather than free-text grouping keys.
 
-**Keys and relationships:** User 1 → 0..1 credential for this V1 design; UNIQUE(providerId, accountId). accountId is a stable library identity rather than mutable email. Only controlled tailor registration/password replacement may write credentials; clients do not register passwords.
+**Security and lifecycle:** Create an intent only after a structurally valid synthetic recording request. An intent alone does not mean money was recorded. Attempts can fail/abandon while the intent remains without Payment. No stored running balance or copied user email/name.
 
-**Indexes/write cost:** userId uniqueness supports credential lookup/FK checks; provider/account uniqueness supports adapter lookup. Both increase insert/update cost; retain only keys required by the verified mapping.
+### L04. PaymentAttempt
 
-**Duplication/security/lifecycle:** accountId may intentionally repeat userId for the provider-account contract. Store only the encoded Argon2id hash containing salt/work parameters, never plaintext passwords. Explicit callbacks must cover hashing and verification across enrollment/replacement. Review session revocation on password changes; generic OTP endpoints must not replace an unverified tailor credential.
+One initiated processing attempt against an existing synthetic intent, including failed/abandoned work that produced no receipt.
 
-### Session — authenticated continuity; before real sign-in
+| Column | PostgreSQL type | Nullability | Key / meaning |
+| --- | --- | --- | --- |
+| id | TEXT | NOT NULL | Opaque synthetic primary key; never a product identity. |
+| paymentIntentId | TEXT | NOT NULL | FK to Lab.PaymentIntent.id. |
+| attemptNo | INTEGER | NOT NULL | Positive sequence within the intent. |
+| outcome | TEXT | NOT NULL | Checked started, failed, abandoned or succeeded; success means receipt recording only. |
+| failureCode | TEXT | NULL allowed | Allow-listed category required for failed, absent for other states. |
+| startedAt | TIMESTAMPTZ(3) | NOT NULL | Server-controlled timestamp. |
+| finishedAt | TIMESTAMPTZ(3) | NULL allowed | Required for terminal outcomes; NULL for started. |
 
-**Columns:** id TEXT PK; userId TEXT FK → User; token TEXT UNIQUE; expiresAt time; revokedAt time?; createdAt time; updatedAt time.
+**Candidate keys:** PK(id); UQ(paymentIntentId, attemptNo); UQ(id, paymentIntentId).
 
-**Keys and relationships:** User 1 → many Sessions; expiresAt > createdAt. token represents the confidential library-managed session token. Verify supported storage/protection and revocation mapping before implementation; do not invent incompatible token transformations around the adapter.
+**Constraints:** attemptNo > 0. started requires finishedAt/failureCode NULL; failed requires both; abandoned/succeeded require finishedAt and failureCode NULL. Terminal finishedAt >= startedAt. Terminal attempts are immutable. Receipt creation and successful finalization are atomic; reviewed deferred constraint triggers must enforce that Payment points to a succeeded attempt and every succeeded attempt has its corresponding Payment. Those cross-table conditions cannot be expressed as ordinary CHECKs.
 
-**Indexes/write cost:** token uniqueness for lookup, userId index for revocation and expiresAt index for cleanup, in addition to PK. Renewal/revocation writes must be measured; avoid unnecessary per-request updates.
+| Index (B-tree unless stated) | Why it exists | Write-performance cost |
+| --- | --- | --- |
+| PK(id) | Unique row identity and referenced-key lookup. | One index entry per inserted/deleted row; key changes require uniqueness checks and index maintenance. |
+| UQ(paymentIntentId, attemptNo) | Prevent duplicate attempt numbers and retrieve ordered attempts; covers the intent FK. | Adds a uniqueness/index write; sequence allocation must serialize per intent. |
+| UQ(id, paymentIntentId) | Referenced composite key proving a Payment's successful attempt belongs to that same intent. | Logically redundant with id uniqueness but required for the proposed composite FK; extra B-tree storage/write. |
+| Partial IX(startedAt) WHERE outcome = 'started' | Find in-flight attempts eligible for an explicit abandonment/timeout decision. | Adds an entry on start, removes it at finalization; not a full-history status index. |
 
-**Duplication/security/lifecycle:** cookie/server expiry intentionally overlap; the server is authoritative. Session membership snapshots must not grant permanent business authority. Require active business/client links on protected operations. No tailor session before verification. Client seven-day sessions are a PRD proposed default; tailor lifetime, cookies and recovery/revocation remain review items. Never log or expose tokens in evidence.
+**Intentional duplication:** No duplicate owner, idempotency key or money columns: derive them from the immutable intent. Attempt outcome and successful Payment existence overlap intentionally as process versus financial-result evidence, with consistency enforced at commit.
 
-### Business — ownership boundary; before business features
+**Security and lifecycle:** Persist started before the fallible receipt transaction so rollback cannot erase the attempted work. Finalize failed/abandoned separately when appropriate; an abandoned state requires a real explicit cancellation/timeout rule, not guessed browser departure. Retry uses a new attemptNo. An already-complete idempotent replay may return the existing Payment without another processing attempt; it is not new money.
 
-**Columns:** id TEXT PK; name TEXT; disabledAt time?; createdAt time; updatedAt time.
+### L05. Payment
 
-**Keys and relationships:** Business 1 → many BusinessMembers and Clients; future business-owned Orders/records reference this boundary. Existence alone grants no access. Business.name is the tailoring business name, collected separately during business setup and required/nonblank when that business is created. It is not collected during initial Signup and need not equal User.name. Business setup is not implemented in this slice.
+A successful synthetic manually recorded receipt for one intent, not a transfer/charge or independently verified payment.
 
-**Indexes/write cost:** PK only initially; no speculative profile/search indexes. Creation/state changes write a minimal row; child FK indexes carry relationship lookup costs.
+| Column | PostgreSQL type | Nullability | Key / meaning |
+| --- | --- | --- | --- |
+| id | TEXT | NOT NULL | Opaque synthetic primary key; never a product identity. |
+| paymentIntentId | TEXT | NOT NULL | Unique; part of FKs to both matching intent and successful attempt. |
+| successfulAttemptId | TEXT | NOT NULL | Unique; part of FK to PaymentAttempt(id,paymentIntentId). |
+| amount | NUMERIC(18,2) | NOT NULL | Positive receipt snapshot matching the immutable intent. |
+| currency | CHAR(3) | NOT NULL | Receipt currency snapshot matching the immutable intent. |
+| paidAt | TIMESTAMPTZ(3) | NOT NULL | Synthetic external payment date recorded for the example; not independently verified. |
+| recordedAt | TIMESTAMPTZ(3) | NOT NULL | Server time the receipt was recorded. |
 
-**Duplication/security/lifecycle:** membership is authoritative instead of a duplicate owner column. Restricting access must preserve legitimate history and linked clients under reviewed privacy/retention rules. Do not delete a business as an access-revocation shortcut.
+**Candidate keys:** PK(id); UQ(paymentIntentId); UQ(successfulAttemptId).
 
-### BusinessMember — authorized tailor membership; before business access
+**Constraints:** Composite FKs prohibit a different amount/currency or cross-intent successful attempt. amount > 0; currency three uppercase ASCII letters. Deferred trigger/transaction design enforces successful-attempt outcome and one authoritative receipt. Payment has no direct User FK: its owner is derived through PaymentIntent. No blind equality/ordering constraint on paidAt versus recordedAt is imposed.
 
-**Columns:** id TEXT PK; businessId TEXT FK → Business; userId TEXT FK → User; revokedAt time?; createdAt time.
+| Index (B-tree unless stated) | Why it exists | Write-performance cost |
+| --- | --- | --- |
+| PK(id) | Unique row identity and referenced-key lookup. | One index entry per inserted/deleted row; key changes require uniqueness checks and index maintenance. |
+| UQ(paymentIntentId) | Prevent duplicate financial receipts for concurrent retries of one intent; covers intent-led FK checks. | Adds a uniqueness check/index write on receipt creation. |
+| UQ(successfulAttemptId) | One attempt cannot create two receipts; supports attempt-led composite FK checks. | Adds another unique B-tree; no redundant successfulAttemptId-only index. |
 
-**Keys and relationships:** UNIQUE(businessId, userId); a many-to-many identity/business relationship. This does not authorize advanced staff permissions. Active membership, enabled business/user and verified tailor identity are required.
+**Intentional duplication:** amount/currency intentionally repeat the intent so receipt evidence is self-contained; the composite FK prevents drift. paymentIntentId repeats the selected attempt's intent to enforce correlation. paidAt and recordedAt describe different events, not duplicate facts.
 
-**Indexes/write cost:** business/user uniqueness supports scoped checks; userId index finds authorized businesses. Both add creation costs; explicit revocation writes state.
+**Security and lifecycle:** Preserve successful financial records; do not overwrite one when a retry fails. A production reversing-entry ledger, refunds, tax reporting and payment processing remain outside this lab design. Totals use recorded Payments, never failed attempts or intent amounts alone.
 
-**Duplication/security/lifecycle:** businessId intentionally appears in future owned records to constrain scope. Retain historical membership/actor references; creation/reinstatement needs a controlled authorized workflow, not a submitted business identifier.
+### L06. RetrievalDocument
 
-### Client — business-owned customer; later client workflow
+Immutable synthetic source text and its owner.
 
-**Columns:** id TEXT PK; businessId TEXT FK → Business; fullName TEXT; phone TEXT; emailCanonical TEXT?; createdAt time; updatedAt time.
+| Column | PostgreSQL type | Nullability | Key / meaning |
+| --- | --- | --- | --- |
+| id | TEXT | NOT NULL | Opaque synthetic primary key; never a product identity. |
+| ownerUserId | TEXT | NOT NULL | FK to Lab.User.id. |
+| sourceKey | TEXT | NOT NULL | Nonblank source/revision label unique within owner. |
+| sourceText | TEXT | NOT NULL | Nonblank synthetic document snapshot. |
+| contentDigest | TEXT | NOT NULL | Integrity digest of that snapshot. |
+| createdAt | TIMESTAMPTZ(3) | NOT NULL | Server-controlled timestamp. |
 
-**Keys and relationships:** Business 1 → many Clients; UNIQUE(businessId, id) supports composite child FKs. Name/phone are nonblank; phone is text. Optional email follows the PRD and is not globally unique across businesses.
+**Candidate keys:** PK(id); UQ(ownerUserId, sourceKey).
 
-**Indexes/write cost:** PK plus business/id uniqueness support scoped lookup and referential integrity. No automatic identity-matching index is required.
+**Constraints:** Once chunked, sourceText/digest/sourceKey/owner are immutable. A changed synthetic source uses a new revision label/document rather than silently invalidating old chunks.
 
-**Duplication/security/lifecycle:** separate businesses may intentionally hold customer details for the same person. These are not tailor-signup fields. No email means no portal/digital agreement approval until secure access exists. Incorrect email requires a new invitation/verification process; do not silently reassign links.
+| Index (B-tree unless stated) | Why it exists | Write-performance cost |
+| --- | --- | --- |
+| PK(id) | Unique row identity and referenced-key lookup. | One index entry per inserted/deleted row; key changes require uniqueness checks and index maintenance. |
+| UQ(ownerUserId, sourceKey) | Prevent duplicate source/revision labels for one owner and support document ownership/FK lookup. | Adds a scoped uniqueness/index write; no redundant ownerUserId-only index. |
 
-### ClientInvitation — authority for one relationship; later client workflow
+**Intentional duplication:** sourceText is intentionally repeated in chunk excerpts to permit chunk-sized retrieval/storage demonstrations. contentDigest is a derived integrity fact, not encryption or a separate secret.
 
-**Columns:** id TEXT PK; businessId TEXT; clientId TEXT; issuedByUserId TEXT; emailCanonical TEXT; tokenDigest TEXT UNIQUE; expiresAt time; consumedAt time?; revokedAt time?; createdAt time.
+**Security and lifecycle:** Only synthetic text, no private garment/customer content. No runtime retrieval, embeddings, model calls or vector extension. Owner-reviewed disposal occurs after preserving the exercise evidence.
 
-**Keys and relationships:** FK(businessId, clientId) → Client(businessId, id); FK(businessId, issuedByUserId) → BusinessMember(businessId, userId). One Client → many historical invitations; one invitation → at most one completed link. Active issuer authority must also be checked; an FK alone does not prove it.
+### L07. RetrievalChunk
 
-**Constraints/indexes/write cost:** expiresAt > createdAt; consumed/revoked invitations cannot be reused. Index(businessId, clientId) for history and expiresAt for cleanup, plus PK/token uniqueness. Superseding/revoking invites adds writes and must handle concurrency. The PRD's proposed 72-hour expiry needs confirmation.
+Ordered synthetic excerpt of exactly one stored source document.
 
-**Duplication/security/lifecycle:** emailCanonical is the intended recipient snapshot; businessId repeats ownership to enforce composite keys. Store only a protected token verifier. Delivery uses a channel confirmed with the actual client. Email control alone does not authorize that relationship; address/scope changes need a new invitation rather than editing consumed evidence.
+| Column | PostgreSQL type | Nullability | Key / meaning |
+| --- | --- | --- | --- |
+| id | TEXT | NOT NULL | Opaque synthetic primary key; never a product identity. |
+| documentId | TEXT | NOT NULL | FK to Lab.RetrievalDocument.id. |
+| ordinal | INTEGER | NOT NULL | Zero-based nonnegative position within this document. |
+| content | TEXT | NOT NULL | Nonblank synthetic source excerpt. |
+| contentDigest | TEXT | NOT NULL | Integrity digest of the chunk text. |
+| createdAt | TIMESTAMPTZ(3) | NOT NULL | Server-controlled timestamp. |
 
-### ClientAccountLink — verified relationship; later client workflow
+**Candidate keys:** PK(id); UQ(documentId, ordinal).
 
-**Columns:** id TEXT PK; businessId TEXT; clientId TEXT; userId TEXT FK → User; invitationId TEXT UNIQUE FK → ClientInvitation; verifiedAt time; revokedAt time?.
+**Constraints:** ordinal >= 0 and content nonblank. Chunk extraction/digest/overlap validation belongs to the controlled lab writer; a normal row CHECK cannot compare content against another table. No arbitrary content/embedding maximum is selected here.
 
-**Keys and relationships:** FK(businessId, clientId) → Client(businessId, id). User 1 → many links across businesses; Client 1 → historical links. Recommend partial UNIQUE(clientId) WHERE revokedAt IS NULL, allowing one active identity per customer record; confirm this cardinality before client-flow implementation.
+| Index (B-tree unless stated) | Why it exists | Write-performance cost |
+| --- | --- | --- |
+| PK(id) | Unique row identity and referenced-key lookup. | One index entry per inserted/deleted row; key changes require uniqueness checks and index maintenance. |
+| UQ(documentId, ordinal) | Prevent duplicate positions and support ordered chunks/source lookup; also covers the document FK. | Adds index/uniqueness work for every inserted chunk. Chunking increases row count/storage/write amplification. |
 
-**Constraints:** invitation, business/client, verified destination and identity must agree. Use matching composite keys where supported and transactionally validate invitation/challenge state. Consuming the invitation and creating the link must be atomic. Neither an existing session nor a contact match creates authorization.
+**Intentional duplication:** Chunk text intentionally repeats an excerpt of sourceText; overlaps, if used, also repeat adjacent text. Digest deliberately repeats a derived integrity fact. owner/source labels are not copied into each chunk, avoiding inconsistent ownership/source metadata.
 
-**Indexes/write cost:** index(userId, businessId) supports the client's authorized dashboard; invitation uniqueness prevents reuse; active-client uniqueness adds a concurrency check. Link creation/revocation writes must not duplicate authorization.
+**Security and lifecycle:** Chunks are immutable for their document revision. No speculative full-text/vector indexes or search endpoint. The lab is not an approved product retrieval feature.
 
-**Duplication/security/lifecycle:** businessId makes scope explicit; verifiedAt records relationship authorization separately from global emailVerified. Revoking one link must not erase the identity or another business's records. No restoration by email matching.
+## 4. Complete relationship matrix
 
-### VerificationChallenge — ownership/recovery proof; Task Four verification
+All referenced tuples are unconditional PK/UNIQUE keys listed in the table specifications. Parent-side minimum is zero: a parent can exist before any child. Each matrix row is one FK definition; no additional relationships are implied.
 
-**Columns:** id TEXT PK; userId TEXT? FK → User; invitationId TEXT? FK → ClientInvitation; emailCanonical TEXT; purpose TEXT (tailor_email, client_signin, password_reset); codeVerifier TEXT; attemptCount INTEGER default 0; createdAt time; expiresAt time; consumedAt time?; revokedAt time?.
+| Child FK columns | Referenced parent PK/UQ columns | Relationship and cardinality |
+| --- | --- | --- |
+| Lab.Session(userId) | PK Lab.User(id) | One-to-many: Lab.User 1 : 0..* Lab.Session; each Session has exactly one User. |
+| Lab.PaymentIntent(userId) | PK Lab.User(id) | One-to-many: Lab.User 1 : 0..* Lab.PaymentIntent; each intent has exactly one User. |
+| Lab.PaymentAttempt(paymentIntentId) | PK Lab.PaymentIntent(id) | One-to-many: PaymentIntent 1 : 0..* PaymentAttempt; every attempt belongs to exactly one intent. |
+| Lab.Payment(paymentIntentId, amount, currency) | UQ Lab.PaymentIntent(id, amount, currency) | One-to-one with optional child: PaymentIntent 1 : 0..1 Payment; every Payment has exactly one matching full-value intent. |
+| Lab.Payment(successfulAttemptId, paymentIntentId) | UQ Lab.PaymentAttempt(id, paymentIntentId) | One-to-one with optional child: PaymentAttempt 1 : 0..1 Payment; each Payment identifies exactly one successful attempt of that same intent. |
+| Lab.RetrievalDocument(ownerUserId) | PK Lab.User(id) | One-to-many: Lab.User 1 : 0..* RetrievalDocument; each document has exactly one owner. |
+| Lab.RetrievalChunk(documentId) | PK Lab.RetrievalDocument(id) | One-to-many: RetrievalDocument 1 : 0..* RetrievalChunk; every chunk belongs to exactly one document. Owner is derived, not another User FK. |
 
-**Keys and relationships:** User/Invitation 1 → many historical challenges. Tailor verification/reset require the intended existing user. Client issuance requires an authorized invitation or an existing active client link checked on the server. Bind verification to account/destination/purpose/challenge, not merely a matching code.
+Payment/attempt owners are derived through PaymentIntent; chunks derive owner/source from RetrievalDocument. No duplicate User FK is added to either. The seven rows above cover every lab FK, including the two correlated Payment FKs; there are no many-to-many relationships.
 
-**Constraints/indexes/write cost:** six ASCII-digit string; five-minute lifetime; three invalid attempts; 60-second resend cooldown. CHECK(attemptCount BETWEEN 0 AND 3); expiresAt = createdAt + five minutes. Proposed partial UNIQUE(emailCanonical, purpose) for unconsumed/unrevoked challenges; transactionally revoke an expired predecessor rather than put a moving clock in an index predicate. Index userId, invitationId and expiresAt where final keys do not cover them. Failed attempts are intentional atomic writes; consumption/reuse checks must be race-safe.
+## 5. Attempts and financial history
 
-**Duplication/security:** destination/purpose are intentional immutable snapshots. codeVerifier is protected, never a plaintext integer or logged code. Prefer a keyed construction supported by the selected Better Auth storage hook, with the key outside the database: an unkeyed digest of a six-digit space alone offers limited offline protection. Verify the typed lifecycle mapping to actual plugin storage/attempt handling before implementation.
+A failed or abandoned PaymentAttempt is useful independently of a Payment: it records initiated work, intent, sequence, timing and terminal outcome, including an allow-listed failure category. Persist started before the fallible receipt transaction so rollback cannot erase the attempt; preserve terminal failures when a later retry succeeds. Abandonment requires an explicit cancellation/timeout rule, not an inference that a browser closed. Malformed requests rejected before creating a valid intent are not automatically financial attempts.
 
-**Lifecycle:** resending cannot reset account/IP abuse counters or create parallel challenges that bypass attempts. Generic reset/client-sign-in OTP paths cannot verify/sign in an unverified tailor as an alternative to the required flow. Account-safe recovery responses, resend rotation, expiry, counters and concurrent reuse need integration tests. Five-minute validity does not set a final retention period.
+**Business drop-off analysis:** compare intents with no attempt, started attempts awaiting resolution, terminal failures/abandonments and intents with a final Payment. Count distinct intents for completed operations and attempts for retry/failure rates; multiple retries are not multiple customers or receipts. These records can locate where a synthetic recording workflow stops and whether recovery succeeds, but do not establish why a person left or how many unrecorded visits occurred. They measure recording-workflow drop-off, not a payment checkout or proven lost revenue.
 
-### RateLimitBucket — shared abuse counters; before real endpoints
+**Reconciliation and disputes:** join Payment to its immutable intent and successful attempt, then inspect the intent's ordered attempt history. Compare amount/currency, paidAt (reported external payment time), recordedAt and outcomes. Totals use Payments, not intent amounts or failed attempts. The composite FKs, uniqueness and deferred lifecycle enforcement prevent mismatched values, cross-intent attempts and duplicate receipts. A successful attempt without its Payment is an integrity failure, not proof of money received. The record trail can explain retries or conflicting accounts; it does not adjudicate garment workmanship.
 
-**Columns:** keyDigest TEXT PK; scope TEXT; policyVersion TEXT; windowStart time; count INTEGER; expiresAt time.
+**A tax authority asks about a particular transaction from 14 months ago:** if the records remain available and disclosure is authorized, retrieve Payment by its PK (or resolve the owner's idempotency key through the existing scoped unique index), follow its intent and successful-attempt FKs, and retrieve all attempts using the intent/attemptNo index. Report the recorded owner, amounts/currency, reported payment date, recording time and process trail. Compare these with independently available bank/POS receipts or other external evidence and explain discrepancies; synthetic/manual records alone do not prove an external transfer. If only a date/amount is supplied, the current design may require a scoped scan because no date/amount index is proposed; this example adds no index. If records were lawfully deleted or never existed, disclose that limitation rather than reconstructing evidence.
 
-**Purpose/constraints:** keyed digest of normalized account/IP/purpose/window as applicable, not password/code/email logs. No User FK: unknown accounts need protection too. count >= 0; expiresAt > windowStart. Fixed-window storage is a proposal; algorithm, thresholds/windows and legitimate-user costs need approval.
+The 14-month example is not a retention promise. The disposable lab does not establish real transaction history, a complete ledger, tax compliance or a legal disclosure procedure. Actual record-category retention, correction, legal-hold and disclosure obligations require qualified review before product financial workflows.
 
-**Indexes/write cost:** PK supports atomic consume/update; expiresAt index supports cleanup. A request may update multiple buckets, adding shared-store latency/contention. Do not use separate non-atomic read/increment operations.
+## 6. Handwritten drawing blueprint
 
-**Duplication/security/lifecycle:** counters deliberately duplicate aggregate event counts, not full bodies. Expiry bounds ephemeral counters and is not permanent suspension. Trusted proxy/client-IP extraction, account keys, distributed consistency and store-outage behaviour remain review items. Demonstrate IP-only limitations only in an isolated environment.
-
-### EmailOutbox — durable delivery handoff; before real SMTP
-
-**Columns:** id TEXT PK; challengeId TEXT UNIQUE FK → VerificationChallenge; templateVersion TEXT; payloadCiphertext BYTEA?; payloadKeyId TEXT?; status TEXT (pending, leased, sent, failed, cancelled); attemptCount INTEGER default 0; availableAt time; leaseUntil time?; sentAt time?; lastErrorCode TEXT?; createdAt time; updatedAt time.
-
-**Keys and relationships:** Challenge 1 → at most one logical outbox job under proposed rotate-on-resend behaviour. CHECK(attemptCount >= 0); pending/leased jobs require an authenticated encrypted payload/key reference; sentAt applies only to sent jobs. Persist challenge/account changes and durable handoff transactionally; prove selected adapter/hook support.
-
-**Indexes/write cost:** index(status, availableAt) supports due-job claiming; unique challengeId prevents duplicate logical enqueue. Leasing/retry/completion update rows/indexes. Atomic claims and lease expiry need worker tests; an untracked in-request promise is not a durable queue.
-
-**Duplication/security:** encrypted payload necessarily carries recipient/code/template information separately from the verifier. Encryption keys stay outside the database; no plaintext codes in generic JSON, logs or evidence. Clear recoverable payloads when no longer needed, with exact retention reviewed. lastErrorCode is an allow-listed category, not raw SMTP exceptions/credentials.
-
-**Lifecycle:** recheck validity before sending; do not deliberately send expired/revoked codes or silently extend expiry after queue delays. Registration returns after durable enqueue, not proof of receipt. SMTP acceptance is not inbox delivery; uncertain failures can cause duplicate delivery, so do not promise exactly-once email. Detailed delivery-attempt history, retries, provider/worker operation and cleanup require subsequent review, not a payment-attempt model.
-
-### TermsVersion — actual approved platform wording; controlled future integration
-
-**Columns:** id TEXT PK; version TEXT UNIQUE; contentDigest TEXT; immutableDocumentRef TEXT; approvedAt time; effectiveAt time.
-
-**Keys and relationships:** TermsVersion 1 → many TermsAcceptances. Only actually approved text enters this operational table. These are proposed timestamp fields, not assigned dates. Preserve accepted wording/reference immutably.
-
-**Indexes/write cost:** PK/version uniqueness supports required-version lookup; publication is low-frequency. No unnecessary unique digest index: identical wording could be republished under a separately approved version.
-
-**Duplication/security/lifecycle:** digest plus immutable reference deliberately bind evidence to exact content. This table neither publishes a policy nor approves current candidates. Accepted historical versions require reviewed retention.
-
-### TermsAcceptance — actor/version/time; controlled future integration
-
-**Columns:** id TEXT PK; userId TEXT FK → User; termsVersionId TEXT FK → TermsVersion; acceptedAt time; context TEXT (tailor_registration, material_update).
-
-**Keys and relationships:** UNIQUE(userId, termsVersionId); User/TermsVersion each 1 → many acceptance records. Validate affirmative acceptance of the required approved version at the server boundary; record with successful registration transactionally. Server supplies time/context; replaying an old version does not accept a newly required one.
-
-**Indexes/write cost:** unique user/version supports status checks; termsVersionId index supports version-specific review. Adds a registration/event write; do not add IP/device fingerprints without justification/privacy review.
-
-**Duplication/security/lifecycle:** durable event evidence deliberately replaces neither text retention nor verification. Never convert draft-review booleans into acceptance records. Privacy notice receipt, purpose-specific consent and garment approvals are distinct. Client platform-use arrangements and retention need qualified review.
-
-## 5. Authentication constraints and compatibility gates
-
-1. Use Better Auth with Prisma/PostgreSQL, explicit Argon2id hash/verify callbacks and Zod boundaries before business logic/persistence. Verify exact versions, Node 24/native support, plugin schema, transactions and field mapping before installation. No dependency is installed or pinned by this document. See [Prisma integration](https://better-auth.com/docs/adapters/prisma) and [password configuration](https://better-auth.com/docs/authentication/email-password).
-2. The owner has approved tailor Signup with Your name, Email and Password; Login remains Email/Password. User.name is a personal/display name and Business.name is collected later in business setup. This is a product decision, not a fabricated field for library defaults. Verify the supported name mapping, including the distinct client flow; do not invent a business name or require it at Signup. Verify session protection/revocation and all generic/server-to-server endpoint paths; wrappers must not bypass validation/limits.
-3. Valid name/email/password plus acceptance of approved Terms create an unverified tailor. No sign-in/business access until verification; no cross-business access merely because email is verified. Clients remain invitation-authorized/passwordless. Disable unauthorized OTP signup/credential replacement; existing identity does not automatically establish a business link.
-4. Canonicalize email consistently across registration, Login, Reset, invitation and verification. Proposed baseline is surrounding-email-whitespace removal and domain-case normalization. Resolve local-part case, Unicode/IDN, uniqueness and provider/Better Auth behaviour before implementation. Do not strip plus tags or provider-specific dots. The existing client validator trims a syntax-check copy only; canonical storage is not implemented.
-5. Preserve password case, Unicode and meaningful whitespace exactly: no silent trimming, normalization or truncation in hashing/Login/reset. Preserve rejection of blank/whitespace-only new passwords and disallowed controls. **Proposed production minimum: 15 Unicode code points**, subject to PRD review and coordinated frontend/backend/recovery changes. Today's UI remains 12. Review safe request-byte/hash-processing bounds without silent truncation; do not apply new enrollment length rules retroactively to Login. [NIST](https://pages.nist.gov/800-63-4/sp800-63b.html) motivates review, not a claim of compliance.
-6. Secure randomness must cover all six-digit strings including leading zeros. Use the reviewed [Better Auth Email OTP integration](https://better-auth.com/docs/plugins/email-otp), enforce five minutes/three invalid attempts/60-second cooldown and account/IP limits, and bind purpose/identity. No second ad-hoc verifier.
-7. Preserve the existing strict /auth, ?login, ?signup, ?reset and ?verify contract until separately approved integration. Current verification is a local-only, UI-only preview; removing its guard must not prematurely enable unfinished public verification.
-8. Keep public onboarding disabled until launch readiness. Secure sessions, approved Terms/version recording, shared limits, breach-screening failure policy and authorized SMTP/worker configuration are gates. Synthetic pre-approval testing needs an explicit test-only arrangement, not a legal-acceptance claim.
-
-**PRD compatibility of the name decision:** section 2 specifies tailor email/password authentication without prohibiting a personal/display name; section 6 distinguishes User from Business. The owner-approved required Your name field supplements that model without changing the two user types, client passwordless access or mandatory six-digit verification before sign-in. The PRD is unchanged. Earlier Task Three two-field inventories remain historical records, not the current Signup specification.
-
-The current UI checks name blankness only (including Unicode whitespace), retaining spelling/spacing without a name whitelist, forced first/last split or arbitrary length requirement. Errors appear on blur or submission and clear when corrected, using the existing associated text/caution feedback. Values remain in transient UI memory. No authentication or pre-verification session is created.
-
-**Conflicts requiring explicit treatment:** assessment password-edge trimming conflicts with exact preservation. Demonstrate only on synthetic data and disclose the divergence. Adding payment processing or retrieval to the product merely for the rubric would conflict with PRD sections 3/4; use the separate lab. The proposed 15-code-point minimum is not an existing PRD requirement or permission to change today's 12-character UI. No other direct PRD conflict is identified. Unresolved mappings, bounds, cardinalities and session policies are review decisions, not PRD amendments.
-
-## 6. Future garment and manual-payment relationships — deferred
-
-Business → Client → Order → ClothingItem is the future ownership chain. Composite keys/server authorization must keep every child in the same business. MeasurementVersion, fabric/style references and submitted AgreementVersion must preserve the exact evidence shown to the client. Submitted versions are immutable; only the authenticated linked client resolves them. Approved changes create versions, not overwritten references.
-
-Future PaymentRecord/PaymentCorrection designs require exact decimals, approved-price totals, actor/reason evidence, reversing entries and idempotency. Clients pay tailors outside StitchTrack; entries are explicitly unverified. No collection, automatic refund, gateway processing or tax-compliance claim follows from this design. Detailed product order/agreement/payment columns and indexes belong to their separately approved milestones.
-
-## 7. Disposable assessment tables — not product models
-
-Use a separate owner-confirmed database/configuration/migration history. These five tables meet the diagram's requested categories as a proposal, not a completed demonstration. Lab users/sessions are synthetic teaching records, not real Better Auth accounts/sessions. Confirm this interpretation with the owner/assessor. No production financial, embedding or retrieval feature is authorized.
-
-### LabUser
-
-**Purpose/columns:** synthetic person; id TEXT PK; emailCanonical TEXT UNIQUE; createdAt time.
-
-**Relationships/constraints:** one user → many LabSessions, LabPayments, LabPaymentAttempts and LabRetrievalChunks. Email is nonblank and synthetic; no password/customer information is needed.
-
-**Indexes/write cost:** PK/email uniqueness add two index writes per creation; no extra profile indexes.
-
-**Duplication/lifecycle:** separate identity deliberately avoids product links. Owner controls disposable cleanup after evidence preservation.
-
-### LabSession
-
-**Purpose/columns:** illustrative session lifecycle, not authentication; id TEXT PK; userId TEXT FK → LabUser; tokenDigest TEXT UNIQUE; createdAt time; expiresAt time; revokedAt time?.
-
-**Constraints/indexes/write cost:** expiresAt > createdAt; index userId for session retrieval, expiresAt for cleanup, plus PK/token uniqueness. Creation/revocation/cleanup create writes.
-
-**Duplication/lifecycle:** stored expiry supports the synthetic lifecycle; no product session is copied. An illustrative token grants no application access and must not be loaded into the real adapter.
-
-### LabPayment
-
-**Purpose/columns:** synthetic manually recorded receipt, not money movement; id TEXT PK; recordedByUserId TEXT FK → LabUser; operationKey TEXT UNIQUE; amount NUMERIC(18,2); currency CHAR(3); paidAt time; createdAt time.
-
-**Constraints/relationships:** amount > 0; currency is three uppercase ASCII letters and selected explicitly for synthetic tests. One user → many receipts; one receipt → zero/many attempts. Unique operationKey prevents retries of one recording intent creating duplicate receipts. Precision/currency here are lab proposals, not final product limits.
-
-**Indexes/write cost:** PK, unique operationKey and index(recordedByUserId, paidAt) support idempotency and actor/date review. All three add insert costs. Derive totals from recorded entries, never attempted ones.
-
-**Duplication/lifecycle:** amount/currency repeat successful attempt intent as a receipt snapshot. Linking must check actor/operation/payload consistency. Preserve receipts during the exercise; a real correction ledger needs immutable reversing entries. This table does not process refunds or establish tax-record sufficiency.
-
-### LabPaymentAttempt
-
-**Purpose/columns:** each synthetic recording attempt, even without a receipt; id TEXT PK; userId TEXT FK → LabUser; operationKey TEXT; attemptNo INTEGER; paymentId TEXT? FK → LabPayment; requestedAmount NUMERIC(18,2)?; currency CHAR(3)?; outcome TEXT (started, failed, abandoned, recorded); failureCode TEXT?; startedAt time; finishedAt time?.
-
-**Constraints/relationships:** UNIQUE(operationKey, attemptNo); attemptNo > 0; amount, if present, > 0; currency, if present, three uppercase ASCII letters. Recorded requires paymentId/finishedAt; failed/abandoned require finishedAt. Failed uses only allow-listed failure codes. Multiple retries may refer to the same deduplicated receipt; started/failed/abandoned attempts may have no receipt.
-
-**Indexes/write cost:** index(paymentId), index(userId, startedAt), unique operation/attempt and PK support reconciliation/history. Starting/finalizing creates writes even when no receipt results. Attempt allocation/idempotency need concurrency-safe transactions.
-
-**Duplication/lifecycle:** amount/currency intentionally retain each attempt's proposal rather than overwrite history. Abandonment requires an actual cancellation/timeout rule, not guessed browser departure. Persist the attempt before the fallible operation and finalize separately so a receipt rollback cannot erase the attempt. Successful linkage must check actor, operation and payload; the exact cross-row enforcement needs implementation review.
-
-Attempts distinguish intent, failure, abandonment and recorded money. They help reconcile missing records/retries and investigate disputes or tax enquiries from preserved facts. They do not prove payment occurred, make an unverified receipt true or settle tax/legal retention duties. No gateway or client-to-tailor processing is introduced.
-
-### LabRetrievalChunk
-
-**Purpose/columns:** synthetic text-chunk relationship/storage exercise; id TEXT PK; ownerUserId TEXT FK → LabUser; sourceKey TEXT; ordinal INTEGER; content TEXT; contentDigest TEXT; createdAt time.
-
-**Constraints/relationships:** UNIQUE(ownerUserId, sourceKey, ordinal); ordinal >= 0; nonblank source/content. One user → many chunks, ordered within a source. No vector extension, embedding, model call or product retrieval endpoint is proposed.
-
-**Indexes/write cost:** owner/source/ordinal uniqueness supports ordered reads and duplicate-position prevention, in addition to PK. Chunking increases row count/content storage and index writes; no speculative full-text/vector index.
-
-**Duplication/lifecycle:** content deliberately repeats source excerpts; contentDigest supports integrity comparison, not secrecy/search. Chunk size/overlap needs review only if required for the isolated exercise. No real customer/private records. Owner-reviewed cleanup follows genuine evidence preservation.
-
-## 8. Owner's paper diagram blueprint
-
-Draw separate product and disposable-lab panels; mark deferred parts. Add an existing Task Two box with no product/lab relationship. Write the actual columns/types/nullability, PK/UQ/FK and key indexes from the descriptions above on the paper drawing. Arrows below describe proposals, not deployed tables.
+The owner must draw and photograph the schema on paper **before implementation**. This text is a drawing reference, not substitute evidence. Use one clearly labelled disposable-lab panel, separate from any product proposal. Prefix Lab is a diagram qualifier, not a selected database/schema name.
 
 ~~~text
-PRODUCT PROPOSAL
-User 1 ---- 0..1 CredentialAccount
-User 1 ---- * Session
-User 1 ---- * BusinessMember * ---- 1 Business
-Business 1 ---- * Client
-Client 1 ---- * ClientInvitation ---- 1 issuing BusinessMember
-ClientInvitation 1 ---- 0..1 ClientAccountLink * ---- 1 User
-Client 1 ---- * ClientAccountLink (historical; proposed one active)
-User/ClientInvitation ---- * VerificationChallenge 1 ---- 0..1 EmailOutbox
-RateLimitBucket (independent; includes unknown accounts)
-User 1 ---- * TermsAcceptance * ---- 1 approved TermsVersion
+DISPOSABLE LAB (7 synthetic tables; no product FKs)
+User 1 -- 0..* Session
+User 1 -- 0..* PaymentIntent
+PaymentIntent 1 -- 0..* PaymentAttempt
+PaymentIntent 1 -- 0..1 Payment       [Payment.paymentIntentId UNIQUE]
+PaymentAttempt 1 -- 0..1 Payment      [successfulAttemptId UNIQUE]
+User 1 -- 0..* RetrievalDocument
+RetrievalDocument 1 -- 0..* RetrievalChunk
 
-DEFERRED PRODUCT: Business/Client -> Order -> ClothingItem -> agreement versions
-                  business-owned PaymentRecord -> reversing PaymentCorrection
-
-DISPOSABLE LAB (synthetic; no product FKs)
-LabUser 1 ---- * LabSession
-LabUser 1 ---- * LabPayment
-LabUser 1 ---- * LabPaymentAttempt * ---- 0..1 LabPayment
-LabUser 1 ---- * LabRetrievalChunk
-LabPayment.operationKey UQ
-LabPaymentAttempt(operationKey, attemptNo) UQ
-
-EXISTING TASK TWO: AssessmentEnquiry only; preserve existing source/migration
+CORRELATED PAYMENT FKs:
+Payment(paymentIntentId, amount, currency)
+  -> PaymentIntent(id, amount, currency) UNIQUE
+Payment(successfulAttemptId, paymentIntentId)
+  -> PaymentAttempt(id, paymentIntentId) UNIQUE
 ~~~
 
-1. Owner reviews open choices, draws the schema and captures a legible genuine JPG for Evidence 01 before Prisma implementation. Do not substitute a generated diagram or photograph of this text.
-2. Owner verifies each actual target and captures initial state for Evidence 02 before migrations: schemas/tables, population as appropriate, migration history and identity, without credentials. Do not assume an empty database.
-3. After separate approval, prepare/review implementation schemas and instructions. Owner executes migrations and captures actual output. Populated required-column failure, nullable/backfill/required correction and drift stay disposable. Never edit/remove an applied migration automatically or reproduce failures against product/Task Two data.
+Copy the seven complete column lists above with types/nullability, PK/UQ keys and all index predicates; include User.name TEXT NOT NULL (nonblank, no name index). Mark both ends of each FK arrow using the matrix. Add a note that commit-time lifecycle enforcement couples succeeded attempts to their unique Payment; a CHECK alone cannot enforce another row's outcome. User ownership of Payments/attempts is derived through PaymentIntent, and chunk ownership through RetrievalDocument. There is no lab many-to-many join.
 
-## 9. Slice 2 prerequisites and later gates
+Photograph the actual legible paper drawing as genuine Evidence 01, without generating a replacement. The owner's existing drawing must be checked against this reference; no photograph is inspected, renamed or modified by this edit. Capture the actual initial database state separately for Evidence 02 before any migration. Deliberate required-column/drift failures use only approved disposable targets, never product development.
 
-Slice 2 should begin with database-free security primitives/tests after separate approval: exact compatible dependencies, supported approved name/email/password Signup and separate client mapping, Prisma 7 mapping, explicit Argon2id hooks and offline generation. Resolve canonicalization and password minimum/processing bounds; coordinate future frontend/backend changes. Owner review and genuine paper evidence precede model implementation.
+## 7. Completeness and implementation gates
 
-Before database integration, confirm target/role/history separation, independent migration/shadow paths, transaction support, session lifetimes/revocation and client-link cardinality. Before exposing endpoints, approve thresholds/shared counters, counter-store and breach-service outage policies, challenge protection and trusted-proxy topology. Before email, confirm sender/provider/test recipients, protected durable worker operation, retries and local secret configuration. No secrets are requested in documentation.
+This reference specifies **7 tables, 42 columns, 20 indexes and 7 FK definitions**. Each table retains types/nullability, candidate keys, constraints, individual index reasons/write costs, duplication and lifecycle; the matrix is the single full relationship inventory.
 
-The [operating record](../../task-03-client-validation/docs/legal-operating-decisions.md) and [Terms note](../../task-03-client-validation/docs/terms-note.md) retain approval history. Candidates are NOT APPROVED / NOT PUBLIC; actual versioned acceptance is unimplemented. Proposed tables confer no legal approval or authorization for real customer processing. Public onboarding stays disabled until launch readiness. The assessment/product separation and trimming divergence need explicit review.
+Before implementation, confirm the isolated lab interpretation with the owner/assessor and review transaction locking, attempt sequence allocation, explicit abandonment rules and deferred lifecycle triggers. Keep immutable terminal attempts and the single full-value result semantics. The owner must verify the drawing, actual initial database state and disposable targets; no evidence or database execution is supplied by this specification.
 
-Assumptions: none. Proposed contracts and review gates are not implemented architecture or verified database facts.
+See the [Task Four overview](../README.md) for the remaining assessment work. No product schema, production feature or retention policy is approved by this reference.
