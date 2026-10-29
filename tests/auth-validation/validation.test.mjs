@@ -39,12 +39,16 @@ test("signup email validates from first input and clears immediately when correc
   assert.equal(visibleErrors("signup", state).email, "Enter your email address.");
 });
 
-test("email syntax supports plus addresses, subdomains, apostrophes and Unicode without canonicalizing", () => {
-  for (const email of ["tailor+orders@example.com", "o'neill@studio.example.ng", "ọlá@example.com", " A+tag@EXAMPLE.com "]) {
+test("email syntax supports ASCII plus addresses, subdomains and apostrophes without rewriting typed values", () => {
+  for (const email of ["tailor+orders@example.com", "o'neill@studio.example.ng", " A+tag@EXAMPLE.com "]) {
     assert.equal(emailError(email), undefined);
     const state = change("signup", initialValidationState(), "email", email);
     assert.equal(state.values.email, email);
   }
+});
+
+test("V1 email rejects Unicode addresses and compatibility characters consistently", () => {
+  for (const email of ["\u1ecdl\u00e1@example.com", "a@\u4f8b.example", "\u212A@example.com", "a..b@example.com"]) assert.ok(emailError(email));
 });
 
 test("email syntax rejects missing parts, internal whitespace and multiple unquoted at signs", () => {

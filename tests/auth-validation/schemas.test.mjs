@@ -20,7 +20,7 @@ test("all authentication schemas produce the same trimmed, fully lowercase email
   for (const [email, expected] of [
     ["  Tailor+Orders@EXAMPLE.COM  ", "tailor+orders@example.com"],
     ["\tTailor@EXAMPLE.COM\r\n", "tailor@example.com"],
-    ["\u00a0ỌLÁ@EXAMPLE.COM\u2003", "ọlá@example.com"],
+    ["\u00a0TAILOR@EXAMPLE.COM\u2003", "tailor@example.com"],
   ]) {
     for (const [mode, schema] of Object.entries(schemas)) {
       const raw = Object.freeze(inputFor(mode, { ...valid, email }));

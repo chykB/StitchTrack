@@ -9,18 +9,19 @@ export const nameSchema = z.string({ error: "Enter your name." }).refine(
   { error: "Enter your name." },
 );
 
-// Preserve the existing Unicode-friendly public-address shape rule, rather than
-// introducing stricter provider/RFC assumptions. This does not verify ownership.
-// Only parsed output is canonicalized; callers keep raw UI values separately.
+// Approved V1 policy: ASCII email syntax consistent with installed Better Auth.
+// Validate before lowercasing so non-ASCII compatibility characters cannot fold
+// into ASCII. Only parsed output changes; raw UI typing remains untouched.
 export const emailSchema = z.string({ error: "Enter your email address." })
-  .transform(value => value.trim().toLowerCase())
+  .transform(value => value.trim())
   .superRefine((email, context) => {
     if (!email) {
       context.addIssue({ code: "custom", message: "Enter your email address." });
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email)) {
+    } else if (/[^\x00-\x7f]/u.test(email) || !z.email().safeParse(email).success) {
       context.addIssue({ code: "custom", message: "Enter an email address like you@example.com." });
     }
-  });
+  })
+  .transform(value => value.toLowerCase());
 
 // Password schemas validate the original string: no transforms, coercion,
 // normalization, character-class requirements or provisional maximum.

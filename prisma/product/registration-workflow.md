@@ -1,0 +1,93 @@
+# Registration transaction and verification lifecycle
+
+## Scope, authority and decisions
+
+The [PRD](../../docs/PRD.md) remains read-only. Better Auth Email OTP still generates and validates tailor verification codes. Product-owned lifecycle state supplements the plugin rather than replacing it with an unrelated authentication system. The plugin's replaceable/deletable Verification row cannot alone provide a stable delivery identity, so the proposed schema adds EmailVerificationIssuance. No migrations or database tests have run in this slice.
+
+The current service is an internal factory with an explicitly supplied Prisma client/configuration. It opens no connection on import and exports no Next route or Better Auth handler. It allows only proposed product development/test targets; public onboarding remains disabled. Signup UI, draft acknowledgement, conditional legal documents and unavailable-action messages remain unchanged. The only shared UX policy change is the owner's approved ASCII email restriction across Signup/Login/Reset. Unicode display names remain valid; internationalized email users are now excluded, an explicit V1 compatibility trade-off. Historical Task Three evidence records its earlier policy and is preserved.
+
+## Eight-model reference and relationships
+
+[schema.prisma](schema.prisma) is the complete column/type/nullability reference. All models live in product, with TEXT IDs and TIMESTAMPTZ(3) times. User.email is the Prisma field mapped to the uniquely indexed emailCanonical column. Do not set Better Auth's field mapping to the physical SQL name.
+
+| Model | Purpose, relationships and index rationale |
+| --- | --- |
+| User | Global identity with Unicode name/canonical ASCII email and emailVerified=false. 1:N Account, Session, TermsAcceptance and EmailVerificationIssuance. PK/unique email support identity/duplicate enforcement; inserts maintain both. |
+| Account | Credential row written by Better Auth. userId FK, unique(providerId,accountId), userId index. Nullable password stores only encoded Argon2id. Three indexes maintained on insertion. No OAuth flow is enabled. |
+| Session | Better Auth session storage; unique token, userId/expiry indexes plus PK. Four maintained indexes; registration/verification must create none. |
+| Verification | Plugin-owned opaque identifier/value/expiry, PK and identifier/expiry indexes. It has 0..1 linked issuance while present. Nonunique identifier matches installed latest-row/consume-all behavior. Three maintained indexes per insert; delete/recreate is plugin behavior, not durable issuance history. |
+| TermsVersion | Immutable document reference/digest/version and synthetic/approval metadata. 1:N acceptances; PK and unique version maintained. No candidate policy is approved by creating this model. |
+| TermsAcceptance | Required explicit user/version association with server timestamp/context. PK, unique(userId,termsVersionId), version index; both FKs Restrict deletion. Three maintained indexes. |
+| EmailVerificationIssuance | Stable UUID, userId/email snapshot, optional unique Verification FK, 32-byte keyed verifier/key ID, failedAttempts, expiry, createdAt and nullable consumedAt/supersededAt. User 1:N issuances. Verification deletion sets only its pointer NULL; the issuance survives. PK, unique verificationId, userId/createdAt, expiry and partial one-open indexes add five maintained indexes. Terminal updates maintain the partial index. |
+| EmailOutbox | Required unique issuanceId FK with Restrict, derived User ownership, versioned template and authenticated encrypted payload/nonce/tag/key ID, delivery state/count/times. Issuance 1:0..1 job; service requires exactly one per committed registration issuance. PK/unique issuanceId/status-availability indexes add three maintained indexes; cancellation/rescheduling changes the queue index. |
+
+Core User/Account/Session relations restrict destructive changes, intentionally differing from library cascade defaults. Controlled closure/history rules must be designed before enabling deletion APIs.
+
+Intentional duplication: User email and issuance/email payload snapshots serve current identity versus issue-time destination. The keyed product verifier and plugin's protected verification value represent the same code but have separate roles: a stable serialized attempt/lifecycle gate versus actual Better Auth validation. Their key/context must match. Outbox ownership is derived solely through issuance; no duplicated userId/composite FK is needed. Terms digest/reference duplicates artifact integrity metadata, not policy text. Status/counters are processing summaries, never proof of external email delivery.
+
+## Registration transaction
+
+1. Parse unknown input with the shared strict Signup schema plus termsAccepted=true and an explicit termsVersionId. Canonical email is trimmed/ASCII-validated/lowercased. The accepted password is unchanged, well-formed Unicode with at least 12 code points; no compulsory character mix or provisional 128-unit maximum is introduced.
+2. Require the configured Terms version ID and perform the injected fail-closed breached-password prerequisite **before** opening a transaction. The future operational caller must use the real checker. The product-test harness uses only a synthetic no-network result.
+3. Open a Serializable Prisma interactive transaction (initial timeout 10 seconds, maxWait 5 seconds). Check actual database, current role and product namespace against the literal proposed target. These initial budgets require real hardware/concurrency calibration; they are not performance evidence.
+4. Read the required TermsVersion. Synthetic versions require mode=test, explicit allowSyntheticTerms and null approval/effective dates. Development cannot accept synthetic policies. Nonfixture versions require actual approval/effective timestamps not later than the transaction's time. No such public version has been approved here.
+5. Bind a fresh Better Auth instance to the supplied tx using transaction:false. Configure custom Argon2id callbacks, autoSignIn:false, requireEmailVerification:true, sendOnSignUp:false, sendOnSignIn:false and autoSignInAfterVerification:false. Disable automatic Signup OTP hooks; do not enable background callbacks.
+6. Call signUpEmail through the real library. Observe actual User/Account delegate insert receipts. A generic duplicate response is not proof of creation; require exactly one new User and credential with matching user/accountId and no session.
+7. Write TermsAcceptance explicitly. Call server-only createVerificationOTP; the installed plugin uses secure random digit generation. Capture the actual Verification insert receipt rather than guessing an opaque identifier. Then write the stable issuance and the encrypted pending outbox explicitly through the same tx.
+8. Await every required write, verify no session exists, then allow the outer callback to return. Any required write/callback/API failure aborts the operation. There is no root-client fallback, SMTP, HIBP or detached work inside the transaction.
+
+Failure injection exists after User, Account, TermsAcceptance, Verification, EmailVerificationIssuance and EmailOutbox inserts. It is admitted only in test mode. Verification also has failure seams after the plugin consumes/verifies the user, after the stable consumption marker, and after outbox cancellation. The owner harness separately records that the selected stage was genuinely reached; merely rejecting before that stage cannot count as a rollback proof. All exceptions leave the service as fixed ProductAuthError classifications without input, native errors or causes.
+
+Argon2id runs inside the library signup call and therefore occupies the outer transaction/connection. Offline tests do not establish pool capacity or lock/timeout behavior. No automatic transaction retry is included: unique/serialization conflicts fail safely; a future HTTP layer must provide generic, nonenumerating responses and reviewed retry policy.
+
+## Verification, expiry and reissue
+
+Each verification/reissue transaction checks its product target and locks the same User row using a parameterized, product-qualified SELECT FOR UPDATE before reading issuance state. Serializable isolation provides an additional conflict boundary. Multi-process behavior is still an owner PostgreSQL test, not an offline claim.
+
+A verification request requires canonical email, stable issuance UUID and exactly six ASCII digits as a string. Unknown, verified, superseded, consumed, exhausted or expired issuances cannot authorize verification. Wrong well-formed codes increment the product failedAttempts count and return invalid **without throwing**, so the attempt is committed. The third incorrect attempt cancels pending mail and prevents a later correct code. Malformed input is rejected before storage; transport/account/IP limits remain separate requirements.
+
+Wrong codes do not enter the plugin's delete/recreate path. A matching keyed verifier is passed to Better Auth verifyEmailOTP, which validates/consumes the protected plugin record and updates emailVerified. The same outer transaction marks the product issuance consumed and cancels pending outbox work. Its stable ID/history survives the Verification FK becoming NULL. The private library instance cannot create sessions through this service; generic OTP registration/reset/sign-in APIs are never exposed.
+
+The product expiry is no later than either issuance time + five minutes or the actual plugin expiry. Expired requests cancel pending work and return invalid. Reissue requires an existing unverified credential identity, enforces 60 seconds since latest issuance, marks older active issuances superseded, cancels their pending jobs, deletes their transient plugin rows and creates one new issuance/job in the same locked transaction. It never creates a new user or replaces a credential. Product business membership/client invitation authorization is not implied by email verification.
+
+## Key handling and delivery eligibility
+
+HMAC-SHA-256 uses a 32-byte server key and a versioned context containing issuance ID, canonical email and code. The plugin stores its HMAC string with its own attempt suffix; the product row retains the keyed verifier and key ID. Guessing one million possible codes from a stolen database alone is insufficient without the separate verifier key. Online rate limits remain essential.
+
+AES-256-GCM uses a separate 32-byte key, a random 12-byte nonce and a 16-byte tag. AAD authenticates format version, job ID, issuance ID, template version and key ID. Only email/code enter the encrypted body; passwords never do. Encryption and decryption both enforce a 4-KiB email-payload processing bound, not a password limit. Tampering or unknown keys fail closed. The utilities reject overlapping verifier/outbox keys. Provision keys and the independent Better Auth secret privately; retain needed old key IDs during rotation. No production key store or secret is invented/read by this slice.
+
+The exported deliveryEligible predicate requires pending/available work, matching user/issuance identity and current email, an unverified user, a linked plugin record, unexpired issuance, fewer than three failures and no consumed/superseded marker. Registration, verification and reissue never send SMTP. Tests reject stale/expired/consumed/removed-record cases; ciphertext remains durable history subject to future retention policy.
+
+**Worker boundary:** the future worker must load fresh state and apply this gate atomically with job claiming, then recheck immediately before SMTP using bounded dispatch time and reviewed cancellation/fencing. A stale snapshot or decrypted payload is not permission to send. No worker is implemented or authorized here. A database transaction cannot atomically commit SMTP delivery; once a message is handed to SMTP it cannot be recalled. A consume/supersede/expiry race after the final check can still make an in-flight email obsolete, though its code cannot verify. Do not claim impossible exactly-once delivery or absolute recall. Worker dispatch/retry/lease policy remains a separate pre-launch review; do not hide that race or hold an SMTP call inside a database transaction.
+
+## Initial migration draft
+
+The single [eight-table initial draft](migrations/20261029_product_auth_initial/migration.sql) includes all schema columns/indexes/FKs plus essential row checks and the partial one-open index. The [short review](review/README.md) states PostgreSQL/service responsibilities, removed redundant triggers, permission requirements and remaining negative/integration tests. It is unexecuted; the config now admits offline validate/generate plus exact owner-confirmed migrate deploy/status, following [staged setup](setup/README.md). No root/assessment fallback or shadow target is allowed.
+
+## Owner-authorized PostgreSQL proof: prerequisites, not current authorization
+
+The [harness](../../tests/product-auth/registration.integration.mjs) is prepared and syntax-checked but **has not run**. Before executing it, the owner must approve/provision/inspect the separate product development/test targets and restricted roles, review/authorize the guarded application of the initial product draft, regenerate the isolated client if needed, and explicitly authorize synthetic writes to an exclusively reserved empty product-test database. Do not run it against a populated test store or assessment database. No automatic cleanup/reset is provided.
+
+It requires the exact proposed stitchtrack_product_test database, stitchtrack_product_test_app role, product namespace and 127.0.0.1:5432 target. It verifies actual database/role/namespace, rejects superuser/create-role/create-database/bypass-RLS roles, and requires all eight product tables empty before inserting one synthetic Terms fixture. Missing/wrong schema or failed assertions stop the run; partial test records remain for private inspection.
+
+Only after those prerequisites and a separate owner authorization, privately supply PRODUCT_TEST_DATABASE_URL (never paste it into Git or a transcript), then review this command:
+
+```bash
+cd /home/bmalik/stitchtrack
+NODE_ENV=test PRODUCT_DATABASE_MODE=test PRODUCT_DATABASE_CONFIRMED=true PRODUCT_AUTH_INTEGRATION_CONFIRMED=true \
+  node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tests/product-auth/registration.integration.mjs --owner-integration
+```
+
+This command **will connect and write synthetic test records** if authorized. It is not run by any offline test command. The CLI requires that exact argument shape and no URL/target override. Keys/secrets are generated in memory for the test only, never printed, and lost on exit; resulting encrypted test rows are deliberately not operational delivery jobs. The HIBP prerequisite is a fixed test stub and fetch is blocked; no SMTP client exists.
+
+The harness checks real registration rollback after each reached write stage and verification rollback after each reached lifecycle stage; concurrent equivalent-email registration yields one complete enrollment; exact password verification; concurrent OTP verification permits at most one success; replay, expiry, three wrong attempts, cooldown and supersession; stable issuance/job linkage after plugin deletion; and zero sessions. Expiry/cooldown cases use the existing injected test clock without mutating stored timestamps, not a claim that real wall time elapsed. Serializable conflicts may reject one concurrent verification attempt; they must never produce a second successful verification.
+
+The owner must capture actual environment/revision/output/exit status and preserve a failed/partial run rather than rerunning/resetting silently. The harness logs only named test outcomes, not rows, emails, passwords, codes, hashes, key material or URLs. Its PASS lines occur only after actual assertions succeed; no database result is hardcoded or represented as already achieved. The reserved test database must be reviewed separately before another run.
+
+## Offline evidence and limits
+
+[Unit tests](../../tests/product-auth/registration.test.mjs) use real library calls, Argon2id and crypto against a labelled [delegate double](../../tests/product-auth/fake-product.mjs). They prove orchestration/validation/error branches and encryption behavior; snapshot restoration and simulated FK effects do not prove PostgreSQL rollback, locks or constraints. Existing compatibility tests remain version-pinned to 1.7.7. TypeScript and offline Prisma validation establish type/schema consistency only.
+
+The agent regenerated the ignored product client offline and ran database-free checks. Completed assessment Evidence 01-15, legal drafts, PRD, root/assessment configurations and owner dependency changes are preserved. No migration, product connection, integration run, HIBP/SMTP request, public account or session was performed. Prisma displayed an automatic update notice during CLI validation; its notifier may have checked the update service, so the earlier CLI invocation is not certified network-silent. Further CLI checks and documented offline commands disable it with CHECKPOINT_DISABLE=1.
+
+Assumptions: none. Actual atomicity, database privileges/constraints, operational key management, shared abuse controls and worker dispatch remain unproven or unimplemented until separately reviewed and owner-tested.
