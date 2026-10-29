@@ -2,7 +2,7 @@
 
 ## 1. Scope and database boundaries
 
-**Proposed design only; no lab tables have been implemented or inspected in a database.** The owner's assessment requires at least five tables covering people, sessions, money, separate money attempts and retrieval chunks. This seven-table design covers those categories using synthetic records only. It does not authorize product financial processing or retrieval.
+**Current design reference; lab implementation and owner migration evidence are captured.** The [isolated Prisma model](../prisma/schema.prisma) now has 42 columns, including recovered required User.name. [Migration evidence/status](migrations.md) distinguishes implemented constraints from planned writer/trigger safeguards; those safeguards are not claimed as installed. This specification was prepared before implementation and retains its rationale. The owner's assessment requires at least five tables covering people, sessions, money, separate money attempts and retrieval chunks. This seven-table design covers those categories using synthetic records only. It does not authorize product financial processing or retrieval.
 
 PaymentIntent means a request to record one full synthetic external receipt; Payment is the recorded result, not evidence that money moved. Zero or one full Payment per intent fits that meaning; partial/multiple-payment workflows would require a different design. The thirteen proposed product tables and authentication constraints are maintained separately in the [product schema proposal](product-schema-proposal.md).
 
@@ -271,6 +271,6 @@ Photograph the actual legible paper drawing as genuine Evidence 01, without gene
 
 This reference specifies **7 tables, 42 columns, 20 indexes and 7 FK definitions**. Each table retains types/nullability, candidate keys, constraints, individual index reasons/write costs, duplication and lifecycle; the matrix is the single full relationship inventory.
 
-Before implementation, confirm the isolated lab interpretation with the owner/assessor and review transaction locking, attempt sequence allocation, explicit abandonment rules and deferred lifecycle triggers. Keep immutable terminal attempts and the single full-value result semantics. The owner must verify the drawing, actual initial database state and disposable targets; no evidence or database execution is supplied by this specification.
+The seven structural tables are now owner-migrated. Before adding any lab writer, retain the disclosed lab/product interpretation and review transaction locking, attempt sequence allocation, explicit abandonment rules and deferred lifecycle triggers. Keep immutable terminal attempts and the single full-value result semantics. The owner must verify the drawing, actual initial database state and disposable targets; no evidence or database execution is supplied by this specification.
 
 See the [Task Four overview](../README.md) for the remaining assessment work. No product schema, production feature or retention policy is approved by this reference.

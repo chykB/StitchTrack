@@ -1,6 +1,6 @@
 # Task Four Step 5: email normalization and password-trimming comparison
 
-**Prepared for owner review. Evidence 09/10 has not been captured.** This follows the Step 5 requirements supplied by the owner; the assessment PDF is unavailable. [PRD](../../docs/PRD.md) is read-only. Steps 1-4 are not repeated; [Evidence 06](../evidence/06-drift-error.txt) is completed at ca554f1 and preserved.
+**Owner Evidence 09/10 is captured:** [email normalization](../evidence/09-email-case-normalised.png) and [isolated password-trimming comparison](../evidence/10-password-trim-working.png). The commands below describe the completed synthetic experiment, not new evidence or authority to repeat it. This follows the Step 5 requirements supplied by the owner; the assessment PDF is unavailable. [PRD](../../docs/PRD.md) is read-only. Steps 1-4 are not repeated; [Evidence 06](../evidence/06-drift-error.txt) is completed at ca554f1 and preserved.
 
 ## Existing product behaviour
 
@@ -8,7 +8,7 @@
 
 Inputs that differ only in supported surrounding whitespace and letter case have the same canonical value under this policy. This is not proof of mailbox ownership, delivery, account existence or permission to link client records across businesses. Whole-address lowercasing can conflate mailboxes on unusual case-sensitive systems; that is an existing approved trade-off, not new provider knowledge. Future server boundaries must consistently consume successful parsed output in registration, login and reset, while preserving verified invitations and business authorization.
 
-Signup and Login preserve accepted password strings exactly, including case, Unicode representation and meaningful spaces. Signup retains the current 12-Unicode-code-point minimum, nonblank/control-character rules and no arbitrary maximum. Login retains presence-only validation rather than reapplying enrollment rules to an existing credential. **Consistency means neither flow transforms the credential; their existing enrollment/presence checks are intentionally different.** A nonempty Login value passing syntax checks is not a successful sign-in. Real backend verification is not implemented.
+Signup and Login preserve accepted password strings exactly, including case, Unicode representation and meaningful spaces. Signup retains the current 12-Unicode-code-point minimum, nonblank/control-character rules and no arbitrary maximum. Login retains presence-only validation rather than reapplying enrollment rules to an existing credential. **Consistency means neither flow transforms the credential; their existing enrollment/presence checks are intentionally different.** A nonempty Login value passing syntax checks is not a successful sign-in. Public sign-in remains unavailable; internal credential/OTP verification has since passed owner product-test integration, without changing this isolated comparison or the exact-password policy.
 
 The [hashing primitive](../../lib/auth/password.server.ts) also preserves characters. It is not modified or invoked by this comparison. No benchmarks, database records, sessions, SMTP or authentication requests are involved.
 
@@ -43,7 +43,7 @@ TASK04_NORMALIZATION_EXPERIMENT=true node --disable-warning=MODULE_TYPELESS_PACK
 printf 'email_demo_exit_status=%s\n' "$?"
 ```
 
-Capture a genuine PNG of the command, complete readable table, equivalence result and actual exit status. Use task-04-server-security/evidence/09-email-normalization.png. Raw inputs are JSON-escaped so surrounding spaces/tabs are identifiable. Widen the terminal or adjust font size before capture; do not reconstruct or edit output to fit.
+Capture a genuine PNG of the command, complete readable table, equivalence result and actual exit status. Use task-04-server-security/evidence/09-email-case-normalised.png. Raw inputs are JSON-escaped so surrounding spaces/tabs are identifiable. Widen the terminal or adjust font size before capture; do not reconstruct or edit output to fit.
 
 For Evidence 10, run separately:
 
@@ -53,7 +53,7 @@ TASK04_NORMALIZATION_EXPERIMENT=true node --disable-warning=MODULE_TYPELESS_PACK
 printf 'password_comparison_exit_status=%s\n' "$?"
 ```
 
-Capture the command, readable comparison rows, product-policy limitation and actual status as task-04-server-security/evidence/10-password-trimming-experiment.png. If a complete readable view requires an additional screenshot, retain the primary PNG and add a clearly named supplement; do not overwrite existing evidence or simulate a terminal image. These are descriptive filenames for the owner-supplied Evidence 09/10 PNG requirements, not a claim to have read unseen PDF filenames.
+Capture the command, readable comparison rows, product-policy limitation and actual status as task-04-server-security/evidence/10-password-trim-working.png. If a complete readable view requires an additional screenshot, retain the primary PNG and add a clearly named supplement; do not overwrite existing evidence or simulate a terminal image. These are descriptive filenames for the owner-supplied Evidence 09/10 PNG requirements, not a claim to have read unseen PDF filenames.
 
 If either command fails, retain the actual output and investigate; do not label it successful or claim that a prepared result was observed. Neither PNG exists as part of this preparation. Terminal screenshots show an isolated executable demonstration, not a browser registration or a server endpoint. Owner observations and assessor acceptance remain pending.
 

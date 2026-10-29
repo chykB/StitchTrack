@@ -189,3 +189,19 @@ test("delivery gate refuses every terminal issuance state even if a stale job st
     assert.equal(deliveryEligible(job, {...issuance, ...patch}, user, f.now()), false);
   }
 });
+
+
+test("successful installed OTP verification preserves unrelated expired challenge history", async () => {
+  const f = await setup(), {issuanceId} = await f.service.register(input), payload = mail(f, issuanceId);
+  const historical = await f.client.verification.create({data: {id: "historical-expired-fixture", identifier: "historical-unrelated",
+    value: "synthetic-historical-secret", expiresAt: new Date(Date.now() - 60_000)}});
+  const remove = f.client.verification.deleteMany;
+  f.client.verification.deleteMany = args => {
+    assert.equal(Object.hasOwn(args.where, "expiresAt"), false, "No global expiry sweep during OTP lookup");
+    return remove(args);
+  };
+  assert.equal(await f.service.verify({...payload, issuanceId}), "verified");
+  assert.deepEqual(await f.client.verification.findUnique({where: {id: historical.id}}), historical);
+  assert.equal(f.rows().verification.length, 1);
+  assert.equal(await f.service.verify({...payload, issuanceId}), "invalid");
+});

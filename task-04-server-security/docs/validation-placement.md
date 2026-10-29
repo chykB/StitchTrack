@@ -1,10 +1,10 @@
 # Task Four Step 6: schema validation at the server boundary
 
-**Prepared implementation; owner HTTP measurements pending.** The assessment PDF is unavailable. This document follows the owner's supplied Step 6 requirements and preserves [PRD](../../docs/PRD.md), completed evidence and exact-password policy. No database operation, real authentication or timing evidence was performed by the agent.
+**Owner HTTP Evidence 11 is captured** in [the genuine timing log](../evidence/11-validation-timing.txt); its scope is the controlled validation fixture. This document records the original preview slice, not a claim that current internal product authentication is absent. [Current scope](../README.md) separates the later owner-tested foundation from unfinished public integration. The assessment PDF is unavailable. This document follows the owner's supplied Step 6 requirements and preserves [PRD](../../docs/PRD.md), completed evidence and exact-password policy. No database operation, real authentication or timing evidence was performed by the agent.
 
 ## Repository findings and current scope
 
-| Area | Actual state |
+| Area | Historical preview-slice state (current status above) |
 | --- | --- |
 | Existing authentication UI | Signup, Login, Reset and local verification view; forms remain UI-only and are not wired to the new APIs. |
 | Existing server work | Task Two's separately guarded synthetic enquiry persistence endpoint; Task Three's fixed-payload form-bypass fixture; database-free shared Zod schemas and Argon2id utilities. No Better Auth registration/login/reset/session/SMTP integration exists. |
@@ -38,7 +38,7 @@ Manual route checks are still appropriate for method, content type and resource 
 
 The 16 KiB cap is a transport safeguard, not a new Signup password character limit. It can reject extremely long otherwise schema-valid names/passwords; future backend processing bounds and UI alignment need explicit review. Input is never truncated. In production, also configure trusted proxies, HTTPS, safe logging, CSRF/session handling and error containment appropriate to the eventual authentication flow. Validation does not replace those controls, SQL parameterization or output encoding.
 
-The new modules log no request bodies, credentials or account-existence information, set no cookies and make no outbound calls. Responses are no-store. Framework/infrastructure logging remains a separate configuration responsibility; never put credentials in URLs. Existing enquiry/fixture routes and application forms are unchanged.
+The base validation modules log no request bodies, credentials or account-existence information, set no cookies and make no outbound calls. The later explicitly enabled [Signup breach preview](breach-check.md) can perform an external prefix-only range lookup; it does not activate registration. Responses are no-store. Framework/infrastructure logging remains a separate configuration responsibility; never put credentials in URLs. Existing enquiry/fixture routes and application forms are unchanged.
 
 ## Credible timing scope and explicit blocker
 

@@ -1,77 +1,92 @@
-# StitchTrack — Task Four: The Server Is the Source of Truth
+# StitchTrack - Task Four: The Server Is the Source of Truth
 
-## Purpose and progress
+## Current status and product boundary
 
-Task Four moves StitchTrack from the [Task Three UI](../task-03-client-validation/README.md) towards server validation, secure credentials, sessions and email verification. The [PRD](../docs/PRD.md) is authoritative and read-only. Baseline: commit 1aab84c on feat/task-03-auth-foundation. The owner's supplied requirements define the assessment; no assessment PDF was available.
+Reviewed on feat/task-04-server-security at HEAD e09b419 plus the existing pending authentication/email/documentation work. The [PRD](../docs/PRD.md) is authoritative and read-only. The assessment PDF is unavailable; the owner's supplied 12 steps and exact 19 interview questions define this review.
 
-**Slice 1 was documentation only.** The isolated seven-table lab was subsequently implemented and owner-migrated. Evidence 03/04/05 records initial deployment, the genuine required-column failure and three-step recovery (latest 528e166). Its model now includes required TEXT User.name. The owner completed reconciliation/status at 8464453 in the [second resolution attempt](evidence/05-required-column-resolution-attempt-02.txt). [Runtime drift Evidence 06](evidence/06-drift-error.txt) is completed and committed at ca554f1. [Step 5 normalization/trimming](docs/normalization-and-trimming.md) evidence is captured at 552b607, with the isolated-experiment/product-policy limitations retained. [Step 6 server validation](docs/validation-placement.md) has captured HTTP timing Evidence 11; Evidence 12 compares the synthetic Task Three fixture with the validation-only Signup boundary. Neither proves functional authentication. [Step 8 rate limiting](docs/rate-limiting.md) now has an isolated default-off socket adapter and owner source-IP capture procedure; Evidence 13/14 is captured at d0b9fd6. [Step 9 breach checking](docs/breach-check.md) adds an opt-in Signup range lookup with fail-closed handling; Evidence 15 remains pending. The [product schema](docs/product-schema-proposal.md) remains a proposal, separate from the lab. Paper/initial-state evidence and hashing Evidence 07/08 are captured; remaining experiments are pending.
+**Evidence 01-23 is present. Written deliverables are indexed below. This is not a declaration that every functional assessment requirement or production launch gate is complete.** Owner-run PostgreSQL registration/verification and worker-mechanics checks passed their reported scopes. The latest OTP capture has owner-reported run_exit_status=0, capture_exit_status=0 and connection cleanup, plus screenshots 19-22. Its final all-four-stages banner was not found in filtered output and is not asserted.
 
-Signup now requires Your name, Email and Password. Your name is the tailor's personal/display name (future User.name); Business.name is separate and collected during business setup, never initial Signup. Login remains Email/Password, and Reset remains Email only. Signup, Login, Reset and the opt-in local verification preview remain UI-only. Shared Zod validation and canonical email output are implemented. Standalone server-only Argon2id utilities and an owner-run benchmark are now available; see [hashing design and evidence commands](docs/hashing.md). The owner installed @node-rs/argon2 2.2.2; its pending package changes are preserved. Better Auth integration, real registration, sessions, SMTP and background delivery remain unimplemented, and the owner's genuine hashing evidence is linked in the checklist below. The root product schema still declares only Task Two's AssessmentEnquiry. Task Four has its own isolated schema/config/history; owner evidence establishes the reconciled lab state and completed runtime drift correction.
+Public Signup/Login/Reset remain UI-only; the opt-in /auth?verify view does not verify accounts. Development-only /api/auth/signup, /login and /reset are validation previews, not functional authentication. Internal Better Auth registration/OTP services use the separate eight-model product schema with Argon2id, exact passwords, synthetic test Terms, stable issuances and encrypted email jobs. They are not wired to public forms; functional public sign-in/recovery and sessions remain inactive.
 
-## Assessment versus product scope
+The seven-table disposable financial/retrieval laboratory is separate from product development/test and Task Two. It does not introduce payment processing, retrieval or AI to StitchTrack. Clients pay tailors directly; the future product records unverified receipts. Client invitations and business-scoped access remain product work, not extra user roles.
 
-The product requires email/password tailor accounts, mandatory email verification, invitation-based passwordless client access and business-scoped authorization. Clients pay tailors directly; StitchTrack records unverified receipts. No retrieval, vector-search or runtime AI feature is approved.
+## Twelve-step reconciliation
 
-The [seven-table disposable assessment laboratory](docs/schema.md) (42 columns) is documented separately from the [thirteen-table product proposal](docs/product-schema-proposal.md) (98 columns). Synthetic financial attempts and retrieval chunks must not enter the product Prisma schema or become public features. Confirm this separation with the owner/assessor before implementation.
-
-The assessment requires password-edge trimming; the product preserves accepted passwords exactly. The [isolated synthetic comparison](docs/normalization-and-trimming.md) demonstrates the difference without changing authentication. A literal requirement to trim actual authentication passwords remains an explicit assessment/product conflict requiring assessor resolution. Do not silently trim registration or Login passwords.
-
-## Implementation sequence
-
-1. **Design:** owner reviews the architecture, resolves open choices and draws/photographs the paper schema before any model implementation.
-2. **Database-free primitives:** approve exact dependencies and compatibility; prepare Argon2id callbacks, Zod schemas, email canonicalization, processing bounds and focused tests. Capture actual local hashing measurements only when authorized.
-3. **Controlled database work:** owner verifies targets/initial state and executes reviewed migrations. Failure and drift exercises use disposable targets, including any shadow database.
-4. **Authentication boundary:** integrate approved account creation, Terms-version recording, sessions and verification gating; repeat the preserved Task Three attacks against the separately identified new endpoint.
-5. **Abuse controls:** shared atomic rate counters, account/IP rules, trusted-proxy handling and breached-password screening. Demonstrate the IP-only limitation in a controlled environment.
-6. **Verification/email:** durable background delivery with Nodemailer/SMTP, protected challenges, expiry/attempt/resend/reuse checks and branded email.
-7. **Review:** finish genuine evidence, defects, at least four justified deferred controls and 19 interview answers. Obtain the exact question wording before drafting.
-
-Each slice needs separate approval. Current documentation does not authorize package installation, schema changes, database operations, sending email or running workers.
-
-## Genuine evidence checklist
-
-Evidence 01-14 are **captured** under task-04-server-security/evidence/; the remaining entries are pending; the successful reconciliation supplement is also captured. Numbers/formats are owner-supplied; descriptions below are not invented official full filenames. Record actual environment, revision and provenance; redact secrets without fabricating output.
-
-| Status | No. | Required evidence and format |
+| Step | Verified scope | Remaining mandatory/scope issue |
 | --- | --- | --- |
-| [x] | 01 | [Owner's paper schema photograph](evidence/01-schema-drawing.jpg) - owner capture. |
-| [x] | 02 | [Actual database state before migrations](evidence/02-database-state-before.png) - owner capture. |
-| [x] | 03 | [Initial migration and full output](evidence/03-initial-migration.txt) - owner capture. |
-| [x] | 04 | [Genuine required-column failure](evidence/04-required-column-failure.txt) - owner capture. |
-| [x] | 05 | [Nullable/backfill/required recovery](evidence/05-required-column-three-steps.txt) - owner capture. |
-| [x] | 06 | [Genuine Prisma runtime drift and correction](evidence/06-drift-error.txt) - owner capture at ca554f1, TXT. |
-| [x] | 07 | [Two different Argon2id hashes, both verifying](evidence/07-hash-twice-different.txt) — genuine owner capture, TXT. |
-| [x] | 08 | [Owner-machine Argon2id/SHA-256 timings and arithmetic](evidence/08-timing-argon-vs-sha.txt) — local sequential measurements, TXT. |
-| [x] | 09 | [Isolated email normalization](evidence/09-email-normalization.png) - owner PNG; real registration processing remains unimplemented. |
-| [x] | 10 | [Isolated password-trimming comparison](evidence/10-password-trimming-experiment.png) - owner PNG; product policy unchanged, assessment divergence unresolved. |
-| [x] | 11 | [Measured HTTP validation timings](evidence/11-validation-timing.txt) - controlled synthetic comparison, not functional registration, TXT. |
-| [x] | 12 | [Actual direct-request before/after](evidence/12-direct-request-before-and-after.txt) - synthetic fixture versus validation-only boundary, TXT. |
-| [x] | 13 | [Actual triggered rate limit and HTTP 429](evidence/13-rate-limit-triggered.png) - owner PNG. |
-| [x] | 14 | [Actual source-IP bypass](evidence/14-rate-limit-defeated.txt) - owner TXT; isolated assessment admission, not authentication. |
-| [ ] | 15 | 15-breached-password-rejected.png - owner live Signup breach rejection; [procedure](docs/breach-check.md#owner-procedure-for-genuine-evidence-15). |
-| [ ] | 16 | Actual SMTP failure — TXT. |
-| [ ] | 17 | Actual SMTP success — TXT. |
-| [ ] | 18 | Measured synchronous/background registration comparison — TXT. |
-| [ ] | 19 | Genuine verification database row, secrets redacted — PNG. |
-| [ ] | 20 | Expired code rejected — PNG. |
-| [ ] | 21 | Incorrect code rejected — PNG. |
-| [ ] | 22 | Consumed code reuse rejected — PNG. |
-| [ ] | 23 | Actual rendered branded email — PNG. |
+| 1. Schema | Paper photograph; seven-table lab specification with columns, cardinalities, indexes/write costs and duplication; payment-attempt/history rationale. | Lifecycle triggers/writers remain deliberately unimplemented; do not claim enforcement beyond migrated constraints. Lab/product separation must remain explicit. |
+| 2. Initial inspection | Evidence 02 records the owner's genuine initial state. | None identified for the supplied capture requirement. |
+| 3. Migrations | Genuine initial deploy, populated-table failure, three-step recovery/reconciliation and client runtime drift/correction are captured. | Do not rerun or edit applied migrations to polish evidence. |
+| 4. Hashing | Two salted Argon2id hashes verify; actual local Argon2id/SHA timings and arithmetic are captured. SHA is comparison only. | Deployment concurrency calibration is product readiness, not a missing local timing capture. |
+| 5. Normalization/trimming | Synthetic email and trimming comparisons captured; shared canonicalization and exact password preservation exist internally. | Actual functional Login/Reset integration remains absent. Assessment trimming versus product exact-password policy requires explicit resolution. |
+| 6. Boundary validation | Shared Zod validates three preview operations and internal registration. Evidence 11 has real controlled HTTP timings. | No historical functional-auth before-validation baseline; fixture timings do not establish that comparison for working auth. |
+| 7. Repeat attacks | Evidence 12 contrasts genuine Task Three fixture 200 with malformed-payload refusal 422 at the new preview boundary. | It is not the same registration endpoint before/after; full functional authentication enforcement/integration remains pending. |
+| 8. Rate limiting | Three-path isolated limiter, triggered 429 and genuine changed-source-IP admission while original peer stays blocked. | Shared/account-aware product limits and trusted ingress remain absent; fixture scope needs assessor acceptance where functional-auth protection is required. |
+| 9. Breached passwords | Evidence 15 shows real preview HTTP 422; prefix-range checker fails closed. Internal registration requires a checker prerequisite. | Wire the actual checker and operational failure controls into the future public caller; test stubs are not production screening. |
+| 10. Verification/background email | Real service/PostgreSQL screenshots show persistence, expiry, attempts and replay. SMTP failure/success is separately captured. Evidence 18 contains measured controlled HTTP comparison. | No eligible end-to-end worker SMTP dispatch or PostgreSQL registration timing comparison. Keep controlled-transport scope explicit. |
+| 11. Branded email | Actual received/rendered email, plain-text/HTML implementation and editorial notes; screenshot 23 is visibly redacted. | Real mail-client/accessibility/deployment checks are not inferred from one screenshot. |
+| 12. Omitted controls | Four independent controls with rationale, risks and future triggers are documented. | Review operational triggers before deployment; missing essential launch controls are not optional omissions. |
 
-Evidence 24, the seven-minute walkthrough, is optional. Automatic-fail safeguards: never store passwords with SHA/MD5; capture real local hashing timings and arithmetic, a real migration failure and the IP-only limitation; document at least four genuinely deferred controls. SHA-256 belongs only in the synthetic timing comparison.
+## Evidence index
 
-Slice 1 began with this README and docs/schema.md; the thirteen product specifications now live in docs/product-schema-proposal.md. Rate-limit design and capture instructions: [docs/rate-limiting.md](docs/rate-limiting.md). Breach-check design and capture instructions: [docs/breach-check.md](docs/breach-check.md). Pending documentation: docs/verification-design.md, docs/email-copy.md, docs/not-implemented.md, docs/defects.md and docs/interview-answers.md (19 answers, maximum 200 words each).
+A checked item means the artifact is present and its stated capture scope is recorded, not that its whole assessment step or production behavior is certified. All evidence is owner supplied; no capture was rerun or overwritten during this documentation review.
 
-## Database ownership and release restrictions
+| Present | No. | Artifact and limit |
+| --- | --- | --- |
+| [x] | 01 | [Paper schema drawing](evidence/01-schema-drawing.jpg), owner photograph. |
+| [x] | 02 | [Initial database state](evidence/02-database-state-before.png). |
+| [x] | 03 | [Initial migration command/output](evidence/03-initial-migration.txt), recorded deploy and capture statuses zero. |
+| [x] | 04 | [Required-column failure](evidence/04-required-column-failure.txt), P3018/23502; deliberate migration exit 1 and capture 0. |
+| [x] | 05 | [Nullable/backfill/required recovery](evidence/05-required-column-three-steps.txt); successful [reconciliation attempt](evidence/05-required-column-resolution-attempt-02.txt) preserves the earlier failed diagnostic. |
+| [x] | 06 | [Runtime schema drift and restoration](evidence/06-drift-error.txt), P2022 then successful corrected read. |
+| [x] | 07 | [Two different hashes](evidence/07-hash-twice-different.txt), both verify. |
+| [x] | 08 | [Local hashing measurements/arithmetic](evidence/08-timing-argon-vs-sha.txt), not GPU/deployment throughput. |
+| [x] | 09 | [Email normalization](evidence/09-email-case-normalised.png), isolated comparison. |
+| [x] | 10 | [Password trimming experiment](evidence/10-password-trim-working.png), product passwords remain unchanged. |
+| [x] | 11 | [HTTP validation timings](evidence/11-validation-timing.txt), controlled fixture. |
+| [x] | 12 | [Direct-request comparison](evidence/12-direct-request-before-and-after.txt), synthetic 200 versus preview 422. |
+| [x] | 13 | [Triggered rate limit](evidence/13-rate-limit-triggered.png), actual HTTP 429. |
+| [x] | 14 | [Source-IP bypass](evidence/14-rate-limit-defeated.txt), actual socket peer changed; no authentication. |
+| [x] | 15 | [Breached-password rejection](evidence/15-breach-check-rejection.png), actual HTTP 422 and owner exit 0. |
+| [x] | 16 | [SMTP authentication failure](evidence/16-smtp-failure.txt), owner-transcribed EAUTH/sanitized result. |
+| [x] | 17 | [SMTP acceptance](evidence/17-smtp-success.txt), owner transcription and separately reported inbox arrival; not worker dispatch. |
+| [x] | 18 | [Synchronous/background timings](evidence/18-registration-timing-sync-vs-job.txt), five pairs, controlled delay/local-file commit, no SMTP/PostgreSQL registration. |
+| [x] | 19 | [Persisted verification rows](evidence/19-verification-row.png), safe selected database columns, unverified and no session. |
+| [x] | 20 | [Actual expiry rejection](evidence/20-verification-expired.png), invalid after stored wall-clock deadline, still unverified. |
+| [x] | 21 | [Incorrect-code attempts](evidence/21-verification-wrong-code.png), committed counters 1/2/3 and cancellation; the frame crops lower tables. |
+| [x] | 22 | [Consumed-code replay rejection](evidence/22-verification-code-reused.png), verified then invalid, consumed issuance and removed library row. |
+| [x] | 23 | [Rendered branded email](evidence/23-rendered-email.png), visible sender/recipient/code redaction confirmed in current image; image unchanged here. |
 
-The owner confirms real database identities, roles, privileges and migration history locally, and performs inspection, migrations, backfills, drift exercises and database-dependent verification. Agents never operate on the development database; test operations require task-specific authorization. Do not assume a database name, emptiness, running PostgreSQL service or safe shadow target.
+The owner's zero OTP statuses/cleanup are supplied observations, not a newly created transcript or proof that the missing final banner appeared. Evidence 19-22 demonstrates the named internal service/database cases; no public UI or SMTP linkage is implied. Keep any existing full OTP log privately if available; do not recreate successful tests just to obtain a banner. Evidence 24 (seven-minute walkthrough) is optional bonus evidence.
 
-Separate product development, product test and the disposable laboratory. Preserve [Task Two's schema](../prisma/schema.prisma), [migration](../prisma/migrations/20261023_task_two_enquiry/migration.sql) and [Prisma configuration](../prisma.config.ts). Future product/lab configurations require independent verified targets with no fallback. Client generation, typechecking and building must remain database-free.
+## Required documentation
 
-Public onboarding remains disabled until launch readiness. Task Four now has local-only validation boundaries that return unavailable, with no functional authentication backend. The [operating decisions](../task-03-client-validation/docs/legal-operating-decisions.md) require a registered Nigerian company before public launch, not an assumption that incorporation has occurred. Policy candidates remain **NOT APPROVED / NOT PUBLIC**. Draft acknowledgement is not legal acceptance; platform Terms, garment approvals and privacy consent are distinct.
+| Document | Scope |
+| --- | --- |
+| [schema.md](docs/schema.md) | Seven-table lab, full fields/relationships/indexes/duplication; [product proposal](docs/product-schema-proposal.md) is separate. |
+| [migrations.md](docs/migrations.md) | Failure/recovery, forward-only history and drift; retained commands are historical. |
+| [hashing.md](docs/hashing.md) | Argon2id profile, salts, genuine local timings/arithmetic and limits. |
+| [validation-placement.md](docs/validation-placement.md) | Schema placement, parsing bounds, fixture timing scope and functional-integration gap. |
+| [rate-limiting.md](docs/rate-limiting.md) | Thresholds, real source-IP bypass, shared-counter/proxy and user-cost discussion. |
+| [breach-check.md](docs/breach-check.md) | Prefix protocol, strict responses, outage policy and actual preview rejection. |
+| [verification-design.md](docs/verification-design.md) | OTP lifecycle, SMTP/outbox and owner-reported results/provenance. |
+| [email-copy.md](docs/email-copy.md) | Brand/copy, accessible alternatives and real-customer editorial checks. |
+| [not-implemented.md](docs/not-implemented.md) | Four genuine security deferrals, risks and triggers. |
+| [defects.md](docs/defects.md) | Actual findings, corrections and unresolved product/assessment limits. |
+| [interview-answers.md](docs/interview-answers.md) | Exact owner-supplied 19 questions in order, each answer at most 200 words. |
 
-Real customer processing, SMTP sending and worker operation require separate readiness approval. Task Three's [accessibility shortfall](../task-03-client-validation/docs/accessibility-audit.md) remains disclosed; optional recordings are not mandatory and this task does not complete missing observations.
+Reproducibility details: [OTP capture](docs/verification-evidence.md), [controlled email timing](docs/email-timing.md), [worker mechanics](../prisma/product/worker-postgres-verification.md). They do not authorize repeating database operations or sending mail.
 
-Next: review the Step 9 checker and opt-in owner procedure, then capture genuine Evidence 15. Evidence 13/14 remains preserved. Functional registration/login/reset remain unavailable; the historical real-auth timing baseline is absent. Evidence 11/12 retains its narrowed scope, and the password-trimming compliance gap remains open.
+## Automatic-fail review and remaining work
 
-Assumptions: none. Proposed choices require review before implementation.
+- Password storage uses Argon2id, not SHA/MD5. Evidence 07/08 records genuine local measurements and arithmetic; SHA-1 is only HIBP protocol and SHA-256 only permitted comparison/digests.
+- Evidence 04 records a real populated-table migration failure. Evidence 14 records a successful genuine source-IP bypass. Neither should be replaced by predicted output or spoofed forwarding headers.
+- At least four deferred controls are now documented. No missing item among the supplied automatic-fail conditions was identified in this review; this is not an assessor verdict or waiver of narrower fixture scopes.
+- Resolve the explicit password-trimming conflict and assessor acceptance of the limited 09-14/18 demonstrations. Public frontend/backend sign-in/recovery/session integration, shared abuse controls and eligible end-to-end email delivery remain product work, not completed by artifact presence.
+- Company registration and the [legal launch checklist](../task-03-client-validation/docs/terms-note.md#launch-approval-checklist) remain prerequisites for related public use. Policies are V1.0 candidates, owner/legal review pending, not public/effective. No approved TermsVersion record is inferred from synthetic fixtures.
+
+## Verification and Git review
+
+Documentation-only close-out checks passed: 19 exact questions once each in order, answers 128-144 words, 221 local Markdown links, 26 retained Bash blocks checked with bash -n, and git diff --check. No application/database/SMTP experiment was rerun. Existing pending application, dependency, configuration, legal and evidence changes are preserved for separate owner review. Documentation is ready for review; this does not authorize staging, committing or public deployment. Compare the complete pending diff before an owner-controlled commit, including privacy review of all captures. The current redaction check is visual, not a guarantee about embedded metadata.
+
+Assumptions: none. All operational/database actions remain owner-controlled; no database, migration, worker, email or evidence-writing operation occurred in this review.

@@ -29,7 +29,9 @@ export type RegistrationConfig = {
 export type VerificationOutcome = "verified" | "invalid";
 const transactionOptions = {isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 10_000, maxWait: 5_000} as const;
 
-export function deliveryEligible(job: EmailOutbox, issuance: EmailVerificationIssuance, user: User, now: Date): boolean {
+export function deliveryEligible(job: Pick<EmailOutbox, "status" | "availableAt" | "issuanceId">,
+  issuance: Pick<EmailVerificationIssuance, "id" | "userId" | "emailCanonical" | "verificationId" | "consumedAt" | "supersededAt" | "failedAttempts" | "expiresAt">,
+  user: Pick<User, "id" | "email" | "emailVerified">, now: Date): boolean {
   return job.status === "pending" && job.availableAt <= now && job.issuanceId === issuance.id &&
     issuance.userId === user.id && issuance.emailCanonical === user.email && !user.emailVerified &&
     !!issuance.verificationId && !issuance.consumedAt && !issuance.supersededAt && issuance.failedAttempts < 3 && issuance.expiresAt > now;
@@ -89,6 +91,8 @@ export function createRegistrationService(client: PrismaClient, config: Registra
       baseURL: "http://127.0.0.1:3999", secret: config.authSecret,
       database: prismaAdapter(wrapped, {provider: "postgresql", transaction: false, debugLogs: false}),
       telemetry: {enabled: false}, logger: {disabled: true},
+      // Retention is explicit: OTP lookup must not sweep unrelated expired rows.
+      verification: {disableCleanup: true},
       emailAndPassword: {enabled: true, autoSignIn: false, requireEmailVerification: true,
         minPasswordLength: 12, maxPasswordLength: Number.POSITIVE_INFINITY,
         password: {hash: hashPassword, verify: verifyPassword}},

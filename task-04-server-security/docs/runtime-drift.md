@@ -1,5 +1,7 @@
 # Evidence 06: real Prisma Client runtime schema drift
 
+**Current status:** owner [Evidence 06](../evidence/06-drift-error.txt) records baseline success, genuine P2022 drift failure, restoration success and zero experiment/run/capture statuses. The procedure below is historical reproducibility material; do not rerun it against the current store or overwrite evidence merely to refresh this note.
+
 **Prepared for owner review; not executed.** No client has been generated, database queried or Evidence 06 created by the agent. The owner completed reconciliation at 8464453: the [second resolution attempt](../evidence/05-required-column-resolution-attempt-02.txt) contains successful resolve/status and preserved original failure logs. The earlier [authentication-failed attempt](../evidence/05-required-column-resolution-supplement.txt) remains historical evidence; it is not labelled successful.
 
 ## Scope and dependencies
