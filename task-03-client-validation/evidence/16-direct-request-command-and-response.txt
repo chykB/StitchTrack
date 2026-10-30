@@ -1,0 +1,69 @@
+StitchTrack Task Three, Step 8 — genuine direct HTTP request
+==========================================================
+Executed at: 2026-10-27T12:48:51.943Z
+Provenance: agent-executed WSL curl against an isolated current-source development server on loopback port 3104.
+This is not an owner-executed transcript. The owner's existing port 3000 server was not stopped or changed.
+The only endpoint exercised here is the temporary assessment fixture, NOT real StitchTrack registration.
+
+Activation in the isolated source copy:
+NODE_ENV=development (set by next dev)
+ENABLE_FORM_BYPASS_EXPERIMENT=true
+ENABLE_CODE_INPUT_EXPERIMENT=true
+ENABLE_AUTH_TERMS_PREVIEW=true
+ENABLE_PERSISTENCE_EXPERIMENT=false
+Server bound to 127.0.0.1. The code and draft-preview flags are needed for the separate form review, not for the fixture.
+No database credentials or .env files were copied to this test server.
+
+Working directory: /home/bmalik/stitchtrack
+Payload file: task-03-client-validation/fixtures/form-bypass-payload.json
+Exact body (password is one ASCII space; all data synthetic):
+{"email":"a@b","password":" "}
+
+Command (curl arguments were executed directly using Node spawnSync, without shell interpolation; this is the equivalent WSL shell command):
+curl --silent --show-error --include \
+  --request POST http://127.0.0.1:3104/api/assessment/form-bypass \
+  --header 'Content-Type: application/json' \
+  --header 'X-StitchTrack-Assessment: form-bypass-v1' \
+  --data-binary @task-03-client-validation/fixtures/form-bypass-payload.json \
+  --write-out '\nHTTP_STATUS=%{http_code}\n'
+
+Actual stdout (HTTP headers/body; CRLF normalized to LF for this text file):
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+cache-control: no-store
+content-type: application/json
+x-content-type-options: nosniff
+Date: Tue, 27 Oct 2026 12:48:51 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
+{"assessmentFixture":"form-bypass-v1","outcome":"fixed_synthetic_payload_observed","checksPerformed":["local_development_access","request_envelope","bounded_json","fixed_synthetic_payload"],"checksNotPerformed":["signup_email_format","signup_password_policy","account_lookup","terms_acceptance","registration"],"accountCreated":false,"sessionCreated":false,"persisted":false,"emailSent":false}
+HTTP_STATUS=200
+
+curl process exit code: 0
+Actual stderr: (empty)
+
+Interpretation
+--------------
+200 acknowledges receipt of the exact known synthetic pair. It is deliberately not 201 or a registration receipt.
+The fixture checks development/local access, method/origin/marker/content type, a bounded JSON body and an exact synthetic-payload allowlist.
+It deliberately does not apply the Signup email/password rules, inspect accounts, accept Terms or register anyone.
+The response echoes no email, password or code, sets no session cookie, and explicitly reports no account/session/persistence/email.
+No request body was logged by the fixture.
+The matching browser Signup attempt was blocked (see evidence 15). curl never ran that browser code.
+This demonstrates why browser validation cannot enforce an arbitrary server's policy. It does NOT establish a vulnerability in real StitchTrack registration, which does not exist yet.
+The previous Task Two enquiry endpoint and page-route 405 responses are not used as registration-bypass evidence.
+
+Separate actual guard verification
+----------------------------------
+Default-off development: 4 HTTP fixture tests passed; POST returned 404.
+Opt-in loopback development: 62 combined fixture/auth/verification HTTP/RSC tests passed; fixed-pair POST returned 200.
+Production with experiment flags set true: 62 combined HTTP/RSC tests passed; fixture POST and verification view remained 404.
+Non-loopback/mismatched Host, cross-origin, missing marker, wrong content type, malformed/oversized JSON and non-allowlisted payloads were rejected.
+
+Owner reproduction
+------------------
+See ../docs/client-side-is-not-security.md for the port-3000 activation and exact curl command.
+Do not send real credentials. Preserve this file as the agent-run result; if collecting an independent owner run, save it under a clearly named additional file.
+The fixed payload file is the comparison baseline for later authorized Task Four server tests; it is not a working account.

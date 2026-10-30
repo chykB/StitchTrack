@@ -1,0 +1,95 @@
+Task Three Step 1: final key-only URL verification
+Verification date: 2026-10-26 (Africa/Lagos)
+Built Next.js 16.4.2 application: http://127.0.0.1:3100
+Server environment: NODE_ENV=production, ENABLE_PERSISTENCE_EXPERIMENT=false.
+Final public contract: /auth -> login; /auth?login; /auth?signup; /auth?reset.
+No database operations, authentication submissions or account/session creation were performed.
+
+EVIDENCE PROVENANCE
+Project-owner screenshots were inspected: each real localhost:3000 address bar and form matches its filename.
+03-url-states.png arranges their complete pixels at native size; no address bar was cropped or reconstructed.
+[
+  {
+    "name": "03-auth-signup.png",
+    "bytes": 98334,
+    "sha256": "7356aa2d4c9942145349f255c64b2c564dbd308fd4a7c1be9513c23cfb328771"
+  },
+  {
+    "name": "03-auth-login.png",
+    "bytes": 78182,
+    "sha256": "104ac2e9e9bd036381f7b9fdf4abc33648cc252171ec9bfd75c1d27d58670953"
+  },
+  {
+    "name": "03-auth-reset.png",
+    "bytes": 81043,
+    "sha256": "0534fc885b59fc953a517fb47a39a87b8226638ed41213b0796e67e7c21a59b7"
+  }
+]
+
+BROWSER VERIFICATION LIMIT
+The Windows browser-automation sandbox helper failed to start twice, including after one runtime reset.
+There are NO fresh observed browser clicks, Back/Forward actions, document identities or browser-network events in this file.
+Rows below are genuine Node HTTP requests. RSC rows exercise Next client-navigation transport but are NOT recorded browser switching.
+Old mode= screenshots and document-witness counts were not relabelled as final-URL evidence.
+
+ACTUAL REQUESTS
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth","status":200,"contentType":"text/html; charset=utf-8","authForm":"login","setCookieCount":0,"bodyBytes":10697}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?login","status":200,"contentType":"text/html; charset=utf-8","authForm":"login","setCookieCount":0,"bodyBytes":10711}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?signup","status":200,"contentType":"text/html; charset=utf-8","authForm":"signup","setCookieCount":0,"bodyBytes":10821}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?reset","status":200,"contentType":"text/html; charset=utf-8","authForm":"reset","setCookieCount":0,"bodyBytes":10532}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?mode=forgot-password","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?mode=smjshdsljf","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?login&signup","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?reset&reset","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?reset=unexpected","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?login=","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/auth?unknown","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/","status":200,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":10680}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/?mode=unknown","status":200,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":10680}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/assessment/enquiry","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":7381}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/assessment/enquiry?login","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":7395}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/api/assessment/enquiries","status":405,"contentType":null,"authForm":null,"setCookieCount":0,"bodyBytes":0}
+{"emitter":"Node HTTP verification","kind":"direct HTML or route-method probe","path":"/this-page-does-not-exist","status":404,"contentType":"text/html; charset=utf-8","authForm":null,"setCookieCount":0,"bodyBytes":9107}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":0,"path":"/auth?login=&_rsc=%5Bframework-hash-redacted%5D","status":307,"contentType":null,"setCookieCount":0,"bodyBytes":0,"location":"/auth?login=&_rsc=%5Bframework-hash-redacted%5D"}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":1,"path":"/auth?login=&_rsc=%5Bframework-hash-redacted%5D","status":200,"contentType":"text/x-component","setCookieCount":0,"bodyBytes":6233}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":0,"path":"/auth?signup=&_rsc=%5Bframework-hash-redacted%5D","status":307,"contentType":null,"setCookieCount":0,"bodyBytes":0,"location":"/auth?signup=&_rsc=%5Bframework-hash-redacted%5D"}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":1,"path":"/auth?signup=&_rsc=%5Bframework-hash-redacted%5D","status":200,"contentType":"text/x-component","setCookieCount":0,"bodyBytes":6249}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":0,"path":"/auth?reset=&_rsc=%5Bframework-hash-redacted%5D","status":307,"contentType":null,"setCookieCount":0,"bodyBytes":0,"location":"/auth?reset=&_rsc=%5Bframework-hash-redacted%5D"}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":1,"path":"/auth?reset=&_rsc=%5Bframework-hash-redacted%5D","status":200,"contentType":"text/x-component","setCookieCount":0,"bodyBytes":6240}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":0,"path":"/auth?mode=forgot-password&_rsc=%5Bframework-hash-redacted%5D","status":404,"contentType":"text/x-component","setCookieCount":0,"bodyBytes":5513}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":0,"path":"/auth?signup=&reset=&_rsc=%5Bframework-hash-redacted%5D","status":404,"contentType":"text/x-component","setCookieCount":0,"bodyBytes":5513}
+{"emitter":"Node HTTP verification","kind":"scripted RSC transport probe; NOT observed browser navigation","hop":0,"path":"/auth?unknown=&_rsc=%5Bframework-hash-redacted%5D","status":404,"contentType":"text/x-component","setCookieCount":0,"bodyBytes":5513}
+
+SUMMARY
+{
+  "probes": 23,
+  "actualRequests": 26,
+  "assertions": "passed",
+  "setCookieHeaders": 0,
+  "browserSwitchingObserved": false
+}
+
+PROBE NOTE
+An initial ad-hoc recorder expected an immediate 200 for a synthetic RSC cache key and received 307.
+The recorder was corrected to log the actual same-origin cache-key redirects and final responses shown above; no application change was required.
+RSC cache-key redirects are protocol requests, not evidence of full-document navigation.
+
+EXECUTED CHECKS
+Policy tests: 2 passed, 0 failed.
+Assessment regression: 21 passed, 0 failed; mocked dependencies, database-free.
+Route tests: 38 passed, 0 failed, including invalid public states, RSC rejection, state-header spoofing protection, normal missing routes, homepage and production assessment checks.
+npm run typecheck: passed.
+npm run build: passed; existing generation steps produced Prisma Client 7.10.1 without a database connection.
+
+MANUAL BROWSER CHECKS STILL REQUIRED
+Open /auth?signup; clear DevTools Network with Preserve log enabled. Use the visible links to login/reset.
+Record actual Document versus Fetch/XHR requests: hydrated valid switching should not replace the document, though RSC data requests may occur.
+Verify Back/Forward, refresh, focus, cleared values/feedback and no session cookies for the final URLs without displaying secret values.
+Retain those genuine browser results before claiming final-URL no-reload/history/session behaviour has been observed.
+
+FINAL FILE CHECKS
+git diff --check: passed.
+Local rationale links: 15 resolved, no broken targets.
+Protected-file hashes and owner-supplied screenshot originals: unchanged.
+proxy.ts and next.config.ts: reviewed, unchanged in this follow-up.
+Temporary verification servers: stopped after checks.

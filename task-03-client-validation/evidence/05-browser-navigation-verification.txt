@@ -1,0 +1,27 @@
+Task Three: Manual Browser Navigation Verification
+Date: 26 October 2026
+Browser: Chrome
+Starting URL: http://localhost:3000/auth?login
+
+Actions performed:
+1. Opened the login form.
+2. Set window.__navTest = "STILL_HERE" in DevTools.
+3. Navigated to Signup, Reset and back to Login
+   using application links.
+4. Checked window.__navTest again.
+
+Observed result:
+The Console returned "STILL_HERE".
+The same browser document was preserved.
+No new document requests appeared in the filtered
+Network panel during the test.
+
+Conclusion:
+Switching authentication forms works without
+a full-document reload.
+
+Back/Forward verification: Passed.
+The browser restored the correct authentication form
+when navigating backward and forward.
+
+Authentication-cookie verification: Not manually checked.
