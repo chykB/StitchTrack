@@ -1,0 +1,26 @@
+Owner command: env -i PATH="$PATH" NODE_ENV=development TASK04_EMAIL_TIMING_CONFIRMED=true node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON task-04-server-security/experiments/email-timing/measure.mjs --owner-measure
+EVIDENCE 18 - ACTUAL OWNER HTTP TIMINGS WITH CONTROLLED TRANSPORT
+{"started":"2026-10-29T20:16:18.223Z","revision":"e09b419a1db74d348a7603c76d9e288fdc25a970","node":"v24.22.1","platform":"linux","release":"5.15.167.4-microsoft-standard-WSL2","arch":"x64","target":"127.0.0.1 (ephemeral port)"}
+CONTROLLED: shared Zod/Argon2id/HMAC/AES-GCM/template; private fsync+rename LOCAL FILE commit, NOT PostgreSQL/Better Auth registration.
+NO SMTP, HIBP, Terms approval, accounts, sessions, production worker or historical records. Queue is in-process, NOT production durable recovery.
+Same synthetic fixture and dispatcher in both modes; controlled delay 250ms (configured delay is not a measured result).
+HTTP 202: sync after controlled completion; background after file commit, dispatch starts after server finish. Client timing includes response body; negative sync responseToCompletionMs is expected.
+2 warm-up pairs excluded; 5 measured pairs, alternating order. Each sample awaits background completion before the next.
+{"pair":1,"mode":"sync","status":202,"serverResponseMs":462.5500769999999,"preCommitMs":173.89663199999995,"commitMs":35.266727000000174,"dispatchMs":251.61163799999986,"commitToCompletionMs":251.6329579999997,"responseToCompletionMs":-1.0149780000001556,"clientHttpMs":467.375544}
+{"pair":1,"mode":"background","status":202,"serverResponseMs":201.4724940000001,"preCommitMs":162.6264799999999,"commitMs":37.850822999999764,"dispatchMs":252.30436400000008,"commitToCompletionMs":253.23299300000008,"responseToCompletionMs":252.58533099999977,"clientHttpMs":207.73166700000002}
+{"pair":2,"mode":"background","status":202,"serverResponseMs":171.14124100000026,"preCommitMs":157.1750420000003,"commitMs":12.908629000000019,"dispatchMs":251.52288899999985,"commitToCompletionMs":252.40757299999996,"responseToCompletionMs":251.7197729999998,"clientHttpMs":174.69595000000027}
+{"pair":2,"mode":"sync","status":202,"serverResponseMs":421.9923120000003,"preCommitMs":160.16639499999974,"commitMs":7.973100000000159,"dispatchMs":252.0226630000002,"commitToCompletionMs":252.05825800000002,"responseToCompletionMs":-1.3626530000001367,"clientHttpMs":426.84412599999996}
+{"pair":3,"mode":"sync","status":202,"serverResponseMs":454.7313989999998,"preCommitMs":155.12662900000032,"commitMs":36.21305399999983,"dispatchMs":253.45411299999978,"commitToCompletionMs":253.5245930000001,"responseToCompletionMs":-3.3543989999998303,"clientHttpMs":475.00009}
+{"pair":3,"mode":"background","status":202,"serverResponseMs":233.22773599999982,"preCommitMs":214.25100400000065,"commitMs":17.692183999999543,"dispatchMs":252.621803,"commitToCompletionMs":253.82351200000085,"responseToCompletionMs":252.9843890000002,"clientHttpMs":250.6728639999992}
+{"pair":4,"mode":"background","status":202,"serverResponseMs":188.67406200000005,"preCommitMs":155.45460600000024,"commitMs":32.40935100000024,"dispatchMs":251.9663069999997,"commitToCompletionMs":252.67206999999962,"responseToCompletionMs":252.19188399999985,"clientHttpMs":192.3540149999999}
+{"pair":4,"mode":"sync","status":202,"serverResponseMs":447.064265,"preCommitMs":161.55500800000027,"commitMs":32.49016000000029,"dispatchMs":251.89803200000006,"commitToCompletionMs":251.91551299999992,"responseToCompletionMs":-0.6794319999999061,"clientHttpMs":450.59214900000006}
+{"pair":5,"mode":"sync","status":202,"serverResponseMs":448.1431560000001,"preCommitMs":174.00041299999975,"commitMs":20.360665000000154,"dispatchMs":252.61740399999962,"commitToCompletionMs":252.65700899999956,"responseToCompletionMs":-0.7563650000001871,"clientHttpMs":450.78787699999975}
+{"pair":5,"mode":"background","status":202,"serverResponseMs":166.1296709999997,"preCommitMs":154.34557500000028,"commitMs":11.16834900000049,"dispatchMs":252.5119909999994,"commitToCompletionMs":253.0988129999996,"responseToCompletionMs":252.71429100000023,"clientHttpMs":169.89224999999988}
+SUMMARY sync {"http":{"n":5,"meanMs":454.11995719999993,"medianMs":450.78787699999975,"minMs":426.84412599999996,"maxMs":475.00009},"dispatch":{"n":5,"meanMs":252.3207699999999,"medianMs":252.0226630000002,"minMs":251.61163799999986,"maxMs":253.45411299999978},"commit":{"n":5,"meanMs":26.460741200000122,"medianMs":32.49016000000029,"minMs":7.973100000000159,"maxMs":36.21305399999983}}
+SUMMARY background {"http":{"n":5,"meanMs":199.06934919999986,"medianMs":192.3540149999999,"minMs":169.89224999999988,"maxMs":250.6728639999992},"dispatch":{"n":5,"meanMs":252.1854707999998,"medianMs":252.30436400000008,"minMs":251.52288899999985,"maxMs":252.621803},"commit":{"n":5,"meanMs":22.40586720000001,"medianMs":17.692183999999543,"minMs":11.16834900000049,"maxMs":37.850822999999764}}
+DELTA_MEAN_HTTP_MS sync-background=255.05060800000007
+LIMIT: measures controlled local scheduling/response boundaries, not real SMTP latency, production PostgreSQL transactions or eligible worker dispatch.
+CLEANUP: listener closed and private run-owned scratch records removed.
+measurement_exit_status=0
+run_exit_status=0
+capture_exit_status=0

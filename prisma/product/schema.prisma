@@ -1,0 +1,143 @@
+// Product authentication foundation. Never use assessment databases for these models.
+generator client {
+  provider = "prisma-client"
+  output = "./generated"
+  moduleFormat = "esm"
+  runtime = "nodejs"
+  generatedFileExtension = "ts"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas = ["product"]
+}
+
+model User {
+  id String @id @db.Text
+  name String @db.Text
+  email String @unique @map("emailCanonical") @db.Text
+  emailVerified Boolean @default(false)
+  image String? @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  accounts Account[]
+  sessions Session[]
+  acceptances TermsAcceptance[]
+  issuances EmailVerificationIssuance[]
+  @@schema("product")
+}
+
+model Account {
+  id String @id @db.Text
+  accountId String @db.Text
+  providerId String @db.Text
+  userId String @db.Text
+  // Better Auth's password field contains an encoded Argon2id hash, never plaintext.
+  password String? @db.Text
+  accessToken String? @db.Text
+  refreshToken String? @db.Text
+  idToken String? @db.Text
+  accessTokenExpiresAt DateTime? @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(3)
+  scope String? @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  @@unique([providerId,accountId])
+  @@index([userId])
+  @@schema("product")
+}
+
+model Session {
+  id String @id @db.Text
+  token String @unique @db.Text
+  userId String @db.Text
+  expiresAt DateTime @db.Timestamptz(3)
+  ipAddress String? @db.Text
+  userAgent String? @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  @@index([userId])
+  @@index([expiresAt])
+  @@schema("product")
+}
+
+model Verification {
+  id String @id @db.Text
+  identifier String @db.Text
+  value String @db.Text
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  issuance EmailVerificationIssuance?
+  @@index([identifier])
+  @@index([expiresAt])
+  @@schema("product")
+}
+
+model TermsVersion {
+  id String @id @db.Text
+  version String @unique @db.Text
+  contentDigest String @db.Text
+  immutableDocumentRef String @db.Text
+  isTestFixture Boolean @default(false)
+  approvedAt DateTime? @db.Timestamptz(3)
+  effectiveAt DateTime? @db.Timestamptz(3)
+  acceptances TermsAcceptance[]
+  @@schema("product")
+}
+
+model TermsAcceptance {
+  id String @id @db.Text
+  userId String @db.Text
+  termsVersionId String @db.Text
+  acceptedAt DateTime @default(now()) @db.Timestamptz(3)
+  context String @db.Text
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  terms TermsVersion @relation(fields:[termsVersionId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  @@unique([userId,termsVersionId])
+  @@index([termsVersionId])
+  @@schema("product")
+}
+
+model EmailOutbox {
+  id String @id @db.Text
+  // Stable product issuance identity survives deletion of a library challenge.
+  issuanceId String @unique @db.Text
+  templateVersion String @db.Text
+  payloadCiphertext Bytes
+  nonce Bytes
+  authTag Bytes
+  keyId String @db.Text
+  status String @default("pending") @db.Text
+  attemptCount Int @default(0)
+  availableAt DateTime @default(now()) @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  sentAt DateTime? @db.Timestamptz(3)
+  issuance EmailVerificationIssuance @relation(fields:[issuanceId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  @@index([status,availableAt])
+  @@schema("product")
+}
+// Stable lifecycle owner; library Verification remains the plugin storage format.
+model EmailVerificationIssuance {
+  id String @id @db.Text
+  userId String @db.Text
+  emailCanonical String @db.Text
+  verificationId String? @unique @db.Text
+  verifier Bytes
+  verifierKeyId String @db.Text
+  failedAttempts Int @default(0)
+  expiresAt DateTime @db.Timestamptz(3)
+  consumedAt DateTime? @db.Timestamptz(3)
+  supersededAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  verification Verification? @relation(fields:[verificationId],references:[id],onDelete:SetNull,onUpdate:Restrict)
+  outbox EmailOutbox?
+  @@index([userId,createdAt])
+  @@index([expiresAt])
+  @@schema("product")
+}

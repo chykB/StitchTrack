@@ -3,10 +3,10 @@ import styles from "../auth.module.css";
 
 type FormFieldProps = {
   id: string;
-  name: "email" | "password";
+  name: "name" | "email" | "password";
   label: string;
-  type: "email" | "password";
-  autoComplete: "email" | "new-password" | "current-password";
+  type: "text" | "email" | "password";
+  autoComplete: "name" | "email" | "new-password" | "current-password";
   value: string;
   onChange: ChangeEventHandler<HTMLInputElement>;
   onBlur: FocusEventHandler<HTMLInputElement>;
@@ -30,7 +30,7 @@ export default function FormField({
       <div className={styles.inputControl}>
         <input id={id} name={name} type={type === "password" && passwordVisible ? "text" : type}
           className={hasToggle ? styles.passwordInput : undefined} autoComplete={autoComplete}
-          autoCapitalize="none" spellCheck={false} required
+          autoCapitalize={name === "name" ? "words" : "none"} spellCheck={false} required
           value={value} onChange={onChange} onBlur={onBlur}
           aria-invalid={error ? true : undefined} aria-describedby={describedBy || undefined} />
         {hasToggle && (

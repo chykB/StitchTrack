@@ -1,0 +1,34 @@
+EVIDENCE 17 - Successful SMTP Delivery
+
+Date: 29 October 2026
+Environment: Local StitchTrack development, WSL, Node.js 24
+SMTP provider: Gmail
+Connection: Port 587, STARTTLS
+
+Test: Owner-authorized synthetic verification email using the StitchTrack
+Nodemailer implementation.
+
+ACTUAL TERMINAL OUTPUT (OWNER TRANSCRIPTION)
+SMTP result: accepted
+Synthetic verification email submitted.
+
+OWNER-OBSERVED RESULT
+Gmail SMTP accepted the message. The owner independently confirmed that the
+email arrived in the configured Gmail inbox and rendered with StitchTrack
+branding, a six-digit verification code, expiry information and instructions.
+
+Evidence 23: task-04-server-security/evidence/23-branded-email.png
+The screenshot already exists and was preserved unchanged.
+
+The code was synthetic and was not associated with a registered account.
+No PostgreSQL operation was performed in this test.
+
+PROVENANCE AND LIMITS
+The two terminal lines above were supplied by the owner as a transcription
+of the actual owner-run test. The agent did not execute or independently
+reproduce the test. No raw terminal log, exact command, exact test time or
+exit status was supplied; none has been reconstructed or invented.
+
+SMTP acceptance alone does not guarantee inbox delivery. Inbox arrival was
+confirmed separately by the owner. This test does not demonstrate background
+worker delivery, end-to-end account verification or exactly-once sending.
