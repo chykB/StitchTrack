@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import {createRegistrationClient,type RegistrationFrontendConfig} from "../../../lib/auth/registration-client.ts";
+import {createRegistrationController,type RegistrationController} from "../../../lib/auth/registration-controller.ts";
+import EmailVerificationForm from "../_components/EmailVerificationForm";
 import AuthForm from "../_components/AuthForm";
 import DraftDocument from "../_components/DraftDocument";
 import { focusViewTarget, nextSignupView } from "../../../lib/auth/draft-document";
@@ -35,7 +38,14 @@ const copy = {
   },
 };
 
-export default function AuthScreen({ mode, draftPreview }: { mode: AuthMode; draftPreview?: DraftTermsPreview }) {
+export default function AuthScreen({ mode, draftPreview, localSessionOrigin, registration, registrationController }: { mode: AuthMode; draftPreview?: DraftTermsPreview; localSessionOrigin?: string; registration?:RegistrationFrontendConfig; registrationController?:RegistrationController }) {
+  // Next preserves this screen across /auth mode navigation. Follow the current
+  // server opt-in instead of retaining the disabled controller from Login.
+  // Stable configuration values preserve an in-progress OTP flow on refresh.
+  const localRegistration=useMemo(()=>createRegistrationController(createRegistrationClient({configuration:registration})),
+    [registration?.origin,registration?.developmentConsentDeferred,registration?.terms?.id,registration?.terms?.version,registration?.terms?.path]);
+  const signupController=registrationController??localRegistration;
+  const signup=useSyncExternalStore(signupController.subscribe,signupController.getSnapshot,signupController.getServerSnapshot);
   const heading = useRef<HTMLHeadingElement>(null);
   const content = copy[mode];
   const [view, setView] = useState<SignupView>("signup");
@@ -66,6 +76,8 @@ export default function AuthScreen({ mode, draftPreview }: { mode: AuthMode; dra
       {content.description && <p className={styles.description}>{content.description}</p>}
       {/* A mode change discards entered values and the previous unavailable message. */}
       <AuthForm key={mode} mode={mode} buttonLabel={content.button} legend={content.legend}
+        localSessionOrigin={mode === "login" ? localSessionOrigin : undefined}
+        registrationController={mode === "signup" ? signupController : undefined}
         hideLegend={mode !== "reset"} unavailableMessage={content.unavailable} draftPreview={draftPreview} onOpenDocument={openDocument} />
       <nav className={styles.navigation} aria-label="Account options">
         {mode === "signup" ? (
@@ -88,6 +100,7 @@ export default function AuthScreen({ mode, draftPreview }: { mode: AuthMode; dra
       )}
     </>
   );
+  if(mode==="signup"&&signupController.enabled&&signup.phase!=="signup")return <EmailVerificationForm controller={signupController} />;
   if (mode !== "signup" || !draftPreview) return formContent;
   return <>
     {/* Keep the form mounted: values and validation stay only in browser memory. */}

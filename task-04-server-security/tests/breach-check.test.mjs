@@ -89,24 +89,25 @@ test("deadline includes fetch and stalled body reads, even if injected transport
   let cancelled = false;
   assert.equal(await checkPwnedPassword(password, {timeoutMs: 10, fetcher: async () => response(new ReadableStream({cancel() {cancelled = true;}}))}), "unavailable");
   assert.equal(cancelled, true);
-  for (const timeoutMs of [0, -1, 3001, Infinity, NaN]) assert.equal(await checkPwnedPassword(password, {timeoutMs, fetcher: async () => assert.fail()}), "unavailable");
+  for (const timeoutMs of [0, -1, 10001, Infinity, NaN]) assert.equal(await checkPwnedPassword(password, {timeoutMs, fetcher: async () => assert.fail()}), "unavailable");
 });
 function nodeEnvironment(t, value) {
   const previous = process.env.NODE_ENV;
   if (value === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = value;
   t.after(() => {if (previous === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previous;});
 }
-test("default checker stays at three seconds; only explicit development preview can use up to twenty", async t => {
+test("normal checker defaults to ten seconds; the development preview remains bounded to twenty", async t => {
   nodeEnvironment(t, "development");
   const nativeTimeout = globalThis.setTimeout, delays = [];
   t.mock.method(globalThis, "setTimeout", (callback, delay, ...args) => {delays.push(delay); return nativeTimeout(callback, delay, ...args);});
   const dependencies = {fetcher: async () => response(suffixFor(password) + ":1")};
-  assert.equal(BREACH_CHECK_TIMEOUT_MS, 3000); assert.equal(BREACH_PREVIEW_MAX_TIMEOUT_MS, 20000);
+  assert.equal(BREACH_CHECK_TIMEOUT_MS, 10000); assert.equal(BREACH_PREVIEW_MAX_TIMEOUT_MS, 20000);
   assert.equal(await checkPwnedPassword(password, dependencies), "breached");
   assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, enabled, dependencies), "breached");
   assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "20000"}, dependencies), "breached");
-  assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "3001"}, dependencies), "breached");
-  assert.deepEqual(delays, [3000, 3000, 20000, 3001]);
+  assert.equal(await checkPwnedPasswordForDevelopmentPreview(password, {...enabled, AUTH_BREACH_CHECK_PREVIEW_TIMEOUT_MS: "10001"}, dependencies), "breached");
+  assert.equal(await checkPwnedPassword(password, {...dependencies, timeoutMs: 10000}), "breached");
+  assert.deepEqual(delays, [10000, 10000, 20000, 10001, 10000]);
   assert.equal(await checkPwnedPassword(password, {...dependencies, timeoutMs: 20000}), "unavailable");
 });
 test("extended preview denies invalid configuration and missing opt-ins before lookup", async t => {
@@ -196,4 +197,24 @@ test("owner evidence driver imports inertly, requires opt-in and rejects mislead
 test("range checker remains server-only and has no storage or logging imports", () => {
   const source = readFileSync(new URL("../../lib/auth/breach-check.server.ts", import.meta.url), "utf8");
   assert.match(source, /import "server-only"/); assert.doesNotMatch(source, /console\.|writeFile|localStorage|sessionStorage|PrismaClient|nodemailer/u);
+});
+
+test("normal deadline permits delayed headers and full body validation beyond three seconds, then aborts at ten", async t => {
+  t.mock.timers.enable({apis:["setTimeout"]});
+  let signal;
+  const pending=checkPwnedPassword(password,{fetcher:async(_url,options)=>{
+    signal=options.signal;
+    await new Promise(resolve=>setTimeout(resolve,3500));
+    return response(new ReadableStream({start(controller){
+      setTimeout(()=>{controller.enqueue(new TextEncoder().encode(otherSuffix(password)+":1\n"));controller.close();},3500);
+    }}));
+  }});
+  t.mock.timers.tick(3500);await Promise.resolve();await Promise.resolve();
+  assert.equal(signal.aborted,false);
+  t.mock.timers.tick(3500);
+  assert.equal(await pending,"not_found");
+  let stalledSignal;
+  const stalled=checkPwnedPassword(password,{fetcher:async(_url,options)=>{stalledSignal=options.signal;return new Promise(()=>{});}});
+  t.mock.timers.tick(9999);assert.equal(stalledSignal.aborted,false);
+  t.mock.timers.tick(1);assert.equal(await stalled,"unavailable");assert.equal(stalledSignal.aborted,true);
 });

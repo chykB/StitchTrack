@@ -2,7 +2,7 @@ import "server-only";
 import {createHash} from "node:crypto";
 import {signupPasswordSchema} from "./schemas.ts";
 
-export const BREACH_CHECK_TIMEOUT_MS = 3_000;
+export const BREACH_CHECK_TIMEOUT_MS = 10_000;
 export const BREACH_PREVIEW_MAX_TIMEOUT_MS = 20_000;
 export const BREACH_RANGE_MAX_BYTES = 2 * 1024 * 1024;
 const RANGE_BASE = "https://api.pwnedpasswords.com/range/";

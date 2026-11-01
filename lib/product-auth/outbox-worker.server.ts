@@ -2,6 +2,7 @@ import "server-only";
 import type {QueryResult, QueryResultRow} from "pg";
 import type {EmailOutbox} from "../../prisma/product/generated/client.ts";
 import {productDatabaseConfig, PRODUCT_TARGETS} from "../../prisma/product/targets.ts";
+import {developmentConsentDeferred,DEVELOPMENT_VERIFICATION_TEMPLATE} from "./development-policy.ts";
 import {deliveryEligible} from "./registration.server.ts";
 import {ProductAuthError, type createSecretTools} from "./secrets.server.ts";
 import {VERIFICATION_EMAIL_TEMPLATE} from "./verification-email.server.ts";
@@ -18,7 +19,7 @@ type Joined = EmailOutbox & {
   userId: string; userEmail: string; emailVerified: boolean; issueEmail: string;
   issueVerificationId: string | null; issueExpiresAt: Date; failedAttempts: number;
   consumedAt: Date | null; supersededAt: Date | null; verifier: Uint8Array; verifierKeyId: string;
-  verificationRecordId: string | null; verificationExpiresAt: Date | null; approvedTerms: boolean;
+  verificationRecordId: string | null; verificationExpiresAt: Date | null; approvedTerms: boolean;hasTermsAcceptance?:boolean;
 };
 type Dependencies = {
   connect(): Promise<WorkerSession>;
@@ -37,8 +38,9 @@ export const OUTBOX_APPROVED_TERMS_SQL = `EXISTS (SELECT 1 FROM "product"."Terms
     AND t."approvedAt" <= a."acceptedAt" AND t."effectiveAt" <= a."acceptedAt" AND a."acceptedAt" <= j."createdAt")`;
 const joins = `FROM "product"."EmailOutbox" j JOIN "product"."EmailVerificationIssuance" i ON i."id"=j."issuanceId"
   JOIN "product"."User" u ON u."id"=i."userId"`;
-const OUTBOX_NEXT_SQL = `/* outbox:next */ SELECT j."id" ${joins}
-  WHERE j."status"='pending' AND j."availableAt" <= $1 AND j."templateVersion"=$2 AND ${OUTBOX_APPROVED_TERMS_SQL}
+const hasAcceptance=`EXISTS (SELECT 1 FROM "product"."TermsAcceptance" a WHERE a."userId"=i."userId")`;
+const OUTBOX_NEXT_SQL = (consentSql:string) => `/* outbox:next */ SELECT j."id" ${joins}
+  WHERE j."status"='pending' AND j."availableAt" <= $1 AND j."templateVersion"=$2 AND ${consentSql}
   ORDER BY j."availableAt", j."id" LIMIT 1`;
 export const OUTBOX_RESERVE_SQL = `/* outbox:reserve */ UPDATE "product"."EmailOutbox"
   SET "attemptCount"="attemptCount"+1,"availableAt"=$4,"updatedAt"=$5
@@ -46,18 +48,23 @@ export const OUTBOX_RESERVE_SQL = `/* outbox:reserve */ UPDATE "product"."EmailO
 const loadSql = `/* outbox:load */ SELECT j.*, i."userId", u."emailCanonical" AS "userEmail", u."emailVerified",
   i."emailCanonical" AS "issueEmail", i."verificationId" AS "issueVerificationId", i."expiresAt" AS "issueExpiresAt",
   i."failedAttempts", i."consumedAt", i."supersededAt", i."verifier", i."verifierKeyId",
-  v."id" AS "verificationRecordId", v."expiresAt" AS "verificationExpiresAt", ${OUTBOX_APPROVED_TERMS_SQL} AS "approvedTerms"
+  v."id" AS "verificationRecordId", v."expiresAt" AS "verificationExpiresAt", ${OUTBOX_APPROVED_TERMS_SQL} AS "approvedTerms", ${hasAcceptance} AS "hasTermsAcceptance"
   ${joins} LEFT JOIN "product"."Verification" v ON v."id"=i."verificationId" WHERE j."id"=$1`;
 
 // One pass, one job, one dedicated session. The owner CLI supplies a process
 // watchdog; library callers must not detach a timed-out send and start a new pass.
 export function createOutboxWorker(env: Readonly<Record<string,string|undefined>>, deps: Dependencies) {
   const target = emailWorkerConfig(env), clock = deps.clock ?? (() => new Date());
+  const deferred=developmentConsentDeferred(env);
+  if(env.PRODUCT_DEVELOPMENT_CONSENT_DEFERRED==="true"&&(!deferred||process.env.NODE_ENV!=="development"))throw new ProductAuthError("configuration_unavailable");
+  const template=deferred?DEVELOPMENT_VERIFICATION_TEMPLATE:VERIFICATION_EMAIL_TEMPLATE;
+  const consentSql=deferred?`(${OUTBOX_APPROVED_TERMS_SQL} OR NOT ${hasAcceptance})`:OUTBOX_APPROVED_TERMS_SQL;
   const now = () => {const value=clock();if(!Number.isFinite(value.getTime()))throw new ProductAuthError();return value;};
   return {
     async runOnce(): Promise<WorkerOutcome> {
       let db: WorkerSession | undefined;
       try {
+        if(deferred&&process.env.NODE_ENV!=="development")throw new ProductAuthError("configuration_unavailable");
         db = await deps.connect();
         const identity = await db.query(`SELECT current_database() AS database, current_user AS role, to_regnamespace('product')::text AS namespace,
           r.rolsuper, r.rolcreatedb, r.rolcreaterole, r.rolbypassrls FROM pg_roles r WHERE r.rolname=current_user`);
@@ -68,12 +75,12 @@ export function createOutboxWorker(env: Readonly<Record<string,string|undefined>
         const lock=await db.query("SELECT pg_try_advisory_lock($1::int,$2::int) AS locked",[...OUTBOX_LOCK]);
         if(lock.rows[0]?.locked!==true)return "busy";
         const time=now();
-        const candidates=await db.query(OUTBOX_NEXT_SQL,[time,VERIFICATION_EMAIL_TEMPLATE]);
+        const candidates=await db.query(OUTBOX_NEXT_SQL(consentSql),[time,template]);
         if(!candidates.rows.length)return "idle";
         const id=candidates.rows[0].id as string;
         const load=async()=> (await db!.query<Joined>(loadSql,[id])).rows[0];
-        const eligible=(state: Joined | undefined, time: Date, availability?: Date): state is Joined => !!state && state.approvedTerms &&
-          state.templateVersion===VERIFICATION_EMAIL_TEMPLATE && state.verificationRecordId===state.issueVerificationId &&
+        const eligible=(state: Joined | undefined, time: Date, availability?: Date): state is Joined => !!state && (state.approvedTerms || deferred&&state.hasTermsAcceptance===false) &&
+          state.templateVersion===template && state.verificationRecordId===state.issueVerificationId &&
           !!state.verificationRecordId && !!state.verificationExpiresAt && state.verificationExpiresAt>time &&
           deliveryEligible({...state,availableAt:availability??state.availableAt},
             {id:state.issuanceId,userId:state.userId,emailCanonical:state.issueEmail,verificationId:state.issueVerificationId,

@@ -1,23 +1,24 @@
 import "server-only";
 import {randomUUID} from "node:crypto";
 import {betterAuth} from "better-auth";
+import {isAPIError} from "better-auth/api";
 import {prismaAdapter} from "@better-auth/prisma-adapter";
 import {emailOTP} from "better-auth/plugins/email-otp";
-import {z} from "zod";
 import {Prisma, type PrismaClient, type EmailOutbox, type EmailVerificationIssuance, type User} from "../../prisma/product/generated/client.ts";
-import {signupSchema, emailSchema} from "../auth/schemas.ts";
+import {DEVELOPMENT_VERIFICATION_TEMPLATE} from "./development-policy.ts";
+import {signupSchema,emailSchema} from "../auth/schemas.ts";
+import {registrationSchema,emailVerificationSchema,issuanceVerificationSchema} from "../auth/registration-contract.ts";
 import {hashPassword, verifyPassword} from "../auth/password.server.ts";
 import {PRODUCT_TARGETS} from "../../prisma/product/targets.ts";
-import {createSecretTools, ProductAuthError, type KeyRing} from "./secrets.server.ts";
+import {createSecretTools, ProductAuthError, reportRegistrationFailure, type KeyRing} from "./secrets.server.ts";
 
 export const REGISTRATION_STAGES = ["user", "account", "terms", "verification", "issuance", "outbox"] as const;
 export type RegistrationStage = typeof REGISTRATION_STAGES[number];
 export const VERIFICATION_STAGES = ["verified-user", "consumed-issuance", "cancelled-outbox"] as const;
 export type WriteStage = RegistrationStage | typeof VERIFICATION_STAGES[number];
-const inputSchema = signupSchema.extend({termsAccepted: z.literal(true), termsVersionId: z.string().min(1)});
-const verificationSchema = z.strictObject({email: emailSchema, issuanceId: z.string().uuid(), otp: z.string().regex(/^[0-9]{6}$/u)});
 export type RegistrationConfig = {
-  mode: "development" | "test"; allowSyntheticTerms: boolean; requiredTermsVersionId: string;
+  mode: "development" | "test"; allowSyntheticTerms: boolean; requiredTermsVersionId?: string;
+  deferConsentInDevelopment?:boolean;
   authSecret: string; verifierKeys: KeyRing; outboxKeys: KeyRing;
   // Required outside-transaction prerequisite. The real caller must supply the
   // fail-closed HIBP checker; only the isolated test mode may use a synthetic stub.
@@ -40,7 +41,8 @@ export function deliveryEligible(job: Pick<EmailOutbox, "status" | "availableAt"
 // Factory is inert. No Prisma instance is constructed and no route/handler is
 // exported. Callers must provide an explicitly isolated, approved product client.
 export function createRegistrationService(client: PrismaClient, config: RegistrationConfig) {
-  if (!["test", "development"].includes(config.mode) || config.authSecret.length < 32 || !config.requiredTermsVersionId || typeof config.checkPassword !== "function" ||
+  const deferConsent=config.deferConsentInDevelopment===true;
+  if (!["test", "development"].includes(config.mode) || config.authSecret.length < 32 || (!deferConsent&&!config.requiredTermsVersionId) || (deferConsent&&process.env.NODE_ENV!=="development") || typeof config.checkPassword !== "function" ||
       (config.allowSyntheticTerms && config.mode !== "test") || ((config.testFault || config.testObserver) && config.mode !== "test") ||
       (config.clock && config.mode !== "test")) throw new ProductAuthError("configuration_unavailable");
   const secrets = createSecretTools(config.verifierKeys, config.outboxKeys);
@@ -116,7 +118,7 @@ export function createRegistrationService(client: PrismaClient, config: Registra
       verificationId: record.id, verifier: new Uint8Array(secrets.mac(issuanceId, user.email, otp)), verifierKeyId: secrets.verifierKeyId,
       expiresAt, createdAt: time}});
     if (stageFaults) fault("issuance");
-    const context = {id: randomUUID(), issuanceId, templateVersion: "tailor-verification-v1"};
+    const context = {id: randomUUID(), issuanceId, templateVersion: deferConsent?DEVELOPMENT_VERIFICATION_TEMPLATE:"tailor-verification-v1"};
     await tx.emailOutbox.create({data: {...context, ...secrets.seal(context, {email: user.email, otp}), availableAt: time, createdAt: time}});
     if (stageFaults) fault("outbox");
     return {issuanceId};
@@ -124,49 +126,69 @@ export function createRegistrationService(client: PrismaClient, config: Registra
   async function cancelJobs(tx: Prisma.TransactionClient, issuanceId: string) {
     await tx.emailOutbox.updateMany({where: {issuanceId, status: "pending"}, data: {status: "cancelled"}});
   }
-  return {
-    async register(input: unknown): Promise<{issuanceId: string}> {
-      const parsed = inputSchema.safeParse(input);
+  async function register(input: unknown, neutralDuplicate=false): Promise<{issuanceId: string}|null> {
+      if(deferConsent&&process.env.NODE_ENV!=="development")throw new ProductAuthError("configuration_unavailable");
+      const parsed = (deferConsent?signupSchema:registrationSchema).safeParse(input);
       if (!parsed.success || !parsed.data.password.isWellFormed()) throw new ProductAuthError("invalid_input");
       const data = parsed.data;
-      if (data.termsVersionId !== config.requiredTermsVersionId) throw new ProductAuthError("terms_required");
+      if (!deferConsent && (!("termsVersionId" in data)||data.termsVersionId !== config.requiredTermsVersionId)) throw new ProductAuthError("terms_required");
       // No HIBP or other network operation belongs inside the transaction.
       let breachResult: string = "unavailable";
       try {breachResult = await config.checkPassword(data.password);} catch { /* Never expose prerequisite errors or input. */ }
-      if (breachResult !== "not_found") throw new ProductAuthError("password_rejected");
+      if (breachResult !== "not_found") {reportRegistrationFailure(breachResult==="breached"?"breached_password":"breach_check_unavailable");throw new ProductAuthError("password_rejected");}
       try {
         return await client.$transaction(async tx => {
           await assertTarget(tx);
-          const time = now(), terms = await tx.termsVersion.findUnique({where: {id: data.termsVersionId}});
-          if (!terms || (terms.isTestFixture ? !(config.mode === "test" && config.allowSyntheticTerms && !terms.approvedAt && !terms.effectiveAt)
-            : !terms.approvedAt || !terms.effectiveAt || terms.approvedAt > time || terms.effectiveAt > time)) throw new ProductAuthError("terms_required");
+          const time = now(), terms = deferConsent?null:await tx.termsVersion.findUnique({where: {id: config.requiredTermsVersionId!}});
+          if (!deferConsent && (!terms || (terms.isTestFixture ? !(config.mode === "test" && config.allowSyntheticTerms && !terms.approvedAt && !terms.effectiveAt)
+            : !terms.approvedAt || !terms.effectiveAt || terms.approvedAt > time || terms.effectiveAt > time))) throw new ProductAuthError("terms_required");
           const issuanceId = randomUUID(), {auth, receipts} = scopedAuth(tx, issuanceId, data.email, secrets.verifierKeyId, true);
           const result = await auth.api.signUpEmail({body: {name: data.name, email: data.email, password: data.password}});
+          // Installed Better Auth hashes duplicate submissions and returns a neutral
+          // response under mandatory verification. Keep that privacy at the browser boundary.
+          if(neutralDuplicate && result.token===null && !receipts.user.length && !receipts.account.length && !receipts.sessions) {
+            const existing=await tx.user.findUnique({where:{email:data.email}});
+            if(existing) return null;
+          }
           if (result.token !== null || receipts.user.length !== 1 || receipts.account.length !== 1 || receipts.sessions) throw new ProductAuthError("registration_conflict");
           const user = await tx.user.findUnique({where: {id: receipts.user[0]}});
           if (!user || user.email !== data.email || user.emailVerified || user.id !== result.user.id ||
               await tx.account.count({where: {userId: user.id, providerId: "credential", accountId: user.id}}) !== 1) throw new ProductAuthError();
-          await tx.termsAcceptance.create({data: {id: randomUUID(), userId: user.id, termsVersionId: terms.id,
+          if(terms)await tx.termsAcceptance.create({data: {id: randomUUID(), userId: user.id, termsVersionId: terms.id,
             acceptedAt: time, context: terms.isTestFixture ? "synthetic-test" : "tailor-registration"}});
-          fault("terms");
+          if(terms)fault("terms");
           const issued = await issue(tx, user, issuanceId, time, true);
           if (await tx.session.count({where: {userId: user.id}}) !== 0) throw new ProductAuthError();
           return issued;
         }, transactionOptions);
       } catch (error) {
+        // A concurrent winner may commit after the library's duplicate lookup.
+        // Reconcile by READ only after rollback; never retry registration writes.
+        if(neutralDuplicate && (error instanceof Prisma.PrismaClientKnownRequestError && ["P2002","P2034"].includes(error.code) ||
+          isAPIError(error) && error.body?.code==="FAILED_TO_CREATE_USER")) {
+          try {
+            const exists=await client.$transaction(async tx=>{await assertTarget(tx);return !!await tx.user.findUnique({where:{email:data.email}});},transactionOptions);
+            if(exists)return null;
+          } catch { /* Storage failures remain unavailable. */ }
+        }
+        reportRegistrationFailure("registration_transaction",error);
         if (error instanceof ProductAuthError) throw error;
         throw new ProductAuthError("registration_unavailable");
       }
-    },
-    async verify(input: unknown): Promise<VerificationOutcome> {
-      const parsed = verificationSchema.safeParse(input); if (!parsed.success) return "invalid";
+    }
+  async function verify(input: unknown,latest=false): Promise<VerificationOutcome> {
+      if(deferConsent&&process.env.NODE_ENV!=="development")throw new ProductAuthError("configuration_unavailable");
+      const parsed = (latest?emailVerificationSchema:issuanceVerificationSchema).safeParse(input); if (!parsed.success) return "invalid";
       try {
         return await client.$transaction(async tx => {
           await assertTarget(tx);
-          const {email, issuanceId, otp} = parsed.data, user = await lockedUser(tx, email), time = now();
+          const {email,otp} = parsed.data, user = await lockedUser(tx, email), time = now();
           if (!user || user.emailVerified) return "invalid";
-          const issuance = await tx.emailVerificationIssuance.findUnique({where: {id: issuanceId}});
-          if (!issuance || issuance.userId !== user.id || issuance.emailCanonical !== email || issuance.consumedAt || issuance.supersededAt || issuance.failedAttempts >= 3) return "invalid";
+          const issuance = "issuanceId" in parsed.data
+            ? await tx.emailVerificationIssuance.findUnique({where: {id: parsed.data.issuanceId as string}})
+            : await tx.emailVerificationIssuance.findFirst({where:{userId:user.id,consumedAt:null,supersededAt:null},orderBy:{createdAt:"desc"}});
+          const issuanceId=issuance?.id;
+          if (!issuance || !issuanceId || issuance.userId !== user.id || issuance.emailCanonical !== email || issuance.consumedAt || issuance.supersededAt || issuance.failedAttempts >= 3) return "invalid";
           if (issuance.expiresAt <= time || !issuance.verificationId) {await cancelJobs(tx, issuanceId); return "invalid";}
           if (!secrets.matches(issuance.verifier, issuanceId, email, otp, issuance.verifierKeyId)) {
             const failedAttempts = issuance.failedAttempts + 1;
@@ -185,9 +207,15 @@ export function createRegistrationService(client: PrismaClient, config: Registra
           fault("cancelled-outbox");
           return "verified";
         }, transactionOptions);
-      } catch {throw new ProductAuthError("verification_unavailable");}
-    },
+      } catch(error) {reportRegistrationFailure("verification_transaction",error);throw new ProductAuthError("verification_unavailable");}
+    }
+  return {
+    async register(input:unknown):Promise<{issuanceId:string}> {const result=await register(input);if(!result)throw new ProductAuthError();return result;},
+    async beginSignup(input:unknown):Promise<void> {await register(input,true);},
+    verify:(input:unknown)=>verify(input),
+    verifyEmail:(input:unknown)=>verify(input,true),
     async reissue(emailInput: unknown): Promise<{issuanceId: string} | null> {
+      if(deferConsent&&process.env.NODE_ENV!=="development")throw new ProductAuthError("configuration_unavailable");
       const parsed = emailSchema.safeParse(emailInput); if (!parsed.success) return null;
       try {
         return await client.$transaction(async tx => {
@@ -204,7 +232,7 @@ export function createRegistrationService(client: PrismaClient, config: Registra
           }
           return issue(tx, user, randomUUID(), time);
         }, transactionOptions);
-      } catch {throw new ProductAuthError("verification_unavailable");}
+      } catch(error) {reportRegistrationFailure("resend_transaction",error);throw new ProductAuthError("verification_unavailable");}
     },
   };
 }

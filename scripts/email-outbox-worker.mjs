@@ -29,15 +29,9 @@ async function main(target, env) {
   const {Client}=await import("pg");
   const {setTimeout:sleep}=await import("node:timers/promises");
   const {createOutboxWorker}=await import("../lib/product-auth/outbox-worker.server.ts");
-  const {createSecretTools}=await import("../lib/product-auth/secrets.server.ts");
+  const {createSecretTools,keyRingFromEnvironment}=await import("../lib/product-auth/secrets.server.ts");
   const {createVerificationMailer}=await import("../lib/product-auth/smtp.server.ts");
-  const keyRing=prefix=>{
-    const id=env[prefix+"_KEY_ID"], encoded=env[prefix+"_KEY"];
-    if(!id || !encoded || !/^[A-Za-z0-9+/]{43}=$/u.test(encoded))throw new Error("Worker key configuration required.");
-    const key=Buffer.from(encoded,"base64");if(key.length!==32 || key.toString("base64")!==encoded)throw new Error("Worker key configuration required.");
-    return {currentId:id,keys:new Map([[id,key]])};
-  };
-  const secrets=createSecretTools(keyRing("PRODUCT_EMAIL_VERIFIER"),keyRing("PRODUCT_EMAIL_OUTBOX"));
+  const secrets=createSecretTools(keyRingFromEnvironment(env,"PRODUCT_EMAIL_VERIFIER"),keyRingFromEnvironment(env,"PRODUCT_EMAIL_OUTBOX"));
   const mailer=createVerificationMailer(env);
   const stop=new AbortController();
   const shutdown=()=>stop.abort();process.on("SIGINT",shutdown);process.on("SIGTERM",shutdown);
