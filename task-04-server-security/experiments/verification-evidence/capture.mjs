@@ -1,6 +1,6 @@
 // OWNER ONLY. No connection, keys, prompt or side effect on import.
 import {pathToFileURL} from "node:url";
-import {productDatabaseConfig} from "../../../prisma/product/targets.ts";
+import {PRODUCT_PRISMA_CONNECTION_OPTIONS,productDatabaseConfig} from "../../../prisma/product/targets.ts";
 // Both canonical and historical names block accidental reruns after reconciliation.
 export const CAPTURE_EVIDENCE_FILES = Object.freeze([
   "19-verification-row.png", "20-verification-expired.png", "21-verification-wrong-code.png", "22-verification-code-reused.png",
@@ -41,7 +41,7 @@ async function run(target) {
   const {createRegistrationService}=await import("../../../lib/product-auth/registration.server.ts");
   const {createSecretTools}=await import("../../../lib/product-auth/secrets.server.ts");
   globalThis.fetch=async()=>{throw new Error("External requests disabled in OTP capture");};
-  const client=new PrismaClient({adapter:new PrismaPg({connectionString:target.url,connectionTimeoutMillis:5000,query_timeout:10000},{schema:"product"}),log:[]});
+  const client=new PrismaClient({adapter:new PrismaPg({options:PRODUCT_PRISMA_CONNECTION_OPTIONS,connectionString:target.url,connectionTimeoutMillis:5000,query_timeout:10000},{schema:"product"}),log:[]});
   const prompt=createInterface({input:process.stdin,output:process.stdout,terminal:false});
   const watchdog=setTimeout(()=>{console.error("STOP: capture deadline exceeded. Preserve partial output and newly created fixtures; no retry/reset.");process.exit(1);},20*60_000);
   const next=async stage=>(await prompt.question("Capture the current screenshot. Type continue-"+stage+" to authorize the next stage, or stop: "))==="continue-"+stage;

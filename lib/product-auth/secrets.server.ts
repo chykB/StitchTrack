@@ -1,4 +1,5 @@
 import "server-only";
+import {ProductConfigurationError,productConfigurationReasons} from "../../prisma/product/targets.ts";
 import {createCipheriv, createDecipheriv, createHmac, randomBytes, timingSafeEqual} from "node:crypto";
 
 export type KeyRing = {currentId: string; keys: ReadonlyMap<string, Uint8Array>};
@@ -8,6 +9,27 @@ export type MailPayload = {email: string; otp: string};
 export class ProductAuthError extends Error {
   readonly code: string;
   constructor(code = "operation_unavailable") {super("Product authentication operation unavailable."); this.name = "ProductAuthError"; this.code = code;}
+}
+// Fixed server-side labels only. Never stringify an exception or configuration.
+const registrationFailureStages = [
+  "transport_configuration", "database_target_configuration", "runtime_override_configuration", "rate_key_configuration",
+  "dependency_initialization", "runtime_initialization", "prisma_client_initialization", "registration_configuration", "rate_policy_configuration",
+  "verifier_key_configuration", "outbox_key_configuration", "key_separation_configuration", "auth_secret_configuration",
+  "registration_service_initialization", "http_boundary", "rate_limit_ip", "rate_limit_account", "request_execution",
+  "registration_execution", "verification_execution", "resend_execution", "breach_check_unavailable", "breached_password",
+  "registration_transaction", "verification_transaction", "resend_transaction",
+] as const;
+export type RegistrationFailureStage = typeof registrationFailureStages[number];
+export function reportRegistrationFailure(stage:RegistrationFailureStage,error?:unknown):void {
+  if(process.env.NODE_ENV!=="development"||!registrationFailureStages.includes(stage))return;
+  // Error codes may identify connection/authentication failures; messages, causes,
+  // SQL, URLs and provider responses are never logged. Unknown errors stay generic.
+  let connection=false;
+  try{const code=(error as {code?:unknown}|null)?.code;
+    connection=typeof code==="string"&&["P1000","P1001","P1002","P1017","ECONNREFUSED","ECONNRESET","ETIMEDOUT","ENETUNREACH","28P01","08001","08003","08006"].includes(code);
+  }catch{}
+  const reason=error instanceof ProductConfigurationError&&productConfigurationReasons.includes(error.reason)?" reason="+error.reason:"";
+  console.error("[StitchTrack registration] failure_stage="+stage+reason+(connection?" category=database_connection":""));
 }
 export function createSecretTools(verifierRing: KeyRing, outboxRing: KeyRing) {
   const copy = (ring: KeyRing) => {
@@ -53,4 +75,13 @@ export function createSecretTools(verifierRing: KeyRing, outboxRing: KeyRing) {
       } catch {throw new ProductAuthError();}
     },
   };
+}
+
+// Shared by the explicit development registration composition and owner worker.
+export function keyRingFromEnvironment(env:Readonly<Record<string,string|undefined>>,prefix:"PRODUCT_EMAIL_VERIFIER"|"PRODUCT_EMAIL_OUTBOX"):KeyRing {
+  const id=env[prefix+"_KEY_ID"],encoded=env[prefix+"_KEY"];
+  if(!id||!encoded)throw new ProductAuthError("configuration_unavailable");
+  const key=Buffer.from(encoded,"base64");
+  if(!/^[A-Za-z0-9_-]{1,64}$/u.test(id)||key.length!==32||key.toString("base64")!==encoded)throw new ProductAuthError("configuration_unavailable");
+  return {currentId:id,keys:new Map([[id,key]])};
 }

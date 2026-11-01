@@ -1,7 +1,7 @@
 // OWNER ONLY: importing this module opens no connection. Do not execute until
 // product targets, migration SQL, privileges and test authorization are approved.
 import {pathToFileURL} from "node:url";
-import {productDatabaseConfig, PRODUCT_TARGETS} from "../../prisma/product/targets.ts";
+import {PRODUCT_PRISMA_CONNECTION_OPTIONS,productDatabaseConfig, PRODUCT_TARGETS} from "../../prisma/product/targets.ts";
 export function authorizeProductIntegration(args, env) {
   if (args.length !== 1 || args[0] !== "--owner-integration" || env.PRODUCT_AUTH_INTEGRATION_CONFIRMED !== "true" ||
       env.PRODUCT_DATABASE_MODE !== "test") throw new Error("Explicit isolated product-test authorization required.");
@@ -22,7 +22,7 @@ async function run(config) {
   const {prismaAdapter} = await import("@better-auth/prisma-adapter");
   const modelNames = ["user", "account", "session", "verification", "termsVersion", "termsAcceptance", "emailOutbox", "emailVerificationIssuance"];
   globalThis.fetch = async () => {throw new Error("No external network allowed in product integration proof.");};
-  const client = new PrismaClient({adapter: new PrismaPg({connectionString: config.url}, {schema: "product"}), log: []});
+  const client = new PrismaClient({adapter: new PrismaPg({connectionString: config.url, options:PRODUCT_PRISMA_CONNECTION_OPTIONS}, {schema: "product"}), log: []});
   try {
     const identity = await client.$queryRaw`SELECT current_database() AS database, current_user AS role, to_regnamespace('product')::text AS namespace`;
     assert.deepEqual(identity, [{database: config.database, role: config.user, namespace: "product"}]);

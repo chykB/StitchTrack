@@ -37,7 +37,7 @@ test("branded multipart content preserves leading zeros, expiry and semantic str
   assert.ok(message.html.includes("o&#39;neal@example.invalid"));assert.ok(message.text.includes(payload.email));
   assert.equal(message.recipient,payload.email);assert.equal(VERIFICATION_EMAIL_TEMPLATE,"tailor-verification-v1");
   const registration=readFileSync(new URL("../../lib/product-auth/registration.server.ts",import.meta.url),"utf8");
-  assert.ok(registration.includes('templateVersion: "'+VERIFICATION_EMAIL_TEMPLATE+'"'));
+  assert.ok(registration.includes('templateVersion: deferConsent?DEVELOPMENT_VERIFICATION_TEMPLATE:"'+VERIFICATION_EMAIL_TEMPLATE+'"'));
   assert.doesNotMatch(registration,/smtp\.server|verification-email\.server/u);
 });
 test("malformed/injected codes, multiple recipients, noncanonical email and invalid expiry are refused",()=>{

@@ -1,12 +1,12 @@
 # Email outbox worker
 
-Status: implemented and offline-tested; the owner subsequently passed the real PostgreSQL mechanics/permission verification before and after applying the test-only additive grant. No eligible worker dispatch or worker SMTP delivery has run. No worker, SQL grant, database operation or SMTP send was executed by the agent. The [PRD](../../docs/PRD.md), eight-model schema, applied migration and original permissions script are unchanged. Existing owner Evidence 16/17/23 is transport evidence, not worker evidence.
+Status: implemented and offline-tested; the owner subsequently passed the real PostgreSQL mechanics/permission verification before and after applying the test-only additive grant. The later owner-confirmed Next.js registration -> SMTP delivery -> OTP verification -> login -> session journey establishes real development email delivery against product-test, separately from that earlier mechanics proof. Crash/retry, approved-Terms dispatch and production supervision remain unproven. No worker, SQL grant, database operation or SMTP send was executed by the agent. The [PRD](../../docs/PRD.md), applied migrations, schema and SQL guards are unchanged by this documentation update. Existing owner Evidence 16/17/23 is transport evidence, not worker evidence.
 
 ## Scope and activation
 
-[Worker core](../../lib/product-auth/outbox-worker.server.ts) processes only tailor-verification-v1 using the existing encrypted outbox, keyed verifier, plugin Verification record and deliveryEligible. [CLI](../../scripts/email-outbox-worker.mjs) is inert on import. It requires exact --owner-run, PRODUCT_EMAIL_WORKER_ENABLED=true, PRODUCT_DATABASE_CONFIRMED=true and the existing reviewed development/test runtime URL/mode. Assessment/migrator/wrong targets, production mode and PostgreSQL option/service overrides are rejected. Actual connected database/role/namespace and role privilege flags are checked before locking or writing. No dotenv or .env.local file is read.
+[Worker core](../../lib/product-auth/outbox-worker.server.ts) processes the normal tailor-verification-v1 template, or the explicitly enabled development-deferred template, using the existing encrypted outbox, keyed verifier, plugin Verification record and deliveryEligible. [CLI](../../scripts/email-outbox-worker.mjs) is inert on import. It requires exact --owner-run, PRODUCT_EMAIL_WORKER_ENABLED=true, PRODUCT_DATABASE_CONFIRMED=true and the existing reviewed development/test runtime URL/mode. Assessment/migrator/wrong targets, production mode and PostgreSQL option/service overrides are rejected. Actual connected database/role/namespace and role privilege flags are checked before locking or writing. The CLI does not itself load dotenv files; the explicit `npm run dev:email` launcher supplies the retained ignored environment files through Node. Ordinary `npm run dev` does not start delivery.
 
-The query requires an approved/effective **nonfixture** Terms version and a tailor-registration acceptance recorded no later than job creation. Completed integration rows use synthetic-test/fixture Terms and are neither selected, dispatched nor cleaned up. Public policies remain unapproved; do not label fixtures approved or repurpose old rows to exercise the worker. Owner-authorized PostgreSQL worker testing needs a separately reviewed fresh-fixture procedure. Offline fixtures do not approve actual Terms.
+The normal template requires an approved/effective **nonfixture** Terms version and a tailor-registration acceptance recorded no later than job creation. The approved development-only opt-in uses the distinct development-deferred template and no Terms acceptance; it cannot operate in production or create fictitious consent. Completed integration rows use synthetic-test/fixture Terms and are neither selected, dispatched nor cleaned up. Public policies remain unapproved; do not label fixtures approved or repurpose old rows to exercise the worker. Owner-authorized PostgreSQL worker testing needs a separately reviewed fresh-fixture procedure. Offline fixtures do not approve actual Terms.
 
 ## Claiming, safety and recovery
 
@@ -31,7 +31,7 @@ There remains an unavoidable uncertainty window if the server accepted SMTP befo
 
 The existing runtime can already SELECT the relevant tables and update outbox status/updatedAt. [worker-permissions.sql](setup/worker-permissions.sql) adds **only UPDATE(attemptCount,availableAt,sentAt)** on product.EmailOutbox to the matching existing product runtime role. It verifies the exact restricted migrator, non-owning runtime, product ownership and successful reviewed initial migration. No identity/Terms/history privileges, role, table, trigger or migration is added. The existing runtime identity is reused for this small slice; a separately restricted worker principal remains a later operational option.
 
-The owner has applied this script to stitchtrack_product_test and reported BEGIN, DO, GRANT, COMMIT. After-grant verification passed. Development grants are not confirmed. The retained command below documents the completed test stage; **do not reapply it merely to follow this runbook**:
+The owner has applied this script to stitchtrack_product_test and reported BEGIN, DO, GRANT, COMMIT. After-grant verification passed. Development grants are not confirmed. The retained command below documents the completed initial-only stage; **do not reapply it after later migrations**. Product-test now has three migration records, which this historical guard intentionally rejects. Review any new setup separately without changing the SQL guard:
 
 ```bash
 cd /home/bmalik/stitchtrack
@@ -47,7 +47,7 @@ Inspect actual grants and preserve failures; no automatic retry/reset. Developme
 
 1. The owner completed the [staged PostgreSQL verification](worker-postgres-verification.md#confirmed-owner-results): before/after test=0 and capture=0; lock exclusion/release/session loss, SQLSTATE 42501 denials, fixture exclusion, 55P03 reservation contention and stale-token zero-row checks passed. Probe changes rolled back; state and connection cleanup checks passed. This is owner-reported real PostgreSQL evidence, distinct from injected tests. A committed two-session race, process crashes during SMTP and end-to-end cancellation/delivery remain untested; do not repeat completed checks to fill those gaps.
 2. Privately supply existing runtime database/SMTP configuration plus PRODUCT_EMAIL_VERIFIER_KEY_ID/KEY and PRODUCT_EMAIL_OUTBOX_KEY_ID/KEY. Keys must be distinct 32-byte canonical base64 values matching registration; no values are supplied or read by this work. Never dispatch historical test jobs with guessed/replacement keys.
-3. Review a fresh test-job procedure that preserves the synthetic-fixture exclusion. Then separately authorize any SMTP/worker execution and later deployment supervision. Approved operational Terms are still required for real registration; public onboarding stays disabled.
+3. The owner has since exercised eligible development-deferred jobs through the real browser flow. Preserve historical synthetic-fixture exclusion; further sends/worker experiments still need explicit authorization. Normal public registration requires approved Terms; the development exception does not approve or publish them.
 
 Only after those steps, the owner CLI invocation is:
 
@@ -55,7 +55,7 @@ Only after those steps, the owner CLI invocation is:
 PRODUCT_EMAIL_WORKER_ENABLED=true node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/email-outbox-worker.mjs --owner-run
 ```
 
-The command **connects, writes and may send mail** when all prerequisites are met. It was not run. No npm/startup hook, route or background scheduler enables it automatically. Evidence 18 remains pending; the completed PostgreSQL mechanics checks do not supply its HTTP timings.
+The command **connects, writes and may send mail** when all prerequisites are met; it is retained as a historical direct invocation, not authority for another run. Current routine development uses the explicit worker launcher documented in the [registration workflow](registration-workflow.md#owner-run-next-only-local-browser-test), separately from Next.js. No route or background scheduler enables delivery automatically. Evidence 18 is captured in its controlled scope below; the PostgreSQL mechanics proof did not supply those timings.
 
 ## Evidence 18: proposed measurement procedure
 
@@ -69,4 +69,4 @@ This measures scheduling/response boundaries, not PostgreSQL registration perfor
 
 The current [rendered-email screenshot](../../task-04-server-security/evidence/23-rendered-email.png) was visually inspected during documentation completion. The sender/recipient addresses and synthetic code are now obscured. The earlier unredacted warning described the previous file state, not the current image. No image was changed by the agent. Preserve owner provenance and review all evidence privately before commit; visual inspection is not a guarantee about metadata or earlier Git copies.
 
-Assumptions: none. The isolated controlled benchmark is approved for preparation; its owner measurements are now captured in the controlled scope above. Live worker activation, operational Terms/fresh-record setup and SMTP side effects remain subject to separate owner approval.
+Assumptions: none. The isolated controlled benchmark is approved for preparation; its owner measurements are now captured in the controlled scope above. Further worker activation and SMTP side effects require explicit owner approval; approved operational Terms and deployment supervision remain outstanding. The completed development flow does not settle those production requirements.

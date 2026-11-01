@@ -9,7 +9,7 @@ const setup = p => read("../../prisma/product/setup/"+p);
 const migration = read("../../prisma/product/migrations/20261029_product_auth_initial/migration.sql");
 const config = read("../../prisma/product/prisma.config.ts");
 
-test("real config imports remain offline without URLs; admitted migration config uses only confirmed migrator target", () => {
+test("real config stays offline; deploy/status require the exact approved product migration manifest and target", () => {
   const url = new URL("../../prisma/product/prisma.config.ts", import.meta.url).href;
   const load = (args, env={}) => spawnSync(process.execPath,["--disable-warning=MODULE_TYPELESS_PACKAGE_JSON","--input-type=module","-e",
     `process.argv=["node","offline-proof",...${JSON.stringify(args)}];const c=(await import(${JSON.stringify(url)})).default;console.log(JSON.stringify({hasDatasource:!!c.datasource,schema:c.schema}));`],
@@ -25,7 +25,7 @@ test("real config imports remain offline without URLs; admitted migration config
     assert.equal(JSON.parse(result.stdout).hasDatasource,true);
     assert.doesNotMatch(result.stdout,/synthetic-only|postgresql:/u);
   }
-  assert.ok(config.includes(createHash("sha256").update(migration).digest("hex")));
+  assert.ok(read("../../prisma/product/migration-files.ts").includes(createHash("sha256").update(migration).digest("hex")));
   assert.doesNotMatch(config,/import[^\n]*dotenv|shadowDatabaseUrl/u);
 });
 test("provisioning is fresh-target admin-only and creates only four unprivileged roles/two product databases", () => {

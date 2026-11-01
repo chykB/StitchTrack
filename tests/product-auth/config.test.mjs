@@ -38,8 +38,8 @@ test("only exact offline or owner migration command shapes are permitted",()=>{
 });
 test("core storage remains distinct and outbox retains stable issuance after challenge removal",()=>{
   const schema=readFileSync(new URL("../../prisma/product/schema.prisma",import.meta.url),"utf8");
-  assert.equal((schema.match(/^model /gmu)??[]).length,8);
-  assert.equal((schema.match(/@@schema\("product"\)/gu)??[]).length,8);
+  assert.equal((schema.match(/^model /gmu)??[]).length,9);
+  assert.equal((schema.match(/@@schema\("product"\)/gu)??[]).length,9);
   assert.match(schema,/@map\("emailCanonical"\)/u);
   assert.match(schema,/verificationId String\? @unique/u);
   assert.match(schema,/verification Verification\? @relation\([^\n]*onDelete:SetNull/u);
@@ -69,4 +69,22 @@ test("migration credentials are separate, exact-role and explicitly confirmed wi
   for(const args of [["migrate","reset","--config","prisma/product/prisma.config.ts"],
     ["migrate","deploy","--config","prisma.config.ts"],["migrate","deploy","--config","prisma/product/prisma.config.ts","--schema=prisma/schema.prisma"],
     ["migrate","resolve","--applied","anything","--config","prisma/product/prisma.config.ts"]])assert.throws(()=>productPrismaCommand(args));
+});
+
+test("target failure reasons are fixed labels and preserve the same least-privilege validation",()=>{
+ const cases=[
+  [()=>undefined,"database_url_missing"],
+  [u=>" "+u,"database_url_whitespace"],
+  [()=>"not-a-url","database_url_syntax"],
+  [u=>u.replace("127.0.0.1","localhost"),"database_host"],
+  [u=>u.replace(":5432/",":5433/"),"database_port"],
+  [u=>u.replace("/stitchtrack_product_test?","/stitchtrack_assessment?"),"database_name"],
+  [u=>u.replace("_app:","_migrator:"),"database_role"],
+  [u=>u.replace("synthetic-only",""),"database_password"],
+  [u=>u.replace("schema=product","schema=public"),"database_schema"],
+  [u=>u+"&options=private","database_options"],
+ ];
+ for(const [edit,reason] of cases){const env=fixture();env.PRODUCT_TEST_DATABASE_URL=edit(env.PRODUCT_TEST_DATABASE_URL);
+  assert.throws(()=>productDatabaseConfig(env),error=>error instanceof ProductConfigurationError&&error.reason===reason&&!String(error).includes("synthetic-only"));}
+ assert.equal(new ProductConfigurationError("arbitrary-private-input").reason,"configuration");
 });
