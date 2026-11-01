@@ -1,0 +1,10 @@
+Base revision: 6803d2c
+Original authentication page routes:
+
+Current branch:
+feat/task-03-auth-foundation
+
+New authentication page routes:
+app/(auth)/forgot-password/page.tsx
+app/(auth)/login/page.tsx
+app/(auth)/signup/page.tsx

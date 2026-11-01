@@ -1,0 +1,26 @@
+Task Three Step 1: page count AFTER consolidation
+Working tree based on cb31dc9; no commit created.
+Counting rule: app/**/page.{tsx,ts,jsx,js}; excludes route handlers, layouts, assets and framework-generated not-found routes.
+Total application page routes: 3
+Authentication page routes: 1
+
+Application page sources:
+app/(auth)/auth/page.tsx
+app/assessment/enquiry/page.tsx
+app/page.tsx
+
+Public page routes:
+/
+/assessment/enquiry
+/auth
+
+One auth route, three URL states:
+/auth?signup
+/auth?login
+/auth?reset
+
+Default /auth displays login; /auth?login is its explicit key-only state.
+All unsupported, valued, duplicate or conflicting public query states return 404.
+
+Superseded /signup, /login and /forgot-password pages removed; no alias page routes or redirects added.
+Original 00-foundation-* evidence and historical foundation record preserved.

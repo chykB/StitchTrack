@@ -36,6 +36,18 @@ They can:
 - Update delivery progress.
 - Receive delivery reminders.
 
+#### Tailor Email Verification
+
+After submitting valid registration details and accepting the approved Platform Terms, the system creates an unverified tailor account with a securely hashed password.
+
+Better Auth Email OTP generates and validates a six-digit email verification code. Nodemailer delivers the code through the configured SMTP provider.
+
+The code expires after five minutes, allows three invalid attempts per code, and has a 60-second resend cooldown. Account- and IP-based rate limits also apply.
+
+Tailors must verify email ownership before signing in or accessing business features. Successful verification does not automatically authorize access to another tailoring business.
+
+Verification codes must be treated as strings, preserving leading zeros. Registration, verification and recovery must use server-side validation and safe error handling.
+
 ### Client
 
 Clients do not create passwords or complete a traditional registration form.
