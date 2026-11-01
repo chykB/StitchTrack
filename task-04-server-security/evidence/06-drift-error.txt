@@ -1,0 +1,89 @@
+EVIDENCE 06 - owner-run real Prisma Client runtime drift and correction
+Started: 2026-10-28T14:54:01Z
+Command: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON task-04-server-security/experiments/runtime-drift/run.mjs --owner-run
+Installed: prisma 7.10.1
+Installed: @prisma/client 7.10.1
+Installed: @prisma/adapter-pg 7.10.1
+Installed: pg 8.16.3
+Canonical schema SHA-256: 26dea8f74fc95dde98b9e8a172c4ce507f823e48f64ed09e3566e245a5fbdba9
+Command: "./node_modules/.bin/prisma" "generate" "--config" "task-04-server-security/experiments/runtime-drift/prisma.config.ts"
+
+✔ Generated Prisma Client (7.10.1) to ./task-04-server-security/experiments/runtime-drift/work/client in 75ms
+
+Loaded Prisma config from task-04-server-security/experiments/runtime-drift/prisma.config.ts.
+
+Prisma schema loaded from task-04-server-security/experiments/runtime-drift/work/schema.prisma.
+baseline_generate_exit_status=0
+Command: "/home/bmalik/.nvm/versions/node/v24.22.1/bin/node" "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON" "task-04-server-security/experiments/runtime-drift/read-users.mjs" "--owner-read" "baseline"
+TASK04_METADATA={"role":"stitchtrack_task04_test_app","columns":[{"name":"id","type":"text","default":false,"required":true},{"name":"emailCanonical","type":"text","default":false,"required":true},{"name":"createdAt","type":"timestamp(3) with time zone","default":false,"required":true},{"name":"name","type":"text","default":false,"required":true}],"history":[{"id":"bb1d3fb7-90cf-4fc5-b7e3-6fdb00b1f878","logs":null,"checksum":"1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501","started_at":"2026-10-28T13:18:45.061066+01:00","finished_at":"2026-10-28T13:18:45.132994+01:00","migration_name":"20261028_task04_initial","rolled_back_at":null,"applied_steps_count":1},{"id":"e91a14f3-686e-4929-8e3f-bcec0baaff30","logs":"A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20261028_task04_user_name\n\nDatabase error code: 23502\n\nDatabase error:\nERROR: column \"name\" of relation \"User\" contains null values\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E23502), message: \"column \\\"name\\\" of relation \\\"User\\\" contains null values\", detail: None, hint: None, position: None, where_: None, schema: Some(\"task04_test\"), table: Some(\"User\"), column: Some(\"name\"), datatype: None, constraint: None, file: Some(\"tablecmds.c\"), line: Some(6120), routine: Some(\"ATRewriteTable\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:255","checksum":"482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33","started_at":"2026-10-28T14:04:36.829231+01:00","finished_at":null,"migration_name":"20261028_task04_user_name","rolled_back_at":"2026-10-28T15:12:55.604315+01:00","applied_steps_count":0},{"id":"9d8fa5d0-6dfc-4458-9e79-82f0ddfff9c8","logs":"","checksum":"482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33","started_at":"2026-10-28T15:12:55.606809+01:00","finished_at":"2026-10-28T15:12:55.606809+01:00","migration_name":"20261028_task04_user_name","rolled_back_at":null,"applied_steps_count":0}],"database":"stitchtrack_assessment","readOnly":"on","userCount":2,"constraints":[{"name":"User_emailCanonical_nonblank_check","validated":true,"definition":"CHECK ((btrim(\"emailCanonical\", '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"},{"name":"User_name_nonblank_check","validated":true,"definition":"CHECK ((btrim(name, '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"},{"name":"User_pkey","validated":true,"definition":"PRIMARY KEY (id)"}],"schemaOwned":true}
+ORM read: prisma.user.findMany({ orderBy: { id: "asc" } })
+TASK04_ROWS=[{"id":"task04-required-name-01","emailCanonical":"required-name-01@example.invalid","name":"Synthetic User 01","createdAt":"2026-10-28T14:04:28.304Z"},{"id":"task04-required-name-02","emailCanonical":"required-name-02@example.invalid","name":"Synthetic User 02","createdAt":"2026-10-28T14:04:28.304Z"}]
+baseline_read_exit_status=0
+Working-schema-only change: added task04DriftProbe String? @db.Text to User; no SQL/migration executed.
+Drifted working schema SHA-256: c5811c6c921511d84892b83b76a5b661a02d3b2e4088788119ff9be869cad66c
+Command: "./node_modules/.bin/prisma" "generate" "--config" "task-04-server-security/experiments/runtime-drift/prisma.config.ts"
+
+✔ Generated Prisma Client (7.10.1) to ./task-04-server-security/experiments/runtime-drift/work/client in 99ms
+
+Loaded Prisma config from task-04-server-security/experiments/runtime-drift/prisma.config.ts.
+
+Prisma schema loaded from task-04-server-security/experiments/runtime-drift/work/schema.prisma.
+drifted_generate_exit_status=0
+Command: "/home/bmalik/.nvm/versions/node/v24.22.1/bin/node" "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON" "task-04-server-security/experiments/runtime-drift/read-users.mjs" "--owner-read" "drifted"
+TASK04_METADATA={"role":"stitchtrack_task04_test_app","columns":[{"name":"id","type":"text","default":false,"required":true},{"name":"emailCanonical","type":"text","default":false,"required":true},{"name":"createdAt","type":"timestamp(3) with time zone","default":false,"required":true},{"name":"name","type":"text","default":false,"required":true}],"history":[{"id":"bb1d3fb7-90cf-4fc5-b7e3-6fdb00b1f878","logs":null,"checksum":"1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501","started_at":"2026-10-28T13:18:45.061066+01:00","finished_at":"2026-10-28T13:18:45.132994+01:00","migration_name":"20261028_task04_initial","rolled_back_at":null,"applied_steps_count":1},{"id":"e91a14f3-686e-4929-8e3f-bcec0baaff30","logs":"A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20261028_task04_user_name\n\nDatabase error code: 23502\n\nDatabase error:\nERROR: column \"name\" of relation \"User\" contains null values\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E23502), message: \"column \\\"name\\\" of relation \\\"User\\\" contains null values\", detail: None, hint: None, position: None, where_: None, schema: Some(\"task04_test\"), table: Some(\"User\"), column: Some(\"name\"), datatype: None, constraint: None, file: Some(\"tablecmds.c\"), line: Some(6120), routine: Some(\"ATRewriteTable\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:255","checksum":"482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33","started_at":"2026-10-28T14:04:36.829231+01:00","finished_at":null,"migration_name":"20261028_task04_user_name","rolled_back_at":"2026-10-28T15:12:55.604315+01:00","applied_steps_count":0},{"id":"9d8fa5d0-6dfc-4458-9e79-82f0ddfff9c8","logs":"","checksum":"482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33","started_at":"2026-10-28T15:12:55.606809+01:00","finished_at":"2026-10-28T15:12:55.606809+01:00","migration_name":"20261028_task04_user_name","rolled_back_at":null,"applied_steps_count":0}],"database":"stitchtrack_assessment","readOnly":"on","userCount":2,"constraints":[{"name":"User_emailCanonical_nonblank_check","validated":true,"definition":"CHECK ((btrim(\"emailCanonical\", '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"},{"name":"User_name_nonblank_check","validated":true,"definition":"CHECK ((btrim(name, '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"},{"name":"User_pkey","validated":true,"definition":"PRIMARY KEY (id)"}],"schemaOwned":true}
+ORM read: prisma.user.findMany({ orderBy: { id: "asc" } })
+PrismaClientKnownRequestError: 
+Invalid `prisma.user.findMany()` invocation:
+
+
+The column `User.task04DriftProbe` does not exist in the current database.
+    at vn.handleRequestError (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:65:8640)
+    at vn.handleAndLogRequestError (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:65:7929)
+    at vn.request (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:65:7636)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async a (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:99:6921)
+    at async prisma.$transaction.isolationLevel (file:///home/bmalik/stitchtrack/task-04-server-security/experiments/runtime-drift/read-users.mjs:68:20)
+    at async Proxy._transactionWithCallback (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:99:4854)
+    at async ownerRead (file:///home/bmalik/stitchtrack/task-04-server-security/experiments/runtime-drift/read-users.mjs:50:5) {
+  code: 'P2022',
+  meta: {
+    modelName: 'User',
+    driverAdapterError: DriverAdapterError: ColumnNotFound
+        at PgTransaction.onError (file:///home/bmalik/stitchtrack/node_modules/@prisma/adapter-pg/dist/index.mjs:666:11)
+        at PgTransaction.performIO (file:///home/bmalik/stitchtrack/node_modules/@prisma/adapter-pg/dist/index.mjs:661:12)
+        at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at async PgTransaction.queryRaw (file:///home/bmalik/stitchtrack/node_modules/@prisma/adapter-pg/dist/index.mjs:595:30)
+        at async /home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:11:70479
+        at async e.run (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:11:69220)
+        at async e.execute (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:57:815)
+        at async yr.request (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:58:2425)
+        at async Object.singleLoader (/home/bmalik/stitchtrack/node_modules/@prisma/client/runtime/client.js:65:6917) {
+      cause: {
+        originalCode: '42703',
+        originalMessage: 'column User.task04DriftProbe does not exist',
+        kind: 'ColumnNotFound',
+        column: 'User.task04DriftProbe'
+      }
+    }
+  },
+  clientVersion: '7.10.1'
+}
+drifted_read_exit_status=2
+Restored correct working schema SHA-256: 18399977c80ae6111dd0dc5cbd43c06adf03b047e68470f20e6230040f2187b3
+Command: "./node_modules/.bin/prisma" "generate" "--config" "task-04-server-security/experiments/runtime-drift/prisma.config.ts"
+
+✔ Generated Prisma Client (7.10.1) to ./task-04-server-security/experiments/runtime-drift/work/client in 112ms
+
+Loaded Prisma config from task-04-server-security/experiments/runtime-drift/prisma.config.ts.
+
+Prisma schema loaded from task-04-server-security/experiments/runtime-drift/work/schema.prisma.
+restored_generate_exit_status=0
+Command: "/home/bmalik/.nvm/versions/node/v24.22.1/bin/node" "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON" "task-04-server-security/experiments/runtime-drift/read-users.mjs" "--owner-read" "restored"
+TASK04_METADATA={"role":"stitchtrack_task04_test_app","columns":[{"name":"id","type":"text","default":false,"required":true},{"name":"emailCanonical","type":"text","default":false,"required":true},{"name":"createdAt","type":"timestamp(3) with time zone","default":false,"required":true},{"name":"name","type":"text","default":false,"required":true}],"history":[{"id":"bb1d3fb7-90cf-4fc5-b7e3-6fdb00b1f878","logs":null,"checksum":"1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501","started_at":"2026-10-28T13:18:45.061066+01:00","finished_at":"2026-10-28T13:18:45.132994+01:00","migration_name":"20261028_task04_initial","rolled_back_at":null,"applied_steps_count":1},{"id":"e91a14f3-686e-4929-8e3f-bcec0baaff30","logs":"A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20261028_task04_user_name\n\nDatabase error code: 23502\n\nDatabase error:\nERROR: column \"name\" of relation \"User\" contains null values\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E23502), message: \"column \\\"name\\\" of relation \\\"User\\\" contains null values\", detail: None, hint: None, position: None, where_: None, schema: Some(\"task04_test\"), table: Some(\"User\"), column: Some(\"name\"), datatype: None, constraint: None, file: Some(\"tablecmds.c\"), line: Some(6120), routine: Some(\"ATRewriteTable\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:255","checksum":"482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33","started_at":"2026-10-28T14:04:36.829231+01:00","finished_at":null,"migration_name":"20261028_task04_user_name","rolled_back_at":"2026-10-28T15:12:55.604315+01:00","applied_steps_count":0},{"id":"9d8fa5d0-6dfc-4458-9e79-82f0ddfff9c8","logs":"","checksum":"482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33","started_at":"2026-10-28T15:12:55.606809+01:00","finished_at":"2026-10-28T15:12:55.606809+01:00","migration_name":"20261028_task04_user_name","rolled_back_at":null,"applied_steps_count":0}],"database":"stitchtrack_assessment","readOnly":"on","userCount":2,"constraints":[{"name":"User_emailCanonical_nonblank_check","validated":true,"definition":"CHECK ((btrim(\"emailCanonical\", '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"},{"name":"User_name_nonblank_check","validated":true,"definition":"CHECK ((btrim(name, '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"},{"name":"User_pkey","validated":true,"definition":"PRIMARY KEY (id)"}],"schemaOwned":true}
+ORM read: prisma.user.findMany({ orderBy: { id: "asc" } })
+TASK04_ROWS=[{"id":"task04-required-name-01","emailCanonical":"required-name-01@example.invalid","name":"Synthetic User 01","createdAt":"2026-10-28T14:04:28.304Z"},{"id":"task04-required-name-02","emailCanonical":"required-name-02@example.invalid","name":"Synthetic User 02","createdAt":"2026-10-28T14:04:28.304Z"}]
+restored_read_exit_status=0
+All requested phases completed; review actual reads/error/statuses. Canonical schema, users and migration history are unchanged.
+owner_experiment_exit_status=0
+run_exit_status=0
+capture_exit_status=0

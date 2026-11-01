@@ -32,7 +32,9 @@ export function readLocalSubmission(
   event.preventDefault();
   if (!ready) return null;
   const fields = event.currentTarget.elements;
+  const name = (fields.namedItem("name") as HTMLInputElement | null)?.value;
   return {
+    ...(name !== undefined ? { name } : {}),
     email: (fields.namedItem("email") as HTMLInputElement | null)?.value ?? "",
     password: (fields.namedItem("password") as HTMLInputElement | null)?.value ?? "",
   };
@@ -48,7 +50,7 @@ export function handleLocalSubmit(
   const acknowledged = (event.currentTarget.elements.namedItem("draftAcknowledgement") as HTMLInputElement | null)?.checked === true;
   const invalid = validateAssessmentForm(mode, values, acknowledged, requireDraftAcknowledgement);
   dispatch({ type: "submit", values, draftAcknowledged: acknowledged });
-  const first = invalid.email ? "email" : invalid.password ? "password" :
+  const first = invalid.name ? "name" : invalid.email ? "email" : invalid.password ? "password" :
     invalid.draftAcknowledgement ? "draftAcknowledgement" : null;
   if (first) {
     (event.currentTarget.elements.namedItem(first) as HTMLInputElement | null)?.focus();
@@ -70,7 +72,7 @@ export default function AuthForm({
   const signupBlocked = signupSubmissionBlocked(mode, state, requireDraftAcknowledgement);
   const feedback = state.unavailable ? unavailableMessage :
     state.submitted && Object.keys(errors).length ?
-      (!errors.email && !errors.password && errors.draftAcknowledgement ? errors.draftAcknowledgement :
+      (!errors.name && !errors.email && !errors.password && errors.draftAcknowledgement ? errors.draftAcknowledgement :
         "Check the fields marked with an error.") : "";
 
   useEffect(() => {
@@ -83,6 +85,12 @@ export default function AuthForm({
       {/* SSR and JavaScript-disabled controls stay inert. No legend inputs. */}
       <fieldset className={styles.fields} disabled={!ready}>
         <legend className={hideLegend ? styles.visuallyHidden : styles.legend}>{legend}</legend>
+        {mode === "signup" && (
+          <FormField id="signup-name" name="name" label="Your name"
+            type="text" autoComplete="name" value={state.values.name ?? ""} error={errors.name}
+            onChange={event => dispatch({ type: "change", field: "name", value: event.currentTarget.value })}
+            onBlur={event => dispatch({ type: "blur", field: "name", value: event.currentTarget.value })} />
+        )}
         <FormField id={mode + "-email"} name="email" label="Email address"
           type="email" autoComplete="email" value={state.values.email} error={errors.email}
           onChange={event => dispatch({ type: "change", field: "email", value: event.currentTarget.value })}

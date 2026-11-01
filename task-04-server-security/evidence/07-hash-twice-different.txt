@@ -1,0 +1,28 @@
+StitchTrack: manual synthetic-only password experiment
+{
+  "timestamp": "2026-10-27T19:27:37.629Z",
+  "node": "v24.22.1",
+  "os": "linux",
+  "release": "5.15.167.4-microsoft-standard-WSL2",
+  "architecture": "x64",
+  "cpu": "Intel(R) Core(TM) Ultra 7 165U",
+  "logicalCpus": 14,
+  "argon2Package": "2.2.2",
+  "parameters": {
+    "algorithm": 2,
+    "version": 1,
+    "memoryCost": 65536,
+    "timeCost": 3,
+    "parallelism": 1,
+    "outputLen": 32
+  },
+  "saltBytes": 16
+}
+No accounts, database, email or authentication session.
+SHA-256 is benchmark comparison ONLY; never credential storage.
+The password is fixed synthetic source data; no password arguments or environment input are accepted.
+Evidence 07: same synthetic password, independent random salts
+synthetic_hash_1=$argon2id$v=19$m=65536,t=3,p=1$wubsm0tqomZG0usV+bjgjQ$bJm+AZSGgwEb8nzkCFLHlltSohaCTs8gIbvOEHCcgGg
+synthetic_hash_2=$argon2id$v=19$m=65536,t=3,p=1$3o6o3J/hyFO+/MCRaLBeJQ$bM26WqEicAHlp0UPjy5mwP8sOIol2T0Yw5cW6Ia+utY
+different_hashes=true
+first_verifies=true; second_verifies=true

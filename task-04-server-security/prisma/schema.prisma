@@ -1,0 +1,118 @@
+// Synthetic Task Four laboratory only. No application client is generated.
+// Aligned after owner-verified Evidence 05 recovery; applied SQL stays unchanged.
+// The nonblank name CHECK is maintained in reviewed SQL, not Prisma DSL.
+datasource db {
+  provider = "postgresql"
+  schemas  = ["task04_test"]
+}
+
+model User {
+  id             String              @id @db.Text
+  emailCanonical String              @unique @db.Text
+  name           String              @db.Text
+  createdAt      DateTime            @db.Timestamptz(3)
+  sessions       Session[]
+  paymentIntents PaymentIntent[]
+  documents      RetrievalDocument[]
+
+  @@schema("task04_test")
+}
+
+model Session {
+  id          String    @id @db.Text
+  userId      String    @db.Text
+  tokenDigest String    @unique @db.Text
+  createdAt   DateTime  @db.Timestamptz(3)
+  expiresAt   DateTime  @db.Timestamptz(3)
+  revokedAt   DateTime? @db.Timestamptz(3)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  // SQL review: expiresAt > createdAt.
+  @@index([userId])
+  @@index([expiresAt])
+  @@schema("task04_test")
+}
+
+model PaymentIntent {
+  id             String           @id @db.Text
+  userId         String           @db.Text
+  idempotencyKey String           @db.Text
+  amount         Decimal          @db.Decimal(18, 2)
+  currency       String           @db.Char(3)
+  createdAt      DateTime         @db.Timestamptz(3)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  attempts       PaymentAttempt[]
+  // Collection back-relation avoids an extra Prisma-required composite index.
+  // Payment.paymentIntentId UNIQUE still enforces database cardinality 0..1.
+  payments       Payment[]        @relation("IntentReceipt")
+
+  // SQL review: positive amount, ASCII currency and immutability once attempted.
+  @@unique([userId, idempotencyKey])
+  @@unique([id, amount, currency])
+  @@schema("task04_test")
+}
+
+model PaymentAttempt {
+  id              String        @id @db.Text
+  paymentIntentId String        @db.Text
+  attemptNo       Int
+  outcome         String        @db.Text
+  failureCode     String?       @db.Text
+  startedAt       DateTime      @db.Timestamptz(3)
+  finishedAt      DateTime?     @db.Timestamptz(3)
+  intent          PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  // Payment.successfulAttemptId UNIQUE still enforces database cardinality 0..1.
+  payments        Payment[]     @relation("ReceiptAttempt")
+
+  // SQL review: lifecycle CHECKs, terminal immutability, deferred receipt checks.
+  // Required partial B-tree index is pending reviewed SQL, NOT a full index:
+  // (startedAt) WHERE outcome = 'started'. Do not omit it from the migration.
+  @@unique([paymentIntentId, attemptNo])
+  @@unique([id, paymentIntentId])
+  @@schema("task04_test")
+}
+
+model Payment {
+  id                  String         @id @db.Text
+  paymentIntentId     String         @unique @db.Text
+  successfulAttemptId String         @unique @db.Text
+  amount              Decimal        @db.Decimal(18, 2)
+  currency            String         @db.Char(3)
+  paidAt              DateTime       @db.Timestamptz(3)
+  recordedAt          DateTime       @db.Timestamptz(3)
+  intent              PaymentIntent  @relation("IntentReceipt", fields: [paymentIntentId, amount, currency], references: [id, amount, currency], onDelete: Restrict, onUpdate: Restrict)
+  successfulAttempt   PaymentAttempt @relation("ReceiptAttempt", fields: [successfulAttemptId, paymentIntentId], references: [id, paymentIntentId], onDelete: Restrict, onUpdate: Restrict)
+
+  // Both composite FKs are necessary: matching value AND matching attempt/intent.
+  // SQL review: positive amount, ASCII currency, deferred success/receipt checks.
+  @@schema("task04_test")
+}
+
+model RetrievalDocument {
+  id            String           @id @db.Text
+  ownerUserId   String           @db.Text
+  sourceKey     String           @db.Text
+  sourceText    String           @db.Text
+  contentDigest String           @db.Text
+  createdAt     DateTime         @db.Timestamptz(3)
+  owner         User             @relation(fields: [ownerUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  chunks        RetrievalChunk[]
+
+  // SQL/writer review: nonblank source, digest correctness, revision immutability.
+  @@unique([ownerUserId, sourceKey])
+  @@schema("task04_test")
+}
+
+model RetrievalChunk {
+  id            String            @id @db.Text
+  documentId    String            @db.Text
+  ordinal       Int
+  content       String            @db.Text
+  contentDigest String            @db.Text
+  createdAt     DateTime          @db.Timestamptz(3)
+  document      RetrievalDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  // SQL/writer review: ordinal >= 0, nonblank content, extraction/digest integrity.
+  @@unique([documentId, ordinal])
+  @@schema("task04_test")
+}

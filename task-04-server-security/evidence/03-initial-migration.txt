@@ -1,0 +1,183 @@
+EVIDENCE 03 - genuine initial Task Four Prisma migration
+Started: 2026-10-28T12:18:36Z
+Target: stitchtrack_assessment / task04_test / stitchtrack_task04_test_app
+1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501  task-04-server-security/prisma/migrations/20261028_task04_initial/migration.sql
+Dedicated configuration and rehearsed migration checks passed.
+configuration_exit_status=0
+READ-ONLY preflight on intended assessment target (main-role password).
+BEGIN READ ONLY;
+BEGIN
+DO LANGUAGE plpgsql $preflight$
+BEGIN
+  IF pg_catalog.current_database() <> 'stitchtrack_assessment'
+      OR CURRENT_USER <> 'stitchtrack_task04_test_app' THEN
+    RAISE EXCEPTION 'Unexpected main migration verification target/role';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_namespace n JOIN pg_catalog.pg_roles r ON r.oid=n.nspowner
+    WHERE n.nspname='task04_test' AND r.rolname=CURRENT_USER
+  ) THEN RAISE EXCEPTION 'Expected main schema ownership is absent'; END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='task04_test'
+  ) THEN RAISE EXCEPTION 'Main schema is not empty: stop and inspect, never auto-retry'; END IF;
+END;
+$preflight$;
+DO
+SELECT pg_catalog.current_database() AS database, CURRENT_USER AS role;
+        database        |            role             
+------------------------+-----------------------------
+ stitchtrack_assessment | stitchtrack_task04_test_app
+(1 row)
+
+COMMIT;
+COMMIT
+preflight_exit_status=0
+Command: ./node_modules/.bin/prisma migrate deploy --config task-04-server-security/prisma/prisma.config.ts
+Loaded Prisma config from task-04-server-security/prisma/prisma.config.ts.
+
+Prisma schema loaded from task-04-server-security/prisma/schema.prisma.
+Datasource "db": PostgreSQL database "stitchtrack_assessment", schemas "task04_test" at "127.0.0.1:5432"
+
+1 migration found in prisma/migrations
+
+Applying migration `20261028_task04_initial`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261028_task04_initial/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+deploy_exit_status=0
+READ-ONLY post-migration verification (main-role password).
+BEGIN READ ONLY;
+BEGIN
+DO LANGUAGE plpgsql $verify$
+BEGIN
+  IF pg_catalog.current_database() <> 'stitchtrack_assessment'
+      OR CURRENT_USER <> 'stitchtrack_task04_test_app' THEN
+    RAISE EXCEPTION 'Unexpected verification target/role';
+  END IF;
+  IF (SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname='task04_test'
+      AND tablename IN ('User','Session','PaymentIntent','PaymentAttempt','Payment','RetrievalDocument','RetrievalChunk')) <> 7 THEN
+    RAISE EXCEPTION 'Expected seven lab tables are missing';
+  END IF;
+  IF (SELECT count(*) FROM information_schema.columns WHERE table_schema='task04_test'
+      AND table_name IN ('User','Session','PaymentIntent','PaymentAttempt','Payment','RetrievalDocument','RetrievalChunk')) <> 41 THEN
+    RAISE EXCEPTION 'Expected 41 transitional columns';
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='task04_test'
+      AND table_name='User' AND column_name='name') THEN RAISE EXCEPTION 'User.name must still be absent'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM "task04_test"."_prisma_migrations"
+      WHERE migration_name='20261028_task04_initial'
+      AND checksum='1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501'
+      AND finished_at IS NOT NULL AND rolled_back_at IS NULL) THEN
+    RAISE EXCEPTION 'Expected successfully applied initial migration/checksum is absent';
+  END IF;
+END;
+$verify$;
+DO
+SELECT tablename FROM pg_catalog.pg_tables
+WHERE schemaname='task04_test' ORDER BY tablename;
+     tablename      
+--------------------
+ Payment
+ PaymentAttempt
+ PaymentIntent
+ RetrievalChunk
+ RetrievalDocument
+ Session
+ User
+ _prisma_migrations
+(8 rows)
+
+SELECT table_name, count(*) AS columns FROM information_schema.columns
+WHERE table_schema='task04_test' AND table_name <> '_prisma_migrations'
+GROUP BY table_name ORDER BY table_name;
+    table_name     | columns 
+-------------------+---------
+ Payment           |       7
+ PaymentAttempt    |       7
+ PaymentIntent     |       6
+ RetrievalChunk    |       6
+ RetrievalDocument |       6
+ Session           |       6
+ User              |       3
+(7 rows)
+
+SELECT migration_name, checksum, started_at, finished_at, rolled_back_at, applied_steps_count
+FROM "task04_test"."_prisma_migrations" ORDER BY started_at;
+     migration_name      |                             checksum                             |          started_at           |          finished_at          | rolled_back_at | applied_steps_count 
+-------------------------+------------------------------------------------------------------+-------------------------------+-------------------------------+----------------+---------------------
+ 20261028_task04_initial | 1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501 | 2026-10-28 13:18:45.061066+01 | 2026-10-28 13:18:45.132994+01 |                |                   1
+(1 row)
+
+SELECT indexname, indexdef FROM pg_catalog.pg_indexes
+WHERE schemaname='task04_test' AND tablename <> '_prisma_migrations' ORDER BY indexname;
+                  indexname                   |                                                                    indexdef                                                                     
+----------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------
+ PaymentAttempt_id_paymentIntentId_key        | CREATE UNIQUE INDEX "PaymentAttempt_id_paymentIntentId_key" ON task04_test."PaymentAttempt" USING btree (id, "paymentIntentId")
+ PaymentAttempt_paymentIntentId_attemptNo_key | CREATE UNIQUE INDEX "PaymentAttempt_paymentIntentId_attemptNo_key" ON task04_test."PaymentAttempt" USING btree ("paymentIntentId", "attemptNo")
+ PaymentAttempt_pkey                          | CREATE UNIQUE INDEX "PaymentAttempt_pkey" ON task04_test."PaymentAttempt" USING btree (id)
+ PaymentAttempt_startedAt_started_idx         | CREATE INDEX "PaymentAttempt_startedAt_started_idx" ON task04_test."PaymentAttempt" USING btree ("startedAt") WHERE (outcome = 'started'::text)
+ PaymentIntent_id_amount_currency_key         | CREATE UNIQUE INDEX "PaymentIntent_id_amount_currency_key" ON task04_test."PaymentIntent" USING btree (id, amount, currency)
+ PaymentIntent_pkey                           | CREATE UNIQUE INDEX "PaymentIntent_pkey" ON task04_test."PaymentIntent" USING btree (id)
+ PaymentIntent_userId_idempotencyKey_key      | CREATE UNIQUE INDEX "PaymentIntent_userId_idempotencyKey_key" ON task04_test."PaymentIntent" USING btree ("userId", "idempotencyKey")
+ Payment_paymentIntentId_key                  | CREATE UNIQUE INDEX "Payment_paymentIntentId_key" ON task04_test."Payment" USING btree ("paymentIntentId")
+ Payment_pkey                                 | CREATE UNIQUE INDEX "Payment_pkey" ON task04_test."Payment" USING btree (id)
+ Payment_successfulAttemptId_key              | CREATE UNIQUE INDEX "Payment_successfulAttemptId_key" ON task04_test."Payment" USING btree ("successfulAttemptId")
+ RetrievalChunk_documentId_ordinal_key        | CREATE UNIQUE INDEX "RetrievalChunk_documentId_ordinal_key" ON task04_test."RetrievalChunk" USING btree ("documentId", ordinal)
+ RetrievalChunk_pkey                          | CREATE UNIQUE INDEX "RetrievalChunk_pkey" ON task04_test."RetrievalChunk" USING btree (id)
+ RetrievalDocument_ownerUserId_sourceKey_key  | CREATE UNIQUE INDEX "RetrievalDocument_ownerUserId_sourceKey_key" ON task04_test."RetrievalDocument" USING btree ("ownerUserId", "sourceKey")
+ RetrievalDocument_pkey                       | CREATE UNIQUE INDEX "RetrievalDocument_pkey" ON task04_test."RetrievalDocument" USING btree (id)
+ Session_expiresAt_idx                        | CREATE INDEX "Session_expiresAt_idx" ON task04_test."Session" USING btree ("expiresAt")
+ Session_pkey                                 | CREATE UNIQUE INDEX "Session_pkey" ON task04_test."Session" USING btree (id)
+ Session_tokenDigest_key                      | CREATE UNIQUE INDEX "Session_tokenDigest_key" ON task04_test."Session" USING btree ("tokenDigest")
+ Session_userId_idx                           | CREATE INDEX "Session_userId_idx" ON task04_test."Session" USING btree ("userId")
+ User_emailCanonical_key                      | CREATE UNIQUE INDEX "User_emailCanonical_key" ON task04_test."User" USING btree ("emailCanonical")
+ User_pkey                                    | CREATE UNIQUE INDEX "User_pkey" ON task04_test."User" USING btree (id)
+(20 rows)
+
+SELECT c.conname, c.contype FROM pg_catalog.pg_constraint c
+JOIN pg_catalog.pg_namespace n ON n.oid=c.connamespace
+JOIN pg_catalog.pg_class r ON r.oid=c.conrelid
+WHERE n.nspname='task04_test' AND r.relname <> '_prisma_migrations' ORDER BY c.contype,c.conname;
+                     conname                      | contype 
+--------------------------------------------------+---------
+ PaymentAttempt_finish_time_check                 | c
+ PaymentAttempt_number_check                      | c
+ PaymentAttempt_outcome_check                     | c
+ PaymentAttempt_state_fields_check                | c
+ PaymentIntent_amount_check                       | c
+ PaymentIntent_currency_check                     | c
+ Payment_amount_check                             | c
+ Payment_currency_check                           | c
+ RetrievalChunk_content_nonblank_check            | c
+ RetrievalChunk_ordinal_check                     | c
+ RetrievalDocument_sourceKey_nonblank_check       | c
+ RetrievalDocument_sourceText_nonblank_check      | c
+ Session_expiry_check                             | c
+ User_emailCanonical_nonblank_check               | c
+ PaymentAttempt_paymentIntentId_fkey              | f
+ PaymentIntent_userId_fkey                        | f
+ Payment_paymentIntentId_amount_currency_fkey     | f
+ Payment_successfulAttemptId_paymentIntentId_fkey | f
+ RetrievalChunk_documentId_fkey                   | f
+ RetrievalDocument_ownerUserId_fkey               | f
+ Session_userId_fkey                              | f
+ PaymentAttempt_pkey                              | p
+ PaymentIntent_pkey                               | p
+ Payment_pkey                                     | p
+ RetrievalChunk_pkey                              | p
+ RetrievalDocument_pkey                           | p
+ Session_pkey                                     | p
+ User_pkey                                        | p
+(28 rows)
+
+COMMIT;
+COMMIT
+verification_exit_status=0
+run_exit_status=0
+capture_exit_status=0

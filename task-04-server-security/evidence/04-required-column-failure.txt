@@ -1,0 +1,237 @@
+EVIDENCE 04 - actual populated-table required-column Prisma attempt
+Started: 2026-10-28T13:04:21Z
+1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501  task-04-server-security/prisma/migrations/20261028_task04_initial/migration.sql
+482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33  task-04-server-security/prisma/migrations/20261028_task04_user_name/migration.sql
+83c98b132026fa160c581a74b744055aaeab76bd807176e551473d62144820c9  task-04-server-security/experiments/required-column/seed-users.sql
+Reviewed failure phase and exact dedicated targets validated offline.
+configuration_exit_status=0
+Owner seed command: psql with fixed main target, --file=task-04-server-security/experiments/required-column/seed-users.sql
+-- OWNER ONLY: two synthetic lab identities, not authentication accounts.
+-- No upsert, delete or cleanup. Repeated/colliding runs stop for review.
+BEGIN;
+BEGIN
+DO LANGUAGE plpgsql $seed_target$
+BEGIN
+    IF pg_catalog.current_database() <> 'stitchtrack_assessment'
+        OR CURRENT_USER <> 'stitchtrack_task04_test_app' THEN
+        RAISE EXCEPTION 'Synthetic seed requires the exact approved assessment target/role';
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_catalog.pg_namespace n JOIN pg_catalog.pg_roles r ON r.oid=n.nspowner
+        WHERE n.nspname='task04_test' AND r.rolname=CURRENT_USER
+    ) THEN RAISE EXCEPTION 'Expected isolated schema ownership'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM "task04_test"."_prisma_migrations"
+        WHERE migration_name='20261028_task04_initial'
+        AND checksum='1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501'
+        AND finished_at IS NOT NULL AND rolled_back_at IS NULL) THEN
+        RAISE EXCEPTION 'Expected successfully applied initial migration/checksum';
+    END IF;
+    IF (SELECT count(*) FROM "task04_test"."_prisma_migrations") <> 1 THEN
+        RAISE EXCEPTION 'Unexpected migration history; stop before synthetic seeding';
+    END IF;
+    IF (SELECT count(*) FROM information_schema.columns
+        WHERE table_schema='task04_test' AND table_name='User') <> 3
+        OR (SELECT count(*) FROM information_schema.columns
+        WHERE table_schema='task04_test' AND table_name='User'
+        AND column_name IN ('id','emailCanonical','createdAt')) <> 3 THEN
+        RAISE EXCEPTION 'Expected initial three-column User table, without name';
+    END IF;
+END;
+$seed_target$;
+DO
+LOCK TABLE "task04_test"."User" IN SHARE ROW EXCLUSIVE MODE;
+LOCK TABLE
+DO LANGUAGE plpgsql $empty_seed$
+BEGIN
+    IF EXISTS (SELECT 1 FROM "task04_test"."User") THEN
+        RAISE EXCEPTION 'User table is not empty; do not overwrite or automatically reseed';
+    END IF;
+END;
+$empty_seed$;
+DO
+INSERT INTO "task04_test"."User" ("id", "emailCanonical", "createdAt") VALUES
+    ('task04-required-name-01', 'required-name-01@example.invalid', CURRENT_TIMESTAMP),
+    ('task04-required-name-02', 'required-name-02@example.invalid', CURRENT_TIMESTAMP);
+INSERT 0 2
+COMMIT;
+COMMIT
+-- Committed rows must be visible before any Prisma attempt. This is actual
+-- owner query output when executed, not predetermined assessment evidence.
+SELECT "id", "emailCanonical", "createdAt" FROM "task04_test"."User" ORDER BY "id";
+           id            |          emailCanonical          |         createdAt          
+-------------------------+----------------------------------+----------------------------
+ task04-required-name-01 | required-name-01@example.invalid | 2026-10-28 14:04:28.304+01
+ task04-required-name-02 | required-name-02@example.invalid | 2026-10-28 14:04:28.304+01
+(2 rows)
+
+SELECT count(*) AS synthetic_user_count FROM "task04_test"."User";
+ synthetic_user_count 
+----------------------
+                    2
+(1 row)
+
+seed_exit_status=0
+Read-only independent committed-row verification before migration.
+BEGIN READ ONLY;
+BEGIN
+DO LANGUAGE plpgsql $seed_proof$
+BEGIN
+  IF pg_catalog.current_database()<>'stitchtrack_assessment'
+      OR CURRENT_USER<>'stitchtrack_task04_test_app' THEN RAISE EXCEPTION 'Wrong verification target/role'; END IF;
+  IF (SELECT count(*) FROM "task04_test"."User")<>2
+      OR (SELECT count(*) FROM "task04_test"."User" WHERE
+        ("id"='task04-required-name-01' AND "emailCanonical"='required-name-01@example.invalid') OR
+        ("id"='task04-required-name-02' AND "emailCanonical"='required-name-02@example.invalid'))<>2 THEN
+    RAISE EXCEPTION 'Expected exactly the two committed synthetic rows';
+  END IF;
+  IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='task04_test'
+      AND table_name='User' AND column_name='name') THEN RAISE EXCEPTION 'name must be absent before the attempt'; END IF;
+END;
+$seed_proof$;
+DO
+SELECT "id","emailCanonical","createdAt" FROM "task04_test"."User" ORDER BY "id";
+           id            |          emailCanonical          |         createdAt          
+-------------------------+----------------------------------+----------------------------
+ task04-required-name-01 | required-name-01@example.invalid | 2026-10-28 14:04:28.304+01
+ task04-required-name-02 | required-name-02@example.invalid | 2026-10-28 14:04:28.304+01
+(2 rows)
+
+SELECT column_name,data_type,is_nullable,column_default FROM information_schema.columns
+WHERE table_schema='task04_test' AND table_name='User' ORDER BY ordinal_position;
+  column_name   |        data_type         | is_nullable | column_default 
+----------------+--------------------------+-------------+----------------
+ id             | text                     | NO          | 
+ emailCanonical | text                     | NO          | 
+ createdAt      | timestamp with time zone | NO          | 
+(3 rows)
+
+COMMIT;
+COMMIT
+before_verification_exit_status=0
+Actual pending migration SQL (not an invented response):
+-- Deliberate Evidence 04 migration candidate: not executed by the agent.
+-- Apply only after the owner has committed and captured two synthetic User rows.
+-- No DEFAULT: existing rows have no name, so PostgreSQL should reject NOT NULL.
+-- Preflight also permits the verified shadow pair for eventual empty replay.
+-- No explicit outer transaction: the single failing ALTER statement is atomic,
+-- and must not leave Prisma's connection in an aborted transaction for logging.
+DO LANGUAGE plpgsql $task04_preflight$
+BEGIN
+    IF NOT (
+        (pg_catalog.current_database() = 'stitchtrack_assessment'
+            AND CURRENT_USER = 'stitchtrack_task04_test_app')
+        OR
+        (pg_catalog.current_database() = 'stitchtrack_task04_shadow'
+            AND CURRENT_USER = 'stitchtrack_task04_shadow_app')
+    ) THEN
+        RAISE EXCEPTION 'Task Four migration target/role mismatch' USING ERRCODE = '42501';
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_catalog.pg_namespace AS n
+        JOIN pg_catalog.pg_roles AS r ON r.oid = n.nspowner
+        WHERE n.nspname = 'task04_test' AND r.rolname = CURRENT_USER
+    ) THEN
+        RAISE EXCEPTION 'Expected existing task04_test schema owned by current role'
+            USING ERRCODE = '42501';
+    END IF;
+    IF pg_catalog.current_setting('server_encoding') <> 'UTF8' THEN
+        RAISE EXCEPTION 'Task Four Unicode text checks require UTF8 server encoding';
+    END IF;
+END;
+$task04_preflight$;
+
+ALTER TABLE "task04_test"."User"
+    ADD COLUMN "name" TEXT NOT NULL
+    CONSTRAINT "User_name_nonblank_check" CHECK (
+        pg_catalog.btrim("name", U&'\0009\000A\000B\000C\000D\0020\0085\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF') <> ''
+    );
+Command: ./node_modules/.bin/prisma migrate deploy --config task-04-server-security/prisma/prisma.config.ts
+Loaded Prisma config from task-04-server-security/prisma/prisma.config.ts.
+
+Prisma schema loaded from task-04-server-security/prisma/schema.prisma.
+Datasource "db": PostgreSQL database "stitchtrack_assessment", schemas "task04_test" at "127.0.0.1:5432"
+
+2 migrations found in prisma/migrations
+
+Applying migration `20261028_task04_user_name`
+Error: P3018
+
+A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve
+
+Migration name: 20261028_task04_user_name
+
+Database error code: 23502
+
+Database error:
+ERROR: column "name" of relation "User" contains null values
+
+DbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E23502), message: "column \"name\" of relation \"User\" contains null values", detail: None, hint: None, position: None, where_: None, schema: Some("task04_test"), table: Some("User"), column: Some("name"), datatype: None, constraint: None, file: Some("tablecmds.c"), line: Some(6120), routine: Some("ATRewriteTable") }
+
+
+migration_attempt_exit_status=1
+Nonzero is not itself proof of the expected failure. Read-only post-attempt inspection follows.
+BEGIN READ ONLY;
+BEGIN
+DO LANGUAGE plpgsql $post_failure$
+BEGIN
+  IF pg_catalog.current_database()<>'stitchtrack_assessment'
+      OR CURRENT_USER<>'stitchtrack_task04_test_app' THEN RAISE EXCEPTION 'Wrong post-failure target/role'; END IF;
+  IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='task04_test'
+      AND table_name='User' AND column_name='name') THEN RAISE EXCEPTION 'Unexpected name column: inspect partial state'; END IF;
+  IF (SELECT count(*) FROM "task04_test"."User")<>2 THEN RAISE EXCEPTION 'Unexpected row count after failure'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM "task04_test"."_prisma_migrations"
+      WHERE migration_name='20261028_task04_user_name' AND finished_at IS NULL AND rolled_back_at IS NULL) THEN
+    RAISE EXCEPTION 'Expected unresolved failed Prisma migration record is absent';
+  END IF;
+END;
+$post_failure$;
+DO
+SELECT "id","emailCanonical","createdAt" FROM "task04_test"."User" ORDER BY "id";
+           id            |          emailCanonical          |         createdAt          
+-------------------------+----------------------------------+----------------------------
+ task04-required-name-01 | required-name-01@example.invalid | 2026-10-28 14:04:28.304+01
+ task04-required-name-02 | required-name-02@example.invalid | 2026-10-28 14:04:28.304+01
+(2 rows)
+
+SELECT migration_name,checksum,started_at,finished_at,rolled_back_at,logs
+FROM "task04_test"."_prisma_migrations" ORDER BY started_at;
+      migration_name       |                             checksum                             |          started_at           |          finished_at          | rolled_back_at |                                                                                                                                                                                                   logs                                                                                                                                                                                                    
+---------------------------+------------------------------------------------------------------+-------------------------------+-------------------------------+----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 20261028_task04_initial   | 1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501 | 2026-10-28 13:18:45.061066+01 | 2026-10-28 13:18:45.132994+01 |                | 
+ 20261028_task04_user_name | 482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33 | 2026-10-28 14:04:36.829231+01 |                               |                | A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve                                                                                                                                                                                            +
+                           |                                                                  |                               |                               |                |                                                                                                                                                                                                                                                                                                                                                                                                          +
+                           |                                                                  |                               |                               |                | Migration name: 20261028_task04_user_name                                                                                                                                                                                                                                                                                                                                                                +
+                           |                                                                  |                               |                               |                |                                                                                                                                                                                                                                                                                                                                                                                                          +
+                           |                                                                  |                               |                               |                | Database error code: 23502                                                                                                                                                                                                                                                                                                                                                                               +
+                           |                                                                  |                               |                               |                |                                                                                                                                                                                                                                                                                                                                                                                                          +
+                           |                                                                  |                               |                               |                | Database error:                                                                                                                                                                                                                                                                                                                                                                                          +
+                           |                                                                  |                               |                               |                | ERROR: column "name" of relation "User" contains null values                                                                                                                                                                                                                                                                                                                                             +
+                           |                                                                  |                               |                               |                |                                                                                                                                                                                                                                                                                                                                                                                                          +
+                           |                                                                  |                               |                               |                | DbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E23502), message: "column \"name\" of relation \"User\" contains null values", detail: None, hint: None, position: None, where_: None, schema: Some("task04_test"), table: Some("User"), column: Some("name"), datatype: None, constraint: None, file: Some("tablecmds.c"), line: Some(6120), routine: Some("ATRewriteTable") }+
+                           |                                                                  |                               |                               |                |                                                                                                                                                                                                                                                                                                                                                                                                          +
+                           |                                                                  |                               |                               |                |    0: sql_schema_connector::apply_migration::apply_script                                                                                                                                                                                                                                                                                                                                                +
+                           |                                                                  |                               |                               |                |            with migration_name="20261028_task04_user_name"                                                                                                                                                                                                                                                                                                                                               +
+                           |                                                                  |                               |                               |                |              at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113                                                                                                                                                                                                                                                                                                                 +
+                           |                                                                  |                               |                               |                |    1: schema_commands::commands::apply_migrations::Applying migration                                                                                                                                                                                                                                                                                                                                    +
+                           |                                                                  |                               |                               |                |            with migration_name="20261028_task04_user_name"                                                                                                                                                                                                                                                                                                                                               +
+                           |                                                                  |                               |                               |                |              at schema-engine/commands/src/commands/apply_migrations.rs:95                                                                                                                                                                                                                                                                                                                               +
+                           |                                                                  |                               |                               |                |    2: schema_core::state::ApplyMigrations                                                                                                                                                                                                                                                                                                                                                                +
+                           |                                                                  |                               |                               |                |              at schema-engine/core/src/state.rs:255
+(2 rows)
+
+SELECT column_name,data_type,is_nullable,column_default FROM information_schema.columns
+WHERE table_schema='task04_test' AND table_name='User' ORDER BY ordinal_position;
+  column_name   |        data_type         | is_nullable | column_default 
+----------------+--------------------------+-------------+----------------
+ id             | text                     | NO          | 
+ emailCanonical | text                     | NO          | 
+ createdAt      | timestamp with time zone | NO          | 
+(3 rows)
+
+COMMIT;
+COMMIT
+after_verification_exit_status=0
+STOP FOR REVIEW: assess the actual required-column diagnostic; recovery is not run.
+run_exit_status=1
+capture_exit_status=0
