@@ -2,29 +2,31 @@
 
 **V1.0 CANDIDATE — OWNER/LEGAL REVIEW PENDING — NOT PUBLIC — NOT EFFECTIVE**
 
-No effective date has been assigned. Company-operated SaaS is the owner-approved product direction; this text has not received legal or publication approval and has not been accepted by users. Operational clauses describe the proposed service when the relevant features are released, not features available today.
+No effective date has been assigned. This revision follows the owner-approved decision to operate StitchTrack initially as an individual. The legal text has not received publication approval and has not been accepted by users. Clauses about unreleased features describe the intended service, not features available today.
 
 ## 1. Operator and current availability
 
-StitchTrack is being developed for independent tailors, small fashion studios and their clients in Nigeria. A Nigerian company will be registered before public launch and will be the contracting platform operator. StitchTrack is the product brand, which may differ from the company's legal name. This does not confirm incorporation or CAC registration. A private company limited by shares remains the preferred structure, subject to final registration choices and advice.
+StitchTrack is being developed for independent tailors, small fashion studios and their clients in Nigeria. It will initially be operated personally by its individual owner. StitchTrack is the product brand, not an assumed registered company or separate contracting entity. No incorporation or business-name registration is asserted here.
 
-[OWNER DECISION REQUIRED: Insert the actual registered operator's legal name, registration number, legal form, service address and monitored support/complaints contact; confirm its authority to contract.]
+[OWNER DECISION REQUIRED: Confirm the individual operator's full legal name, appropriate service/contact address, monitored support/complaints contact and privacy-request channel. Confirm applicable business-name and brand requirements before public operation; do not invent registration particulars.]
 
-The public-facing authentication interface remains unavailable for real registration, sign-in or recovery. Internal account-registration, verification and encrypted email-queue services have been implemented and tested in an isolated product-test environment. Separate SMTP transport tests have sent synthetic messages to an owner-controlled mailbox. These tests do not make the service publicly operational or establish acceptance of these Terms. Client, garment, payment, export and deletion workflows are not currently offered.
+StitchTrack has not publicly launched. Restricted local development supports tailor registration, email-code verification, login, session lookup and logout through the implemented backend. Email delivery uses an encrypted queue and a separately started SMTP worker. Availability depends on valid configuration and security checks; these implementations and scoped tests do not establish production readiness. Client access, garment/order management, manual payment recording, customer-record export and complete account deletion are not yet released. Password reset is also not operational.
 
 ## 2. Platform contract and account responsibility
 
-The proposed platform contract is between the registered operator and the tailoring business through its authorized representative. Garment agreements remain between the tailor and client. Clients will use authorized portal access under the applicable platform-use conditions; their precise contractual position and capacity safeguards must be settled before launch.
+The intended platform contract is between the identified individual operator and the tailor, or the tailoring business acting through an authorized representative. Garment agreements remain between the tailor and client. Clients will use authorized portal access under the applicable platform-use conditions; their precise contractual position and capacity safeguards must be settled before launch.
 
 [OWNER DECISION REQUIRED: Confirm contracting/representation authority, client platform-use conditions and eligibility/capacity arrangements, including handling anyone unable to contract independently.]
 
-Operational registration will require affirmative acceptance of the specific approved Platform Terms version. A draft-review checkbox, reading a Privacy Policy or approving a garment agreement is not that acceptance. Privacy notices explain processing; any consent needed for a particular purpose is separate.
+Normal registration, when approved for release, must require affirmative acceptance of a specific approved Platform Terms version, with the Privacy Policy accessible before submission. The explicitly restricted development-only registration mode currently defers legal consent collection and creates no Terms acceptance record. It does not treat these candidates, synthetic test versions or the historical draft-review checkbox as approved Terms.
+
+Reading a Privacy Policy or approving a garment agreement is not Platform Terms acceptance. Privacy notices explain processing; any consent needed for a particular purpose is separate.
 
 Users of operational accounts will be responsible for providing accurate information, protecting passwords, codes and invitations, using only authorized access and reporting suspected compromise through the confirmed channel. These responsibilities do not remove the operator's security duties or automatically make a user liable for every action on a compromised account.
 
 ## 3. Intended account and client access
 
-Tailor Signup uses a personal/display name, email and password. A business name is collected separately during business setup. Tailors must verify control of their email through a six-digit code before signing in or accessing business features. Codes retain leading zeros; the intended controls include five-minute expiry, three invalid attempts, a 60-second resend cooldown and account/IP limits. An unverified account is not authorization to use business features. Public sign-in, recovery and their complete operational controls remain unavailable.
+Tailor Signup uses a personal/display name, email and password. A business name will be collected separately during business setup. Tailors must verify control of their email through a six-digit code before signing in or accessing business features. Codes retain leading zeros. Implemented local controls include five-minute expiry, three invalid attempts, a 60-second resend cooldown and shared account/IP rate limits. Registration and successful email verification do not create an authenticated session; a separate login is required. An authenticated identity alone does not authorize access to business records. Public authentication remains disabled, and password recovery is not operational.
 
 Clients will not register passwords. They will use a private invitation from their tailor plus email verification. Each invitation must authorize the particular business relationship; matching email addresses or phone numbers alone is insufficient. Incorrect email details require a new verification process.
 
@@ -66,7 +68,7 @@ For operational use, material functionality or Terms changes would be explained 
 
 [OWNER DECISION REQUIRED: Confirm fair notice, pilot change/discontinuation arrangements, communication channels, access to prior versions and fresh-acceptance procedures.]
 
-## 8. Suspension, closure and records
+## 8. Suspension, termination, deletion and records
 
 The proposed operational approach permits proportionate restrictions for reasonably suspected unauthorized access, misuse, material breach or a legal requirement. Where lawful and safe, affected users would receive an understandable reason and a review route; urgent protective action may precede notice. Restrictions must not defeat statutory rights.
 
@@ -74,7 +76,7 @@ The intended closure process must distinguish ending access from erasing data, c
 
 [OWNER DECISION REQUIRED: Establish authorized requesters, suspension/review and closure procedures, safe notice exceptions, effects on pending orders/linked clients, and practical access/export/deletion arrangements.]
 
-No closure, customer-record export or automated customer-data deletion service is currently offered. These clauses do not promise an immediate export, deletion or restoration of access.
+Internal account-locking services can refuse login, reject existing sessions and revoke sessions together. This is not a completed public suspension or account-deletion procedure and does not erase stored data. Customer-record export, retention-aware deletion, anonymisation, scheduled purge and restoration workflows are not released. No immediate export, deletion or restoration deadline is promised.
 
 ## 9. Complaints and disputes
 
@@ -88,4 +90,4 @@ No support response deadline or automatic dispute-resolution service is promised
 
 Platform Terms acceptance, receipt of privacy information, purpose-specific consent and client garment approval are separate actions. Nothing in these Terms excludes rights or remedies that cannot lawfully be excluded or excuses the operator's unlawful conduct. No blanket indemnity or liability cap is introduced.
 
-The [Privacy Policy candidate](privacy-policy-v1.0-candidate.md) distinguishes current processing from intended operational use. Both candidates require the factual and qualified review in the [single launch-approval checklist](terms-note.md#launch-approval-checklist). Neither is published, effective or substituted for the historical draft preview. Internal planning targets are not incorporated as public response, retention, export or notice guarantees.
+The [Privacy Policy candidate](privacy-policy-v1.0-candidate.md) distinguishes current processing from intended operational use. The identity, contact and operational gaps marked here require owner confirmation and qualified Nigerian legal/privacy review before an approved version can be published. Review must cover the individual operator, applicable business-name requirements, contract fairness, privacy responsibilities and statutory remedies. Neither candidate is published, effective or substituted for the historical draft preview. Internal planning targets are not public response, retention, export or notice guarantees.
