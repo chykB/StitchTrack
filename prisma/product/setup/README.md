@@ -1,6 +1,8 @@
 # Owner-only product PostgreSQL setup
 
-**Local setup verified — October 29, 2026.** The status below records the completed local setup. The numbered sections that follow remain reusable instructions for provisioning and verifying fresh environments; do not replay them against the completed local databases.
+**Historical local setup verified - October 29, 2026.** The status below records that completed initial setup. Sections 1-6 preserve its original controlled sequence; they are not a current fresh-install recipe and must not be replayed against the completed databases.
+
+The current manifest admits three migrations. A fresh `migrate deploy` now applies that inventory, whereas original base/Session/worker grant guards require initial-only history and rate-limit guards require their two-migration stage. Review fresh-install sequencing and current ACLs separately; do not bypass guards, remove history, edit applied SQL or blindly reapply grants. Product-test later completed all three migrations and the owner-run registration/SMTP/OTP/login/session journey. Later development grants are not inferred.
 
 ## Completed local setup
 
@@ -11,9 +13,9 @@
 - Synthetic integration-test data remains in the test database.
 - The development database has no approved public Terms version; public registration remains disabled.
 
-No public signup, SMTP or real customer data is authorized. The [initial SQL](../migrations/20261029_product_auth_initial/migration.sql) and [PRD](../../../docs/PRD.md) are unchanged. Use WSL Node 24 and the existing PostgreSQL 16 cluster on port 5432 for a fresh environment. Commands assume its reviewed local administrator is accessible as OS user postgres; if that is not your setup, stop rather than guess another identity/cluster.
+This historical setup record authorizes no new public signup, SMTP send or customer-data processing. The later owner-controlled development delivery test is a separate completed milestone. The [initial SQL](../migrations/20261029_product_auth_initial/migration.sql) and [PRD](../../../docs/PRD.md) are unchanged. Use WSL Node 24 and the existing PostgreSQL 16 cluster on port 5432 for a fresh environment. Commands assume its reviewed local administrator is accessible as OS user postgres; if that is not your setup, stop rather than guess another identity/cluster.
 
-## Fresh-environment setup instructions
+## Historical initial-only setup sequence (retained commands)
 
 ### 1. Inspect before any change
 
@@ -115,7 +117,7 @@ Stop on any status failure. Then apply [permissions.sql](permissions.sql) as the
 
 It verifies target/owner/successful history first. Runtime gets SELECT on all eight domain tables, INSERT on the six registration tables, DELETE only on transient Verification, and column updates only for User verification, issuance attempts/terminal markers and outbox cancellation. Session and migration-history writes are denied; history SELECT is denied too. TermsAcceptance has no UPDATE/DELETE. Development TermsVersion is SELECT-only. Test alone additionally receives INSERT on the five synthetic artifact fields, never approvedAt/effectiveAt, UPDATE or DELETE. This is an isolated test-fixture exception, not operational policy approval.
 
-Rerun the read-only preflight on test to inspect actual ACLs/ownership. Do not infer success from the SQL file. Current grants intentionally do not support future login sessions, reset or workers; review those capabilities when implemented.
+Rerun the read-only preflight on test to inspect actual ACLs/ownership. Do not infer success from the SQL file. Those original base grants intentionally omitted Session insertion/deletion and worker reservation/delivery updates. Later reviewed test-only grants and successful proofs enabled sessions, locking, counters and development delivery. Reset remains unimplemented. This historical base-grant command is not authority to reapply permissions after later migrations.
 
 ### 5. Owner-authorized integration
 

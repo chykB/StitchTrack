@@ -18,6 +18,8 @@ model User {
   name String @db.Text
   email String @unique @map("emailCanonical") @db.Text
   emailVerified Boolean @default(false)
+  disabledAt DateTime? @db.Timestamptz(3)
+  deletionRequestedAt DateTime? @db.Timestamptz(3)
   image String? @db.Text
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
@@ -139,5 +141,18 @@ model EmailVerificationIssuance {
   outbox EmailOutbox?
   @@index([userId,createdAt])
   @@index([expiresAt])
+  @@schema("product")
+}
+// Shared authentication abuse counters; no user FK (unknown accounts count too).
+// Additive proposal only. Policy changes require a new scoped key version.
+model AuthRateBucket {
+  keyDigest String @id @db.Text
+  capacity Int
+  refillIntervalMs Int
+  tokens Int
+  refilledAt DateTime @db.Timestamptz(3)
+  expiresAt DateTime @db.Timestamptz(3)
+  lastAllowed Boolean
+  @@index([expiresAt, keyDigest])
   @@schema("product")
 }

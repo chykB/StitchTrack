@@ -81,7 +81,7 @@ test("installed public exports resolve at 1.7.7 with Prisma 7.10.1 pins", () => 
   for (const name of ["prisma", "@prisma/client"]) assert.equal(JSON.parse(readFileSync(new URL("../../node_modules/" + name + "/package.json", import.meta.url), "utf8")).version, "7.10.1");
   assert.equal(typeof betterAuth, "function"); assert.equal(typeof prismaAdapter, "function"); assert.equal(typeof emailOTP, "function");
 });
-test("all installed core scalar fields/types/nullability fit the proposed eight-table schema", () => {
+test("all installed core scalar fields/types/nullability fit the product schema with independent abuse counters", () => {
   const schema = readFileSync(new URL("../../prisma/product/schema.prisma", import.meta.url), "utf8");
   const models = Object.fromEntries([...schema.matchAll(/^model (\w+) \{([\s\S]*?)^\}/gmu)].map(([, name, body]) => [name, body]));
   const types = {string: "String", boolean: "Boolean", date: "DateTime", number: "Int"};
@@ -96,7 +96,8 @@ test("all installed core scalar fields/types/nullability fit the proposed eight-
       if (options.required) assert.ok(!line.trim().startsWith(field + " " + types[options.type] + "?"), name + "." + field);
     }
   }
-  assert.equal(Object.keys(models).length, 8);
+  assert.equal(Object.keys(models).length, 9);
+  assert.ok(models.AuthRateBucket);
   assert.match(models.User, /email String @unique @map\("emailCanonical"\)/u);
   assert.match(models.Account, /@@unique\(\[providerId,accountId\]\)/u);
   assert.match(models.Session, /token String @unique/u);
