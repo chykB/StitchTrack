@@ -1,0 +1,8 @@
+1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501  task-04-server-security/prisma/migrations/20261028_task04_initial/migration.sql
+482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33  task-04-server-security/prisma/migrations/20261028_task04_user_name/migration.sql
+50e4c06d51145fd9392b5c7d1c732a4834366fff4dacc889f5e26c50adff3c84  task-04-server-security/experiments/required-column/recovery/01-add-nullable.sql
+08be00cce947c9d3a6eb528eb13ebe4cfc615817f68d12cfef5bed6c12601a61  task-04-server-security/experiments/required-column/recovery/02-backfill.sql
+6a88f76df3a623c3c4ca6f169e60d349ff01958ec2a3e167dac0477e81fc91c1  task-04-server-security/experiments/required-column/recovery/03-require-name.sql
+99d8ba9f331d0b4f964e4f881507fdc56b7710bc8a29faaa04ec1e8bd242c81a  task-04-server-security/experiments/required-column/recovery/preconditions.sql
+7a9afe8876c6ab5d30511345c0da1eec80be6e07c34b9397e5511d72e6620acc  task-04-server-security/experiments/required-column/recovery/report.sql
+fdfc0d4933aed5ed8b6ec029e5166df4826847400e2172faa9b1f7f84ec3b1d4  task-04-server-security/experiments/required-column/recovery/verify-unchanged.sql

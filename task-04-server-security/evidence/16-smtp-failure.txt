@@ -1,0 +1,35 @@
+EVIDENCE 16 - Genuine SMTP Authentication Failure
+
+Date: 29 October 2026
+Environment: StitchTrack local development, WSL, Node.js 24
+SMTP provider: Gmail
+Connection: Port 587, STARTTLS
+Test type: Owner-executed live SMTP authentication failure
+
+TEST PROCEDURE (OWNER-REPORTED)
+The existing StitchTrack Nodemailer transport was invoked with a deliberately
+invalid SMTP password supplied in memory. The actual Gmail App Password in
+.env.local was preserved unchanged. The test used a synthetic six-digit
+verification code and did not access PostgreSQL.
+
+ACTUAL TERMINAL OUTPUT (OWNER TRANSCRIPTION)
+PASS: Gmail rejected invalid SMTP credentials (EAUTH)
+PASS: StitchTrack sanitized the authentication failure
+SMTP failure evidence: confirmed
+
+OWNER-OBSERVED RESULT
+Gmail rejected authentication with the EAUTH error category. StitchTrack
+converted the underlying failure into the sanitized application error
+email_delivery_unconfirmed, without exposing credentials or raw provider
+responses.
+
+LIMITATIONS AND PROVENANCE
+This demonstrates authentication-failure handling, not every possible SMTP
+failure. No successful delivery occurred during this test. No automatic retry
+or background worker was involved. Public registration remained disabled.
+
+The terminal output was supplied by the owner as a transcription of the actual
+owner-run test. No simulated SMTP result was substituted. The agent did not
+execute or independently reproduce it and did not read .env.local. No raw
+terminal log, exact command, exact test time or exit status was supplied;
+none has been reconstructed or invented.

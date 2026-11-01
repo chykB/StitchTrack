@@ -1,0 +1,134 @@
+SECOND RESOLUTION ATTEMPT - first attempt failed authentication
+Started: 2026-10-28T14:12:48Z
+Command: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON task-04-server-security/scripts/resolve-required-name.mjs --owner-resolve-required-name
+
+READ-ONLY before inspection; command arguments: ["--no-psqlrc","--password","--host=127.0.0.1","--port=5432","--dbname=stitchtrack_assessment","--username=stitchtrack_task04_test_app","--set=ON_ERROR_STOP=on","--set=VERBOSITY=verbose","--pset=pager=off","--quiet","--tuples-only","--no-align","--file=task-04-server-security/experiments/required-column/resolution/inspect.sql"]
+-- OWNER ONLY, read-only inspection; does not resolve or repair history.
+BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '30s';
+SET LOCAL search_path = pg_catalog;
+DO LANGUAGE plpgsql $inspect$
+BEGIN
+  IF current_database()<>'stitchtrack_assessment' OR CURRENT_USER<>'stitchtrack_task04_test_app' THEN
+    RAISE EXCEPTION 'Exact Task Four main database/role required'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace n JOIN pg_roles r ON r.oid=n.nspowner
+    WHERE n.nspname='task04_test' AND r.rolname=CURRENT_USER) THEN
+    RAISE EXCEPTION 'Task Four schema ownership mismatch'; END IF;
+  IF current_setting('server_encoding')<>'UTF8' THEN RAISE EXCEPTION 'UTF8 required'; END IF;
+  IF (SELECT count(*) FROM pg_attribute a WHERE a.attrelid='"task04_test"."User"'::regclass
+    AND a.attnum>0 AND NOT a.attisdropped)<>4 OR
+    (SELECT count(*) FROM pg_attribute a WHERE a.attrelid='"task04_test"."User"'::regclass
+      AND a.attnum>0 AND NOT a.attisdropped AND a.attnotnull AND NOT a.atthasdef AND (
+        (a.attname IN ('id','emailCanonical','name') AND a.atttypid='text'::regtype) OR
+        (a.attname='createdAt' AND a.atttypid='timestamptz'::regtype AND a.atttypmod=3)))<>4 THEN
+    RAISE EXCEPTION 'Expected recovered four-column User with required TEXT name and no default'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint c JOIN pg_attribute a
+    ON a.attrelid=c.conrelid AND a.attname='name' AND NOT a.attisdropped
+    WHERE c.conrelid='"task04_test"."User"'::regclass AND c.conname='User_name_nonblank_check'
+      AND c.contype='c' AND c.convalidated AND c.conkey=ARRAY[a.attnum]
+      AND pg_get_expr(c.conbin,c.conrelid)=format('(btrim(name, %L::text) <> %L::text)',
+        U&'\0009\000A\000B\000C\000D\0020\0085\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '')) THEN
+    RAISE EXCEPTION 'Exact validated nonblank name CHECK required; inspect actual expression before proceeding'; END IF;
+  IF (SELECT count(*) FROM "task04_test"."User")<>2 OR
+    (SELECT count(*) FROM "task04_test"."User" WHERE
+      ("id"='task04-required-name-01' AND "emailCanonical"='required-name-01@example.invalid' AND "name"='Synthetic User 01') OR
+      ("id"='task04-required-name-02' AND "emailCanonical"='required-name-02@example.invalid' AND "name"='Synthetic User 02'))<>2 THEN
+    RAISE EXCEPTION 'Both original synthetic users and deterministic nonblank names are required'; END IF;
+END;
+$inspect$;
+-- One JSON result for independent before/after comparison; original logs included.
+SELECT jsonb_build_object(
+  'database',current_database(), 'role',CURRENT_USER,
+  'columns',(SELECT jsonb_agg(jsonb_build_object('name',attname,'type',format_type(atttypid,atttypmod),
+    'required',attnotnull,'default',atthasdef) ORDER BY attnum)
+    FROM pg_attribute WHERE attrelid='"task04_test"."User"'::regclass AND attnum>0 AND NOT attisdropped),
+  'constraints',(SELECT jsonb_agg(jsonb_build_object('name',conname,'validated',convalidated,
+    'definition',pg_get_constraintdef(oid)) ORDER BY conname)
+    FROM pg_constraint WHERE conrelid='"task04_test"."User"'::regclass),
+  'indexes',(SELECT jsonb_agg(jsonb_build_object('name',indexname,'definition',indexdef) ORDER BY indexname)
+    FROM pg_indexes WHERE schemaname='task04_test' AND tablename='User'),
+  'users',(SELECT jsonb_agg(to_jsonb(u) ORDER BY u.id) FROM "task04_test"."User" u),
+  'history',(SELECT jsonb_agg(to_jsonb(m) ORDER BY m.started_at,m.id) FROM "task04_test"."_prisma_migrations" m)
+);
+COMMIT;
+
+{"role": "stitchtrack_task04_test_app", "users": [{"id": "task04-required-name-01", "name": "Synthetic User 01", "createdAt": "2026-10-28T14:04:28.304+01:00", "emailCanonical": "required-name-01@example.invalid"}, {"id": "task04-required-name-02", "name": "Synthetic User 02", "createdAt": "2026-10-28T14:04:28.304+01:00", "emailCanonical": "required-name-02@example.invalid"}], "columns": [{"name": "id", "type": "text", "default": false, "required": true}, {"name": "emailCanonical", "type": "text", "default": false, "required": true}, {"name": "createdAt", "type": "timestamp(3) with time zone", "default": false, "required": true}, {"name": "name", "type": "text", "default": false, "required": true}], "history": [{"id": "bb1d3fb7-90cf-4fc5-b7e3-6fdb00b1f878", "logs": null, "checksum": "1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501", "started_at": "2026-10-28T13:18:45.061066+01:00", "finished_at": "2026-10-28T13:18:45.132994+01:00", "migration_name": "20261028_task04_initial", "rolled_back_at": null, "applied_steps_count": 1}, {"id": "e91a14f3-686e-4929-8e3f-bcec0baaff30", "logs": "A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20261028_task04_user_name\n\nDatabase error code: 23502\n\nDatabase error:\nERROR: column \"name\" of relation \"User\" contains null values\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E23502), message: \"column \\\"name\\\" of relation \\\"User\\\" contains null values\", detail: None, hint: None, position: None, where_: None, schema: Some(\"task04_test\"), table: Some(\"User\"), column: Some(\"name\"), datatype: None, constraint: None, file: Some(\"tablecmds.c\"), line: Some(6120), routine: Some(\"ATRewriteTable\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:255", "checksum": "482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33", "started_at": "2026-10-28T14:04:36.829231+01:00", "finished_at": null, "migration_name": "20261028_task04_user_name", "rolled_back_at": null, "applied_steps_count": 0}], "indexes": [{"name": "User_emailCanonical_key", "definition": "CREATE UNIQUE INDEX \"User_emailCanonical_key\" ON task04_test.\"User\" USING btree (\"emailCanonical\")"}, {"name": "User_pkey", "definition": "CREATE UNIQUE INDEX \"User_pkey\" ON task04_test.\"User\" USING btree (id)"}], "database": "stitchtrack_assessment", "constraints": [{"name": "User_emailCanonical_nonblank_check", "validated": true, "definition": "CHECK ((btrim(\"emailCanonical\", '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"}, {"name": "User_name_nonblank_check", "validated": true, "definition": "CHECK ((btrim(name, '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"}, {"name": "User_pkey", "validated": true, "definition": "PRIMARY KEY (id)"}]}
+before_inspection_exit_status=0
+Command: ./node_modules/.bin/prisma migrate resolve --applied 20261028_task04_user_name --config task-04-server-security/prisma/prisma.config.ts
+Loaded Prisma config from task-04-server-security/prisma/prisma.config.ts.
+
+Prisma schema loaded from task-04-server-security/prisma/schema.prisma.
+Datasource "db": PostgreSQL database "stitchtrack_assessment", schemas "task04_test" at "127.0.0.1:5432"
+
+Migration 20261028_task04_user_name marked as applied.
+
+resolve_exit_status=0
+
+READ-ONLY after inspection; command arguments: ["--no-psqlrc","--password","--host=127.0.0.1","--port=5432","--dbname=stitchtrack_assessment","--username=stitchtrack_task04_test_app","--set=ON_ERROR_STOP=on","--set=VERBOSITY=verbose","--pset=pager=off","--quiet","--tuples-only","--no-align","--file=task-04-server-security/experiments/required-column/resolution/inspect.sql"]
+-- OWNER ONLY, read-only inspection; does not resolve or repair history.
+BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '30s';
+SET LOCAL search_path = pg_catalog;
+DO LANGUAGE plpgsql $inspect$
+BEGIN
+  IF current_database()<>'stitchtrack_assessment' OR CURRENT_USER<>'stitchtrack_task04_test_app' THEN
+    RAISE EXCEPTION 'Exact Task Four main database/role required'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace n JOIN pg_roles r ON r.oid=n.nspowner
+    WHERE n.nspname='task04_test' AND r.rolname=CURRENT_USER) THEN
+    RAISE EXCEPTION 'Task Four schema ownership mismatch'; END IF;
+  IF current_setting('server_encoding')<>'UTF8' THEN RAISE EXCEPTION 'UTF8 required'; END IF;
+  IF (SELECT count(*) FROM pg_attribute a WHERE a.attrelid='"task04_test"."User"'::regclass
+    AND a.attnum>0 AND NOT a.attisdropped)<>4 OR
+    (SELECT count(*) FROM pg_attribute a WHERE a.attrelid='"task04_test"."User"'::regclass
+      AND a.attnum>0 AND NOT a.attisdropped AND a.attnotnull AND NOT a.atthasdef AND (
+        (a.attname IN ('id','emailCanonical','name') AND a.atttypid='text'::regtype) OR
+        (a.attname='createdAt' AND a.atttypid='timestamptz'::regtype AND a.atttypmod=3)))<>4 THEN
+    RAISE EXCEPTION 'Expected recovered four-column User with required TEXT name and no default'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint c JOIN pg_attribute a
+    ON a.attrelid=c.conrelid AND a.attname='name' AND NOT a.attisdropped
+    WHERE c.conrelid='"task04_test"."User"'::regclass AND c.conname='User_name_nonblank_check'
+      AND c.contype='c' AND c.convalidated AND c.conkey=ARRAY[a.attnum]
+      AND pg_get_expr(c.conbin,c.conrelid)=format('(btrim(name, %L::text) <> %L::text)',
+        U&'\0009\000A\000B\000C\000D\0020\0085\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '')) THEN
+    RAISE EXCEPTION 'Exact validated nonblank name CHECK required; inspect actual expression before proceeding'; END IF;
+  IF (SELECT count(*) FROM "task04_test"."User")<>2 OR
+    (SELECT count(*) FROM "task04_test"."User" WHERE
+      ("id"='task04-required-name-01' AND "emailCanonical"='required-name-01@example.invalid' AND "name"='Synthetic User 01') OR
+      ("id"='task04-required-name-02' AND "emailCanonical"='required-name-02@example.invalid' AND "name"='Synthetic User 02'))<>2 THEN
+    RAISE EXCEPTION 'Both original synthetic users and deterministic nonblank names are required'; END IF;
+END;
+$inspect$;
+-- One JSON result for independent before/after comparison; original logs included.
+SELECT jsonb_build_object(
+  'database',current_database(), 'role',CURRENT_USER,
+  'columns',(SELECT jsonb_agg(jsonb_build_object('name',attname,'type',format_type(atttypid,atttypmod),
+    'required',attnotnull,'default',atthasdef) ORDER BY attnum)
+    FROM pg_attribute WHERE attrelid='"task04_test"."User"'::regclass AND attnum>0 AND NOT attisdropped),
+  'constraints',(SELECT jsonb_agg(jsonb_build_object('name',conname,'validated',convalidated,
+    'definition',pg_get_constraintdef(oid)) ORDER BY conname)
+    FROM pg_constraint WHERE conrelid='"task04_test"."User"'::regclass),
+  'indexes',(SELECT jsonb_agg(jsonb_build_object('name',indexname,'definition',indexdef) ORDER BY indexname)
+    FROM pg_indexes WHERE schemaname='task04_test' AND tablename='User'),
+  'users',(SELECT jsonb_agg(to_jsonb(u) ORDER BY u.id) FROM "task04_test"."User" u),
+  'history',(SELECT jsonb_agg(to_jsonb(m) ORDER BY m.started_at,m.id) FROM "task04_test"."_prisma_migrations" m)
+);
+COMMIT;
+
+{"role": "stitchtrack_task04_test_app", "users": [{"id": "task04-required-name-01", "name": "Synthetic User 01", "createdAt": "2026-10-28T14:04:28.304+01:00", "emailCanonical": "required-name-01@example.invalid"}, {"id": "task04-required-name-02", "name": "Synthetic User 02", "createdAt": "2026-10-28T14:04:28.304+01:00", "emailCanonical": "required-name-02@example.invalid"}], "columns": [{"name": "id", "type": "text", "default": false, "required": true}, {"name": "emailCanonical", "type": "text", "default": false, "required": true}, {"name": "createdAt", "type": "timestamp(3) with time zone", "default": false, "required": true}, {"name": "name", "type": "text", "default": false, "required": true}], "history": [{"id": "bb1d3fb7-90cf-4fc5-b7e3-6fdb00b1f878", "logs": null, "checksum": "1b2b7b3a988511ac6b73e7f82092e0a31807cb84ad3b385e896da7b0b0a88501", "started_at": "2026-10-28T13:18:45.061066+01:00", "finished_at": "2026-10-28T13:18:45.132994+01:00", "migration_name": "20261028_task04_initial", "rolled_back_at": null, "applied_steps_count": 1}, {"id": "e91a14f3-686e-4929-8e3f-bcec0baaff30", "logs": "A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20261028_task04_user_name\n\nDatabase error code: 23502\n\nDatabase error:\nERROR: column \"name\" of relation \"User\" contains null values\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E23502), message: \"column \\\"name\\\" of relation \\\"User\\\" contains null values\", detail: None, hint: None, position: None, where_: None, schema: Some(\"task04_test\"), table: Some(\"User\"), column: Some(\"name\"), datatype: None, constraint: None, file: Some(\"tablecmds.c\"), line: Some(6120), routine: Some(\"ATRewriteTable\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20261028_task04_user_name\"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:255", "checksum": "482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33", "started_at": "2026-10-28T14:04:36.829231+01:00", "finished_at": null, "migration_name": "20261028_task04_user_name", "rolled_back_at": "2026-10-28T15:12:55.604315+01:00", "applied_steps_count": 0}, {"id": "9d8fa5d0-6dfc-4458-9e79-82f0ddfff9c8", "logs": "", "checksum": "482f61d709079ac088dda61c1d901d17a4d6f42dd3cd81c690211ad03f105e33", "started_at": "2026-10-28T15:12:55.606809+01:00", "finished_at": "2026-10-28T15:12:55.606809+01:00", "migration_name": "20261028_task04_user_name", "rolled_back_at": null, "applied_steps_count": 0}], "indexes": [{"name": "User_emailCanonical_key", "definition": "CREATE UNIQUE INDEX \"User_emailCanonical_key\" ON task04_test.\"User\" USING btree (\"emailCanonical\")"}, {"name": "User_pkey", "definition": "CREATE UNIQUE INDEX \"User_pkey\" ON task04_test.\"User\" USING btree (id)"}], "database": "stitchtrack_assessment", "constraints": [{"name": "User_emailCanonical_nonblank_check", "validated": true, "definition": "CHECK ((btrim(\"emailCanonical\", '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"}, {"name": "User_name_nonblank_check", "validated": true, "definition": "CHECK ((btrim(name, '\t\n\u000b\f\r                  　﻿'::text) <> ''::text))"}, {"name": "User_pkey", "validated": true, "definition": "PRIMARY KEY (id)"}]}
+after_inspection_exit_status=0
+Command: ./node_modules/.bin/prisma migrate status --config task-04-server-security/prisma/prisma.config.ts
+Loaded Prisma config from task-04-server-security/prisma/prisma.config.ts.
+
+Prisma schema loaded from task-04-server-security/prisma/schema.prisma.
+Datasource "db": PostgreSQL database "stitchtrack_assessment", schemas "task04_test" at "127.0.0.1:5432"
+
+2 migrations found in prisma/migrations
+
+Database schema is up to date!
+status_exit_status=0
+STOP FOR REVIEW: command/status returned zero and original diagnostics/users are preserved. Inspect the real records.
+owner_wrapper_exit_status=0
+run_exit_status=0
+capture_exit_status=0

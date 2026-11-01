@@ -2,13 +2,15 @@
 
 **Internal decision record | Owner-directed preparation | NOT LEGAL APPROVAL / NOT PUBLIC POLICY**
 
-Source: the owner's current instruction, checked on `feat/task-03-auth-foundation` at `d62ced0` against the authoritative, read-only [PRD](../../docs/PRD.md). Agreed direction does not establish completed registration, implemented procedures or approved public wording.
+Historical source: the earlier owner-directed company proposal was checked on `feat/task-03-auth-foundation` at `d62ced0` against the authoritative, read-only [PRD](../../docs/PRD.md). The newer individual-operation decision below supersedes that proposal. Neither decision constitutes legal approval, incorporation or public launch.
 
 The [Platform Terms](platform-terms-v1.0-candidate.md) and [Privacy Policy](privacy-policy-v1.0-candidate.md) remain unapproved v1.0 candidates without effective dates or user acceptance. This record does not amend the PRD, publish a policy or activate an application feature.
 
 ## A. Operator identity and authority
 
-### Agreed direction
+### Historical company proposal (superseded)
+
+The following was the earlier direction, not the current operating arrangement or proof of incorporation:
 
 - StitchTrack will operate through a Nigerian company registered before public launch. This is a launch condition, not confirmation that registration has happened.
 - A private company limited by shares is the preferred structure, pending incorporation advice and the owner's final registration choices.
@@ -16,11 +18,16 @@ The [Platform Terms](platform-terms-v1.0-candidate.md) and [Privacy Policy](priv
 - The actual registered company will be the platform contracting party. Tailoring businesses will contract with that operator for platform services.
 - Garment agreements remain between tailors and clients. Platform Terms acceptance cannot approve or amend a garment agreement.
 
+### Current owner decision: individual operation
+
+- The owner will initially operate StitchTrack personally during the private assessment/pilot. No registered company, business name or separate legal entity is assumed.
+- StitchTrack remains the product brand. Operator name, appropriate address, contractual authority and monitored service/privacy contacts require factual confirmation; none is invented here.
+- Company formation is not a prerequisite for continuing restricted development. This does not authorize public launch, establish registration status or settle applicable legal requirements.
+- Platform Terms remain distinct from tailor-client garment agreements. The Terms and Privacy v1.0 candidates remain **OWNER/LEGAL REVIEW PENDING, NOT PUBLIC and NOT EFFECTIVE**, without an effective date.
+
 ### Facts and review still required
 
-The actual company legal name, registration number/status, appropriate address, authority to contract and working service/privacy contact channels remain unresolved. The current website's responsible operator/controller must be identified separately rather than retroactively assumed to be an unverified future company.
-
-Qualified Nigerian advice must confirm structure, brand/registration arrangements, contractual authority, eligibility/capacity and client platform-use conditions. The preferred form is not a final registration choice or a verified fact.
+Qualified Nigerian review must address individual operator identification, any applicable business-name/brand requirements, contractual authority, eligibility/capacity and client platform-use conditions. A future decision to incorporate would require a new reviewed operator/policy transition. Current local consent deferral records no Terms acceptance; normal registration must require genuine acceptance of an approved Terms version, with the Privacy Policy accessible.
 
 ## B. Data and privacy arrangements
 

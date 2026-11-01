@@ -1,0 +1,35 @@
+StitchTrack: manual synthetic-only password experiment
+{
+  "timestamp": "2026-10-27T19:30:30.278Z",
+  "node": "v24.22.1",
+  "os": "linux",
+  "release": "5.15.167.4-microsoft-standard-WSL2",
+  "architecture": "x64",
+  "cpu": "Intel(R) Core(TM) Ultra 7 165U",
+  "logicalCpus": 14,
+  "argon2Package": "2.2.2",
+  "parameters": {
+    "algorithm": 2,
+    "version": 1,
+    "memoryCost": 65536,
+    "timeCost": 3,
+    "parallelism": 1,
+    "outputLen": 32
+  },
+  "saltBytes": 16
+}
+No accounts, database, email or authentication session.
+SHA-256 is benchmark comparison ONLY; never credential storage.
+The password is fixed synthetic source data; no password arguments or environment input are accepted.
+Evidence 08: sequential local-machine measurements
+Argon2id (fresh salt + encoded hash + asynchronous scheduling): operations=5
+elapsed_ms=629.078850
+mean_ms_per_operation = 629.078850 / 5 = 125.815770
+estimated_operations_per_second = 5 * 1000 / 629.078850 = 7.948
+SHA-256 (one unsalted digest; comparison only): operations=100000
+elapsed_ms=204.225886
+mean_ms_per_operation = 204.225886 / 100000 = 0.002042
+estimated_operations_per_second = 100000 * 1000 / 204.225886 = 489653.892
+Estimates describe this sequential program, not attacker GPU throughput or a deployment-load test.
+Argon2id includes salt generation and PHC encoding; this is not a raw-KDF-only comparison.
+Repeat manually on an idle machine; record load and power/thermal conditions.

@@ -1,0 +1,49 @@
+-- OWNER ONLY, read-only inspection; does not resolve or repair history.
+BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '30s';
+SET LOCAL search_path = pg_catalog;
+DO LANGUAGE plpgsql $inspect$
+BEGIN
+  IF current_database()<>'stitchtrack_assessment' OR CURRENT_USER<>'stitchtrack_task04_test_app' THEN
+    RAISE EXCEPTION 'Exact Task Four main database/role required'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace n JOIN pg_roles r ON r.oid=n.nspowner
+    WHERE n.nspname='task04_test' AND r.rolname=CURRENT_USER) THEN
+    RAISE EXCEPTION 'Task Four schema ownership mismatch'; END IF;
+  IF current_setting('server_encoding')<>'UTF8' THEN RAISE EXCEPTION 'UTF8 required'; END IF;
+  IF (SELECT count(*) FROM pg_attribute a WHERE a.attrelid='"task04_test"."User"'::regclass
+    AND a.attnum>0 AND NOT a.attisdropped)<>4 OR
+    (SELECT count(*) FROM pg_attribute a WHERE a.attrelid='"task04_test"."User"'::regclass
+      AND a.attnum>0 AND NOT a.attisdropped AND a.attnotnull AND NOT a.atthasdef AND (
+        (a.attname IN ('id','emailCanonical','name') AND a.atttypid='text'::regtype) OR
+        (a.attname='createdAt' AND a.atttypid='timestamptz'::regtype AND a.atttypmod=3)))<>4 THEN
+    RAISE EXCEPTION 'Expected recovered four-column User with required TEXT name and no default'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint c JOIN pg_attribute a
+    ON a.attrelid=c.conrelid AND a.attname='name' AND NOT a.attisdropped
+    WHERE c.conrelid='"task04_test"."User"'::regclass AND c.conname='User_name_nonblank_check'
+      AND c.contype='c' AND c.convalidated AND c.conkey=ARRAY[a.attnum]
+      AND pg_get_expr(c.conbin,c.conrelid)=format('(btrim(name, %L::text) <> %L::text)',
+        U&'\0009\000A\000B\000C\000D\0020\0085\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', '')) THEN
+    RAISE EXCEPTION 'Exact validated nonblank name CHECK required; inspect actual expression before proceeding'; END IF;
+  IF (SELECT count(*) FROM "task04_test"."User")<>2 OR
+    (SELECT count(*) FROM "task04_test"."User" WHERE
+      ("id"='task04-required-name-01' AND "emailCanonical"='required-name-01@example.invalid' AND "name"='Synthetic User 01') OR
+      ("id"='task04-required-name-02' AND "emailCanonical"='required-name-02@example.invalid' AND "name"='Synthetic User 02'))<>2 THEN
+    RAISE EXCEPTION 'Both original synthetic users and deterministic nonblank names are required'; END IF;
+END;
+$inspect$;
+-- One JSON result for independent before/after comparison; original logs included.
+SELECT jsonb_build_object(
+  'database',current_database(), 'role',CURRENT_USER,
+  'columns',(SELECT jsonb_agg(jsonb_build_object('name',attname,'type',format_type(atttypid,atttypmod),
+    'required',attnotnull,'default',atthasdef) ORDER BY attnum)
+    FROM pg_attribute WHERE attrelid='"task04_test"."User"'::regclass AND attnum>0 AND NOT attisdropped),
+  'constraints',(SELECT jsonb_agg(jsonb_build_object('name',conname,'validated',convalidated,
+    'definition',pg_get_constraintdef(oid)) ORDER BY conname)
+    FROM pg_constraint WHERE conrelid='"task04_test"."User"'::regclass),
+  'indexes',(SELECT jsonb_agg(jsonb_build_object('name',indexname,'definition',indexdef) ORDER BY indexname)
+    FROM pg_indexes WHERE schemaname='task04_test' AND tablename='User'),
+  'users',(SELECT jsonb_agg(to_jsonb(u) ORDER BY u.id) FROM "task04_test"."User" u),
+  'history',(SELECT jsonb_agg(to_jsonb(m) ORDER BY m.started_at,m.id) FROM "task04_test"."_prisma_migrations" m)
+);
+COMMIT;
