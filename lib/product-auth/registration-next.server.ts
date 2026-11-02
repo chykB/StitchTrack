@@ -15,6 +15,9 @@ import {directLocalHttpsConnection,sendHttpsResponse,createLocalSessionDispatche
 import {resetPaths,type ResetOperation} from "../auth/password-reset-contract.ts";
 import {createLocalPasswordResetDispatcher} from "./password-reset-http.server.ts";
 
+import {accountDeletionPath} from "../auth/account-deletion-contract.ts";
+import {createLocalAccountDeletionDispatcher} from "./account-deletion-http.server.ts";
+
 const legacyOrigin="https://127.0.0.1:3443";
 function localOrigin(env:Environment):string {
   const http=localDevelopmentHttpOrigin(env);
@@ -133,5 +136,11 @@ export function createNextPasswordResetHandler(operation:ResetOperation,dependen
  return nodeHandler(resetPaths[operation],"POST","ENABLE_PRODUCT_PASSWORD_RESET_HTTP","reset_unavailable",dependencies.environment,async env=>{
   const dispatch=await (dependencies.runtime??(async settings=>{const {client,identifierKey}=await localRuntime(settings);return createLocalPasswordResetDispatcher(client,settings,identifierKey);}))(env);
   return (request,connection)=>dispatch(request,operation,connection);
+ });
+}
+
+export function createNextAccountDeletionHandler(dependencies:HandlerDependencies<ReturnType<typeof createLocalAccountDeletionDispatcher>>={}) {
+ return nodeHandler(accountDeletionPath,"POST","ENABLE_PRODUCT_ACCOUNT_DELETION_HTTP","deletion_unavailable",dependencies.environment,async env=>{
+  return (dependencies.runtime??(async settings=>{const {client,identifierKey}=await localRuntime(settings);return createLocalAccountDeletionDispatcher(client,settings,identifierKey);}))(env);
  });
 }

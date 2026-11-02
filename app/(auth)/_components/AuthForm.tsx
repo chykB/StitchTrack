@@ -7,6 +7,7 @@ import {
   initialValidationState, passwordGuidance, passwordSpaceNotice, reduceValidation, validateAssessmentForm, signupSubmissionBlocked, visibleErrors,
 } from "../../../lib/auth/validation";
 import type { AuthValues, ValidationEvent, ValidationState } from "../../../lib/auth/validation";
+import AccountDeletionForm from "./AccountDeletionForm";
 import FormField from "./FormField";
 import TermsPreview from "./TermsPreview";
 import type { DocumentKind } from "../../../lib/auth/draft-document";
@@ -26,6 +27,7 @@ type AuthFormProps = {
   legend: string;
   hideLegend?: boolean;
   localSessionOrigin?: string;
+  accountDeletionEnabled?:boolean;
   initialEmail?:string;onEmailDraftChange?:(email:string)=>void;
   registrationController?: RegistrationController;
   sessionController?: SessionController; // Injection for reviewed composition/offline tests only.
@@ -109,7 +111,7 @@ export function AuthSessionControls({snapshot,onRefresh,onLogout,ready=true}:{sn
 }
 
 export default function AuthForm({
-  mode, buttonLabel, unavailableMessage, legend, hideLegend = false, draftPreview, onOpenDocument, sessionController, localSessionOrigin, registrationController,initialEmail,onEmailDraftChange,
+  mode, buttonLabel, unavailableMessage, legend, hideLegend = false, draftPreview, onOpenDocument, sessionController, localSessionOrigin, registrationController,initialEmail,onEmailDraftChange,accountDeletionEnabled,
 }: AuthFormProps) {
   const [disabledRegistration]=useState(()=>createRegistrationController(createRegistrationClient()));
   const registration=registrationController??disabledRegistration;
@@ -153,6 +155,7 @@ export default function AuthForm({
   }, []);
 
   return (
+    <>
     <form method="post" noValidate onSubmit={event => {
       const submitted=liveSignup?submitRegistrationForm(event,ready,dispatch,registration,setTermsError):submitAuthForm(event,ready,mode,requireDraftAcknowledgement,dispatch,controller,onEmailDraftChange);
       void submitted.then(success=>{
@@ -202,5 +205,7 @@ export default function AuthForm({
         {feedback && <p>{feedback}</p>}
       </div>
     </form>
+    {liveLogin&&accountDeletionEnabled&&<AccountDeletionForm controller={controller}/>}
+    </>
   );
 }

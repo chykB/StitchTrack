@@ -8,7 +8,7 @@ import {loginSchema} from "../auth/schemas.ts";
 import {hashPassword, verifyPassword} from "../auth/password.server.ts";
 import {localSessionOrigin} from "./session-policy.ts";
 import {ProductAuthError} from "./secrets.server.ts";
-import {accountAccessEnabled, lockAccountAccess, readAccountAccess, withAccountAccessTransaction} from "./account-access.server.ts";
+import {accountAccessEnabled, lockAccountAccess, readAccountAccess, withAccountAccessTransaction, type AccountAccessState} from "./account-access.server.ts";
 
 type SessionConfig = {
   mode: ProductMode;
@@ -72,6 +72,13 @@ export function createSessionService(client: PrismaClient, config: SessionConfig
     return auth.api.getSession({headers, query: {disableCookieCache: true, disableRefresh: true}, returnHeaders: true});
   }
   return {
+    // Authentication proof for an already locked User inside a real lifecycle tx.
+    // Not administrative/business authorization; the caller still decides eligibility.
+    async hasSessionForLockedUser(tx:Prisma.TransactionClient,input:Headers,user:AccountAccessState):Promise<boolean> {
+      if(!accountAccessEnabled(user)||!user.emailVerified)return false;
+      const result=await authFor(tx).api.getSession({headers:cookieHeaders(input),query:{disableCookieCache:true,disableRefresh:true}});
+      return !!result&&result.user.id===user.id&&result.user.emailVerified&&result.session.expiresAt>new Date();
+    },
     async login(input: unknown) {
       const parsed = loginSchema.safeParse(input);
       if (!parsed.success || !parsed.data.password.isWellFormed()) throw new ProductAuthError("login_rejected");

@@ -41,7 +41,7 @@ const copy = {
   },
 };
 
-export default function AuthScreen({ mode, draftPreview, localSessionOrigin, registration, registrationController,passwordResetOrigin }: { mode: AuthMode; draftPreview?: DraftTermsPreview; localSessionOrigin?: string; registration?:RegistrationFrontendConfig; registrationController?:RegistrationController;passwordResetOrigin?:string }) {
+export default function AuthScreen({ mode, draftPreview, localSessionOrigin, registration, registrationController,passwordResetOrigin,accountDeletionEnabled }: { mode: AuthMode; draftPreview?: DraftTermsPreview; localSessionOrigin?: string; registration?:RegistrationFrontendConfig; registrationController?:RegistrationController;passwordResetOrigin?:string;accountDeletionEnabled?:boolean }) {
   const [flowStore]=useState(()=>createAuthFlowStore());
   const flow=useStore(flowStore);
   // Next preserves this screen across /auth mode navigation. Follow the current
@@ -81,7 +81,7 @@ export default function AuthScreen({ mode, draftPreview, localSessionOrigin, reg
       {content.description && <p className={styles.description}>{content.description}</p>}
       {/* A mode change discards entered values and the previous unavailable message. */}
       <AuthForm key={mode} mode={mode} buttonLabel={content.button} legend={content.legend}
-        localSessionOrigin={mode === "login" ? localSessionOrigin : undefined}
+        localSessionOrigin={mode === "login" ? localSessionOrigin : undefined} accountDeletionEnabled={mode==="login"&&accountDeletionEnabled}
         initialEmail={mode==="login"?flow.email:undefined} onEmailDraftChange={mode==="login"?flow.rememberEmail:undefined}
         registrationController={mode === "signup" ? signupController : undefined}
         hideLegend={mode !== "reset"} unavailableMessage={content.unavailable} draftPreview={draftPreview} onOpenDocument={openDocument} />

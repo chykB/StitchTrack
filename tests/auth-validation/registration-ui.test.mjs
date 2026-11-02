@@ -138,7 +138,7 @@ test("refreshed signup configuration can enable and disable the controller witho
 });
 test("the login form also replaces a disabled controller when its server-supplied origin becomes available",()=>{
  const render=rendersOf(AuthForm),props={mode:"login",buttonLabel:"Log in",legend:"Login details",unavailableMessage:"Login is not available yet."};
- const hasControls=tree=>[tree.props.children].flat(Infinity).some(child=>child?.type?.name==="AuthSessionControls");
+ const hasControls=tree=>!!tree&&typeof tree==="object"&&(tree.type?.name==="AuthSessionControls"||[tree.props?.children].flat(Infinity).some(hasControls));
  assert.equal(hasControls(render(props)),false);
  assert.equal(hasControls(render({...props,localSessionOrigin:"http://127.0.0.1:3000"})),true);
  assert.equal(hasControls(render(props)),false);

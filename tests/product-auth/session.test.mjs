@@ -30,7 +30,7 @@ const rejected = error => error instanceof ProductAuthError && error.code === "l
 
 test("inert private service requires explicit lifetime/fixed renewal and exports no Better Auth handler", async () => {
   const f = await setup();
-  assert.deepEqual(Object.keys(f.service).sort(), ["login", "logout", "logoutAll", "lookup"]);
+  assert.deepEqual(Object.keys(f.service).sort(), ["hasSessionForLockedUser", "login", "logout", "logoutAll", "lookup"]);
   assert.equal(f.rows().session.length, 0);
   for (const patch of [{expiresInSeconds: undefined}, {expiresInSeconds: 0}, {expiresInSeconds: 1.5}, {expiresInSeconds: Infinity}, {expiresInSeconds: 34_560_001}, {sessionTokenKey: undefined}, {sessionTokenKey: Buffer.alloc(31)}, {renewal: undefined}, {renewal: "sliding"}, {mode: "production"}, {authSecret: "short"}]) {
     assert.throws(() => createSessionService(f.client, {...config, ...patch}), ProductAuthError);

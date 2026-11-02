@@ -1,3 +1,4 @@
+import {accountDeletionPath,accountDeletionSchema} from "./account-deletion-contract.ts";
 import {z} from "zod";
 import {emailSchema,loginSchema} from "./schemas.ts";
 
@@ -12,7 +13,8 @@ const user=z.strictObject({id:z.string().min(1),name:z.string().min(1),email:ema
 const loginReply=z.strictObject({user});
 const sessionReply=z.strictObject({user,expiresAt:z.string().datetime({offset:true})});
 const logoutReply=z.strictObject({loggedOut:z.literal(true)});
-const paths={login:"/api/internal/tailor-session/login",session:"/api/internal/tailor-session/session",logout:"/api/internal/tailor-session/logout"} as const;
+const deletionReply=z.strictObject({requested:z.literal(true)});
+const paths={login:"/api/internal/tailor-session/login",session:"/api/internal/tailor-session/session",logout:"/api/internal/tailor-session/logout",deletion:accountDeletionPath} as const;
 function retryAfter(value:string|null,now:number):number|undefined {
   if(!value)return;
   const seconds=/^\d+$/u.test(value)?Number(value):Math.ceil((Date.parse(value)-now)/1000);
@@ -33,7 +35,7 @@ export function createSessionClient(options:{enabled?:boolean;fetch?:typeof fetc
       });
       if(response.redirected)return {ok:false,kind:"unavailable"};
       if(response.status===429)return {ok:false,kind:"rate_limited",retryAfterSeconds:retryAfter(response.headers.get("retry-after"),now())};
-      if(response.status===401)return {ok:false,kind:operation==="login"?"invalid_credentials":"unauthenticated"};
+      if(response.status===401)return {ok:false,kind:operation==="login"||operation==="deletion"?"invalid_credentials":"unauthenticated"};
       if(response.status!==200||!response.headers.get("content-type")?.toLowerCase().startsWith("application/json"))return {ok:false,kind:"unavailable"};
       const parsed=schema.safeParse(await response.json());
       return parsed.success?{ok:true,data:parsed.data}:{ok:false,kind:"unavailable"};
@@ -52,6 +54,11 @@ export function createSessionClient(options:{enabled?:boolean;fetch?:typeof fetc
       return {ok:true,data:{user:result.data.user,expiresAt:Date.parse(result.data.expiresAt)}};
     },
     logout:()=>request("logout",logoutReply,{}),
+    async requestDeletion(input:unknown):Promise<AuthResult<{requested:true}>> {
+      if(!enabled)return {ok:false,kind:"disabled"};
+      const parsed=accountDeletionSchema.safeParse(input);
+      return parsed.success?request("deletion",deletionReply,parsed.data):{ok:false,kind:"invalid_input"};
+    },
   };
 }
 export type SessionClient=ReturnType<typeof createSessionClient>;

@@ -1,0 +1,6 @@
+Owner-triggered PostgreSQL erasure job; scheduler NOT deployed.
+Started: 2026-11-02T20:05:26Z
+{"job":"account-erasure-proof","format":1,"run":"365d27ad-f814-4f65-a262-73b5af95f4fe","mode":"execute","finishedAt":"2026-11-02T20:05:27.331Z","outcome":"erased","counts":{"User":1,"Account":1,"Session":1,"Verification":2,"TermsVersion":0,"TermsAcceptance":1,"EmailOutbox":1,"EmailVerificationIssuance":1,"AuthRateBucket":1},"metrics":{"pending":2,"approaching":0,"overdue":0},"connectionCleanup":true}
+job_exit_status=0
+run_exit_status=0
+capture_exit_status=0

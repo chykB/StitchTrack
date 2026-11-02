@@ -70,7 +70,7 @@ export function localSessionHttpConfiguration(env: Environment): LocalSessionHtt
   return {origin, target, mode: "test", authSecret, sessionTokenKey: key, expiresInSeconds: TAILOR_SESSION_LIFETIME_SECONDS, renewal: "none"};
 }
 // Inert composition helper: client ownership/lifecycle remains with the reviewed caller.
-export function createHttpSessionService(client: PrismaClient, config: LocalSessionHttpConfig): SessionService {
+export function createHttpSessionService(client: PrismaClient, config: LocalSessionHttpConfig): ReturnType<typeof createSessionService> {
   return createSessionService(client, {mode: "test", authSecret: config.authSecret, sessionTokenKey: config.sessionTokenKey,
     origin: config.origin, expiresInSeconds: TAILOR_SESSION_LIFETIME_SECONDS, renewal: "none"});
 }

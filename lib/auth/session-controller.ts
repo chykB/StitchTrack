@@ -1,7 +1,7 @@
 import type {AuthFailure,FrontendSession,SessionClient} from "./session-client.ts";
 export type SessionSnapshot=Readonly<{
   status:"disabled"|"unknown"|"authenticated"|"unauthenticated";
-  pending:"login"|"session"|"logout"|null;
+  pending:"login"|"session"|"logout"|"delete-account"|null;
   session:FrontendSession|null;message:string;retryUntil:number|null;
 }>;
 // Presentation-only session state, never authorization. Passwords/tokens are
@@ -23,11 +23,11 @@ export function createSessionController(client:SessionClient,clock:{now?:()=>num
     if(expired||ready)publish({...state,...(expired?{status:"unauthenticated" as const,session:null,message:"Your session has expired. Log in again."}:{}),
       ...(ready?{retryUntil:null,...(!expired&&state.message.startsWith("Too many attempts.")?{message:"You can try again."}:{})}:{})});else schedule();
   }
-  function failed(failure:AuthFailure,operation:"login"|"session"|"logout") {
+  function failed(failure:AuthFailure,operation:"login"|"session"|"logout"|"delete-account") {
     const seconds=failure.retryAfterSeconds;
     const message=failure.kind==="rate_limited"?(seconds?`Too many attempts. Please wait ${seconds} seconds before trying again.`:"Too many attempts. Please wait before trying again."):
-      failure.kind==="invalid_credentials"?"Email or password is incorrect.":failure.kind==="invalid_input"?"Check your email and password.":
-      operation==="logout"?"Logout could not be confirmed. You may still be logged in. Check your session or try logout again.":
+      failure.kind==="invalid_credentials"?(operation==="delete-account"?"Account deletion could not be authorized. Check your password and session.":"Email or password is incorrect."):failure.kind==="invalid_input"?(operation==="delete-account"?"Enter your current password.":"Check your email and password."):
+      operation==="delete-account"?"Deletion request could not be confirmed. Your account may already be locked. Check your session; permanent erasure is not confirmed.":operation==="logout"?"Logout could not be confirmed. You may still be logged in. Check your session or try logout again.":
       operation==="session"?"Your session could not be checked. Try again.":"Login could not be confirmed. Check your session before trying again.";
     publish({...state,pending:null,status:(failure.kind==="invalid_credentials"||failure.kind==="invalid_input")&&!state.session?"unauthenticated":"unknown",message,
       retryUntil:failure.kind==="rate_limited"&&seconds?now()+seconds*1000:null});
@@ -60,6 +60,16 @@ export function createSessionController(client:SessionClient,clock:{now?:()=>num
         }
         accept(checked.data,"You are logged in.");return true;
       }catch{failed({ok:false,kind:"network"},"login");return false;}
+    },
+    async requestDeletion(input:unknown) {
+      if(blocked()||state.status!=="authenticated"||!state.session)return false;
+      publish({...state,pending:"delete-account",message:"Requesting account deletion..."});
+      try {
+        const result=await client.requestDeletion(input);
+        if(!result.ok){failed(result,"delete-account");return false;}
+        publish({...state,status:"unauthenticated",pending:null,session:null,retryUntil:null,
+          message:"Deletion requested. Your account is locked and all sessions are revoked. Permanent erasure has not occurred."});return true;
+      }catch{failed({ok:false,kind:"network"},"delete-account");return false;}
     },
     async logout() {
       if(blocked())return false;publish({...state,pending:"logout",message:"Logging out..."});

@@ -26,7 +26,7 @@ screenshot, agent database test or completed browser workflow. See the
 | Verification gating | Hard gating is implemented internally, consistent with the PRD. | Task Five's alternative soft-gating experiment needs a separately authorized safe branch/exception; no change to product policy is implied. |
 | Login | Canonical email, Argon2id, generic refusals, fresh sessions and PostgreSQL counters tested; historical curl HTTPS proof passed; owner completed the current Next.js registration/email/OTP/login/session browser journey. | Captured Task Five browser evidence and production ingress/rate policies remain pending. |
 | Protected routes/logout | Individual/user-wide server revocation and account-lock PostgreSQL races owner-verified; curl lookup/logout/revocation passed; fresh lookup rejects locked identities. | Protected business routes, two-account browser identity and logout network-failure evidence. |
-| Reset and deletion | Existing sessions can be revoked by user; real reset implementation is offline-tested and prepared. | Apply/review reset prerequisites and run its PostgreSQL/browser proof; full deletion remains separate. |
+| Reset and deletion | Existing sessions can be revoked by user; real reset implementation is offline-tested and prepared. | Apply/review reset prerequisites and run its PostgreSQL/browser proof; the new Stage 1 deletion request needs owner browser evidence; purge remains separate. |
 | Administrative authorization | Authentication remains separate from business permissions. | Resolve the assessment's administrative-role requirement within approved product scope; business-scoped authorization remains mandatory. |
 
 ## References and evidence boundary
@@ -50,7 +50,7 @@ authorizer and sets the lock/revokes sessions atomically. Login now uses a real 
 transaction with Better Auth bound to its exact Prisma tx; fresh lookup rejects locked
 accounts and cookies are returned only after commit. The adapter callback itself still
 provides no transaction. Individual logout, fixed seven-day policy and prior evidence
-are preserved. No administrative/deletion endpoint or complete erasure workflow exists.
+are preserved. No administrative endpoint or complete erasure workflow exists. The new default-off authenticated deletion-request boundary provides locking/session revocation only; see [account lifecycle](docs/account-lifecycle.md#stage-1-authenticated-deletion-request).
 
 The owner completed the [real PostgreSQL proof and separate cleanup](../prisma/product/account-access-postgres-verification.md)
 for run `a02fc98d-905c-4f0b-a0f6-b9b721869d1d`. Preflight, both login/lock orderings,
@@ -127,7 +127,7 @@ notes below are now prepared; existing owner evidence is preserved, not audited 
 | `docs/sessions.md` | Implementation/reported results and owner procedure prepared; fresh browser captures still pending, including HTTPS Secure-cookie evidence. |
 | `docs/gating.md` | Missing; hard policy implemented, safe alternative-branch soft-gating experiment/evidence not supplied. |
 | `privacy.md`, `privacy-draft-with-broken-promise.md` | Missing Task Five deliverables; Task Three candidates remain unapproved/unpublished, not substitutes. |
-| `docs/retention-matrix.md` | Missing; approved periods, backups and deletion/retention conflict decisions remain unresolved. |
+| `docs/retention-matrix.md` | Prepared for all nine models and controlled fixture erasure; real exceptions, backups and operational scheduling remain unresolved. |
 | `docs/state-management.md` | Prepared using real transient Zustand email handoff; browser demonstration remains pending. |
 | `docs/interview-with-owner.md` | Missing genuine owner interview and challenged assumption. |
 | `docs/handbook.md` | Missing seven-section handbook using actual code and mistakes. |
@@ -156,3 +156,14 @@ The fourth test-only migration and narrow Account credential UPDATE grant are **
 the prepared PostgreSQL proof, cleanup and two-browser reset evidence remain unexecuted.
 Existing owner evidence files are preserved and were not reviewed or changed by this slice.
 Do not mark Task Five complete from offline tests or the earlier login/session milestone.
+
+## Controlled erasure status
+
+The owner reports successful two-browser Stage 1 deletion locking/session revocation;
+Evidence 12 is present. [Stage 2 retention/erasure](docs/retention-matrix.md) now has a
+nine-model matrix, default-off disposable-fixture job, dry-run, deadline metrics and
+owner procedures for genuine job outputs 13/14. No Stage 2 database operation or scheduler
+has run by the agent, and no erasure evidence is invented. Existing non-fixture accounts
+are outside executable assessment scope. Real Terms retention, external data/backups,
+least-privilege operational execution and scheduling/monitoring block activation of the
+proposed maximum-30-day user promise. Stage 1 wording and completed evidence are preserved.
