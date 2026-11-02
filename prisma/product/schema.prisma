@@ -125,6 +125,7 @@ model EmailOutbox {
 }
 // Stable lifecycle owner; library Verification remains the plugin storage format.
 model EmailVerificationIssuance {
+  purpose String @default("email-verification") @db.Text
   id String @id @db.Text
   userId String @db.Text
   emailCanonical String @db.Text

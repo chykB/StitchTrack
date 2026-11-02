@@ -29,3 +29,8 @@ export function localFrontendRegistrationConfiguration(env:Readonly<Record<strin
     env.PRODUCT_REGISTRATION_RATE_POLICY_CONFIRMED!=="true")return;
   return {origin,developmentConsentDeferred:true as const};
 }
+
+export function localFrontendPasswordResetOrigin(env:Readonly<Record<string,string|undefined>>,host:string|null){
+ if(env.NODE_ENV!=="development"||env.ENABLE_PRODUCT_PASSWORD_RESET_HTTP!=="true"||env.PRODUCT_RESET_RATE_POLICY_CONFIRMED!=="true")return;
+ return localFrontendSessionOrigin(env,host);
+}

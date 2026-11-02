@@ -186,9 +186,9 @@ export function createRegistrationService(client: PrismaClient, config: Registra
           if (!user || user.emailVerified) return "invalid";
           const issuance = "issuanceId" in parsed.data
             ? await tx.emailVerificationIssuance.findUnique({where: {id: parsed.data.issuanceId as string}})
-            : await tx.emailVerificationIssuance.findFirst({where:{userId:user.id,consumedAt:null,supersededAt:null},orderBy:{createdAt:"desc"}});
+            : await tx.emailVerificationIssuance.findFirst({where:{userId:user.id,consumedAt:null,supersededAt:null,purpose:"email-verification"},orderBy:{createdAt:"desc"}});
           const issuanceId=issuance?.id;
-          if (!issuance || !issuanceId || issuance.userId !== user.id || issuance.emailCanonical !== email || issuance.consumedAt || issuance.supersededAt || issuance.failedAttempts >= 3) return "invalid";
+          if (!issuance || !issuanceId || issuance.userId !== user.id || issuance.emailCanonical !== email || issuance.purpose !== "email-verification" || issuance.consumedAt || issuance.supersededAt || issuance.failedAttempts >= 3) return "invalid";
           if (issuance.expiresAt <= time || !issuance.verificationId) {await cancelJobs(tx, issuanceId); return "invalid";}
           if (!secrets.matches(issuance.verifier, issuanceId, email, otp, issuance.verifierKeyId)) {
             const failedAttempts = issuance.failedAttempts + 1;
@@ -222,9 +222,9 @@ export function createRegistrationService(client: PrismaClient, config: Registra
           await assertTarget(tx);
           const user = await lockedUser(tx, parsed.data), time = now();
           if (!user || user.emailVerified || await tx.account.count({where: {userId: user.id, providerId: "credential", accountId: user.id}}) !== 1) return null;
-          const previous = await tx.emailVerificationIssuance.findFirst({where: {userId: user.id}, orderBy: {createdAt: "desc"}});
+          const previous = await tx.emailVerificationIssuance.findFirst({where: {userId: user.id,purpose:"email-verification"}, orderBy: {createdAt: "desc"}});
           if (!previous || time.getTime() - previous.createdAt.getTime() < 60_000) return null;
-          const active = await tx.emailVerificationIssuance.findMany({where: {userId: user.id, consumedAt: null, supersededAt: null}});
+          const active = await tx.emailVerificationIssuance.findMany({where: {userId: user.id, consumedAt: null, supersededAt: null,purpose:"email-verification"}});
           for (const old of active) {
             await tx.emailVerificationIssuance.update({where: {id: old.id}, data: {supersededAt: time}});
             await cancelJobs(tx, old.id);

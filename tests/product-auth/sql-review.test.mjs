@@ -18,7 +18,7 @@ test("single complete eight-table baseline matches every scalar column, type, de
     const ddl = table(name); assert.ok(ddl, name);
     const actual = [...ddl.matchAll(/^  "(\w+)" (TEXT|BOOLEAN|INTEGER|BYTEA|TIMESTAMPTZ\(3\))([^\n]*),$/gmu)];
     const fields = [...body.matchAll(/^  (\w+) (String|Boolean|Int|Bytes|DateTime)(\?)?(?: |$)([^\n]*)/gmu)]
-      .filter(([, field]) => name !== "User" || !["disabledAt", "deletionRequestedAt"].includes(field)); // Additive columns are checked separately.
+      .filter(([, field]) => (name !== "User" || !["disabledAt", "deletionRequestedAt"].includes(field)) && (name !== "EmailVerificationIssuance" || field !== "purpose")); // Additive columns are checked separately.
     assert.equal(actual.length, fields.length, name);
     for (const [, field, type, nullable, attributes] of fields) {
       const physical = attributes.match(/@map\("(\w+)"\)/u)?.[1] ?? field;
@@ -34,7 +34,7 @@ test("single complete eight-table baseline matches every scalar column, type, de
   }
   assert.equal(count, 70);
   const dirs = readdirSync(new URL("../../prisma/product/migrations/", import.meta.url), {withFileTypes:true}).filter(entry => entry.isDirectory());
-  assert.deepEqual(dirs.map(entry => entry.name), ["20261029_product_auth_initial", "20261030_auth_rate_bucket", "20261030_user_access_locks"]);
+  assert.deepEqual(dirs.map(entry => entry.name), ["20261029_product_auth_initial", "20261030_auth_rate_bucket", "20261030_user_access_locks", "20261102_password_reset"]);
 });
 test("all declared unique/index/FK contracts are included; outbox ownership has one required path", () => {
   let indexes = 0, fks = 0;

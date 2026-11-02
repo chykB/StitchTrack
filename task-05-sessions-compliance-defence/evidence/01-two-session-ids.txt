@@ -1,0 +1,33 @@
+TASK FIVE - EVIDENCE 01
+Two Distinct Server-Side Sessions
+
+Database: stitchtrack_product_test
+Account: Same verified test account
+
+Session A:
+Reference: bdb015cd54ad
+Created: 2026-11-01T21:29:16.467Z
+
+Session B:
+Reference: 7c8eb6d65939
+Created: 2026-11-01T23:29:44.730Z
+
+Observed results:
+- Two separate session records existed concurrently.
+- Both sessions were unexpired.
+- An earlier read-only inspection confirmed two
+  distinct stored session-token digests.
+- Logout of Session B removed only Session B.
+- Session A remained in PostgreSQL.
+
+The references above are truncated SHA-256
+fingerprints of database session row identifiers.
+They are not authentication tokens.
+
+Supporting evidence:
+07-session-row-present.png
+08-session-row-deleted.png
+
+Result:
+PASS - Two different server-side sessions were
+observed for the same verified account.

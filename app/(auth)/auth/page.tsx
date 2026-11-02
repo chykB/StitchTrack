@@ -1,4 +1,4 @@
-import { localFrontendSessionOrigin,localFrontendRegistrationConfiguration } from "../../../lib/auth/local-session.ts";
+import { localFrontendPasswordResetOrigin,localFrontendSessionOrigin,localFrontendRegistrationConfiguration } from "../../../lib/auth/local-session.ts";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadDraftTermsPreview } from "../../../lib/auth/terms-preview";
@@ -43,7 +43,7 @@ export default async function AuthPage() {
     ]);
     return { terms, privacy };
   });
-  return <AuthScreen mode={mode} draftPreview={draftPreview}
+  return <AuthScreen mode={mode} passwordResetOrigin={mode==="reset"?localFrontendPasswordResetOrigin(process.env,requestHeaders.get("host")):undefined} draftPreview={draftPreview}
     registration={mode === "signup"?localFrontendRegistrationConfiguration(process.env,requestHeaders.get("host")):undefined}
     localSessionOrigin={mode === "login" ? localFrontendSessionOrigin(process.env, requestHeaders.get("host")) : undefined} />;
 }

@@ -42,8 +42,8 @@ export function createVerificationMailer(environment: Readonly<Record<string,str
   // No connection/factory call on construction. Each explicit call is one attempt,
   // not a retry loop. Registration never imports or calls this mailer.
   return {
-    async sendVerification(input: unknown, expiresAt: Date): Promise<{status: "accepted"}> {
-      const {recipient: email, ...content} = renderVerificationEmail(input, expiresAt), now = clock();
+    async sendVerification(input: unknown, expiresAt: Date, purpose:"email-verification"|"password-reset"="email-verification"): Promise<{status: "accepted"}> {
+      const {recipient: email, ...content} = renderVerificationEmail(input, expiresAt,purpose), now = clock();
       if (!(now instanceof Date) || !Number.isFinite(now.getTime()) || expiresAt <= now ||
           expiresAt.getTime() - now.getTime() > 300_000) throw new ProductAuthError("email_invalid_message");
       try {

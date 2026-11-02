@@ -97,3 +97,13 @@ local-only Signup/OTP and Login/session/logout handlers at one loopback HTTP ori
 the owner completed the live journey stated above. Logout/network-failure browser evidence,
 two-session comparison, HTTPS browser cookie evidence, reset and production policy remain
 pending. See the [Task Five session status](../../task-05-sessions-compliance-defence/docs/sessions.md).
+
+## Prepared Task Five password reset (unapplied)
+
+The [reset runbook](../../task-05-sessions-compliance-defence/docs/password-reset.md)
+documents the real Next.js reset flow, purpose-separated OTP/outbox reuse, atomic credential
+replacement/consumption/all-session revocation, and owner-only proof/cleanup. The fourth
+**product-test-only** migration and narrow credential grant remain unapplied. Stop the
+app/worker before rollout, review/apply those prerequisites as owner, regenerate the ignored
+product client and restart; do not treat the earlier three-migration live milestone as
+reset verification. Public activation and product-development migration are not authorized.

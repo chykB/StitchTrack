@@ -26,7 +26,7 @@ screenshot, agent database test or completed browser workflow. See the
 | Verification gating | Hard gating is implemented internally, consistent with the PRD. | Task Five's alternative soft-gating experiment needs a separately authorized safe branch/exception; no change to product policy is implied. |
 | Login | Canonical email, Argon2id, generic refusals, fresh sessions and PostgreSQL counters tested; historical curl HTTPS proof passed; owner completed the current Next.js registration/email/OTP/login/session browser journey. | Captured Task Five browser evidence and production ingress/rate policies remain pending. |
 | Protected routes/logout | Individual/user-wide server revocation and account-lock PostgreSQL races owner-verified; curl lookup/logout/revocation passed; fresh lookup rejects locked identities. | Protected business routes, two-account browser identity and logout network-failure evidence. |
-| Reset and deletion | Existing sessions can be revoked by user. | Implement separately reviewed reset/deletion workflows using the verified User-lock protocol; demonstrate another browser losing access. |
+| Reset and deletion | Existing sessions can be revoked by user; real reset implementation is offline-tested and prepared. | Apply/review reset prerequisites and run its PostgreSQL/browser proof; full deletion remains separate. |
 | Administrative authorization | Authentication remains separate from business permissions. | Resolve the assessment's administrative-role requirement within approved product scope; business-scoped authorization remains mandatory. |
 
 ## References and evidence boundary
@@ -118,9 +118,9 @@ proofs, migrations, fixture setup or cleanup.
 
 ## Remaining submission deliverables
 
-Only this README and sessions, account-lifecycle, HTTP-integration and frontend-integration
-notes currently exist in this Task Five directory. No Task Five evidence artifacts are
-present. The table records gaps; it does not initiate unrelated implementation phases.
+At the earlier documentation checkpoint only this README and the session/lifecycle/HTTP/
+frontend notes existed, without captured Task Five artifacts. The reset/state-management
+notes below are now prepared; existing owner evidence is preserved, not audited by this slice. The table records gaps; it does not initiate unrelated implementation phases.
 
 | Deliverable | Current gap |
 | --- | --- |
@@ -128,7 +128,7 @@ present. The table records gaps; it does not initiate unrelated implementation p
 | `docs/gating.md` | Missing; hard policy implemented, safe alternative-branch soft-gating experiment/evidence not supplied. |
 | `privacy.md`, `privacy-draft-with-broken-promise.md` | Missing Task Five deliverables; Task Three candidates remain unapproved/unpublished, not substitutes. |
 | `docs/retention-matrix.md` | Missing; approved periods, backups and deletion/retention conflict decisions remain unresolved. |
-| `docs/state-management.md` | Missing; existing controller implementation can supply real examples. |
+| `docs/state-management.md` | Prepared using real transient Zustand email handoff; browser demonstration remains pending. |
 | `docs/interview-with-owner.md` | Missing genuine owner interview and challenged assumption. |
 | `docs/handbook.md` | Missing seven-section handbook using actual code and mistakes. |
 | `docs/what-i-do-not-know.md` | Missing at least eight documented knowledge gaps. |
@@ -137,8 +137,22 @@ present. The table records gaps; it does not initiate unrelated implementation p
 | Required evidence `01` through `17` | None present here. Confirm official filenames/mapping; remaining flows include gating, generic errors, logout, reset, deletion/jobs, state management, protected roles and published article. |
 | Published article; optional walkthrough | No Task Five article URL/evidence or recording supplied. |
 
-Reset, full deletion/purge, retention, roles and protected business functionality remain
-application dependencies. Account-locking and revocation foundations are already verified;
+Reset still needs its unapplied database prerequisites and owner proof; full deletion/purge,
+retention, roles and protected business functionality remain application dependencies. Account-locking and revocation foundations are already verified;
 reuse them rather than rebuilding them. The assessment's administrative-role requirement
 and soft-gating demonstration need explicit scope reconciliation with the PRD's two V1
 user types and mandatory tailor verification. Public launch/legal approval is not claimed.
+
+## Password-reset implementation prepared (not database-verified)
+
+The [reset flow](docs/password-reset.md) now connects the existing Reset page to the
+transaction-bound Better Auth service, shared PostgreSQL limiter, encrypted outbox and
+worker. [Zustand state](docs/state-management.md) carries the editable email from a failed
+Login through code/password steps without URL or persistent browser storage. No automatic
+session follows reset. This supersedes earlier descriptions of reset/state-management
+implementation as missing; public activation remains disabled.
+
+The fourth test-only migration and narrow Account credential UPDATE grant are **unapplied**;
+the prepared PostgreSQL proof, cleanup and two-browser reset evidence remain unexecuted.
+Existing owner evidence files are preserved and were not reviewed or changed by this slice.
+Do not mark Task Five complete from offline tests or the earlier login/session milestone.

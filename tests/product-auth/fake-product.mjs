@@ -22,7 +22,7 @@ export function fakeProduct({sessionAccess = false} = {}) {
     async create({data}) {
       const row = {id: "offline-" + (++serial), createdAt: new Date(), updatedAt: new Date(), ...data};
       if (name === "user") {row.emailVerified ??= false; row.image ??= null; row.disabledAt ??= null; row.deletionRequestedAt ??= null;}
-      if (name === "emailVerificationIssuance") {row.failedAttempts ??= 0; row.consumedAt ??= null; row.supersededAt ??= null;}
+      if (name === "emailVerificationIssuance") {row.purpose ??= "email-verification"; row.failedAttempts ??= 0; row.consumedAt ??= null; row.supersededAt ??= null;}
       if (name === "emailOutbox") {row.status ??= "pending"; row.attemptCount ??= 0; row.sentAt ??= null;}
       rows[name].push(row); events.push(name + ".create"); return structuredClone(row);
     },

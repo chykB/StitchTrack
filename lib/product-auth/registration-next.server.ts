@@ -12,6 +12,9 @@ import {sessionPaths,sessionConnectionFromSocket,type SessionOperation} from "./
 import {localSessionRatePolicy} from "./session-policy.ts";
 import {directLocalHttpsConnection,sendHttpsResponse,createLocalSessionDispatcher} from "./session-https.server.ts";
 
+import {resetPaths,type ResetOperation} from "../auth/password-reset-contract.ts";
+import {createLocalPasswordResetDispatcher} from "./password-reset-http.server.ts";
+
 const legacyOrigin="https://127.0.0.1:3443";
 function localOrigin(env:Environment):string {
   const http=localDevelopmentHttpOrigin(env);
@@ -124,4 +127,11 @@ export function createNextSessionHandler(operation:SessionOperation,dependencies
     const dispatch=await (dependencies.runtime??sessionRuntime)(env);
     return (request,connection)=>dispatch(request,operation,connection);
   });
+}
+
+export function createNextPasswordResetHandler(operation:ResetOperation,dependencies:HandlerDependencies<ReturnType<typeof createLocalPasswordResetDispatcher>>={}) {
+ return nodeHandler(resetPaths[operation],"POST","ENABLE_PRODUCT_PASSWORD_RESET_HTTP","reset_unavailable",dependencies.environment,async env=>{
+  const dispatch=await (dependencies.runtime??(async settings=>{const {client,identifierKey}=await localRuntime(settings);return createLocalPasswordResetDispatcher(client,settings,identifierKey);}))(env);
+  return (request,connection)=>dispatch(request,operation,connection);
+ });
 }

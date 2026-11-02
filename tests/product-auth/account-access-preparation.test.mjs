@@ -51,7 +51,7 @@ test("real proof forwards transactions, observes actual blockers and injects rea
 test("read-only migrator preflight and rollback-independent cleanup pin exact migration checksums",()=>{
   const source=read("./account-access.integration.mjs"),sql=read("../../prisma/product/setup/account-access-test-cleanup.sql");
   assert.match(source,/BEGIN READ ONLY/u);assert.match(source,/history.length !== 3/u);assert.match(source,/schema|nspname='product'/u);
-  for(const checksum of Object.values(PRODUCT_MIGRATIONS))assert.ok(sql.includes(checksum));
+  for(const [name,checksum] of Object.entries(PRODUCT_MIGRATIONS))if(name!=="20261102_password_reset")assert.ok(sql.includes(checksum)); // Preserve the original three-migration historical cleanup, not the new reset proof.
   for(const label of ACCOUNT_PROOF_LABELS)assert.ok(sql.includes("'"+label+"'"));
   for(const text of ["current_database()<>'stitchtrack_product_test'","current_user<>'stitchtrack_product_test_migrator'","pg_try_advisory_xact_lock","pg_stat_activity","cleanup_confirmed","found NOT IN (0,8)","<>10+found","TermsAcceptance","EmailVerificationIssuance","User\" WHERE id=ANY(ids)"])assert.ok(sql.includes(text),text);
   const deletes=[...sql.matchAll(/^  DELETE FROM ([^;]+);/gmu)].map(m=>m[1]);assert.equal(deletes.length,3);assert.ok(deletes.every(s=>s.includes("=ANY(ids)")));

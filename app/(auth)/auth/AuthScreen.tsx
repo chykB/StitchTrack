@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {useStore} from "zustand";
+import {createAuthFlowStore} from "../../../lib/auth/auth-flow-store.ts";
+import PasswordResetForm from "../_components/PasswordResetForm";
 import Link from "next/link";
 import {createRegistrationClient,type RegistrationFrontendConfig} from "../../../lib/auth/registration-client.ts";
 import {createRegistrationController,type RegistrationController} from "../../../lib/auth/registration-controller.ts";
@@ -38,7 +41,9 @@ const copy = {
   },
 };
 
-export default function AuthScreen({ mode, draftPreview, localSessionOrigin, registration, registrationController }: { mode: AuthMode; draftPreview?: DraftTermsPreview; localSessionOrigin?: string; registration?:RegistrationFrontendConfig; registrationController?:RegistrationController }) {
+export default function AuthScreen({ mode, draftPreview, localSessionOrigin, registration, registrationController,passwordResetOrigin }: { mode: AuthMode; draftPreview?: DraftTermsPreview; localSessionOrigin?: string; registration?:RegistrationFrontendConfig; registrationController?:RegistrationController;passwordResetOrigin?:string }) {
+  const [flowStore]=useState(()=>createAuthFlowStore());
+  const flow=useStore(flowStore);
   // Next preserves this screen across /auth mode navigation. Follow the current
   // server opt-in instead of retaining the disabled controller from Login.
   // Stable configuration values preserve an in-progress OTP flow on refresh.
@@ -77,6 +82,7 @@ export default function AuthScreen({ mode, draftPreview, localSessionOrigin, reg
       {/* A mode change discards entered values and the previous unavailable message. */}
       <AuthForm key={mode} mode={mode} buttonLabel={content.button} legend={content.legend}
         localSessionOrigin={mode === "login" ? localSessionOrigin : undefined}
+        initialEmail={mode==="login"?flow.email:undefined} onEmailDraftChange={mode==="login"?flow.rememberEmail:undefined}
         registrationController={mode === "signup" ? signupController : undefined}
         hideLegend={mode !== "reset"} unavailableMessage={content.unavailable} draftPreview={draftPreview} onOpenDocument={openDocument} />
       <nav className={styles.navigation} aria-label="Account options">
@@ -100,6 +106,7 @@ export default function AuthScreen({ mode, draftPreview, localSessionOrigin, reg
       )}
     </>
   );
+  if(mode==="reset"&&passwordResetOrigin)return <PasswordResetForm store={flowStore} origin={passwordResetOrigin}/>;
   if(mode==="signup"&&signupController.enabled&&signup.phase!=="signup")return <EmailVerificationForm controller={signupController} />;
   if (mode !== "signup" || !draftPreview) return formContent;
   return <>

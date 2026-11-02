@@ -105,7 +105,7 @@ function rendersOf(Component) {
  const slots=[];let cursor=0;
  const state=initial=>{const i=cursor++;if(!(i in slots))slots[i]=typeof initial==="function"?initial():initial;
   return [slots[i],value=>{slots[i]=typeof value==="function"?value(slots[i]):value;}];};
- const hooks={useState:state,useRef:value=>state(()=>({current:value}))[0],useEffect:()=>{cursor++;},
+ const hooks={useCallback:(callback)=>{cursor++;return callback;},useDebugValue:()=>{},useState:state,useRef:value=>state(()=>({current:value}))[0],useEffect:()=>{cursor++;},
   useReducer:(reducer,arg,init)=>{const [value,set]=state(()=>init?init(arg):arg);return [value,event=>set(previous=>reducer(previous,event))];},
   useSyncExternalStore:(_subscribe,get)=>{cursor++;return get();},
   useMemo:(factory,deps)=>{const i=cursor++,old=slots[i];if(!old||old.deps.length!==deps.length||deps.some((v,j)=>!Object.is(v,old.deps[j])))slots[i]={deps,value:factory()};return slots[i].value;}};

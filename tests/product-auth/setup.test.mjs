@@ -14,7 +14,7 @@ test("real config stays offline; deploy/status require the exact approved produc
   const load = (args, env={}) => spawnSync(process.execPath,["--disable-warning=MODULE_TYPELESS_PACKAGE_JSON","--input-type=module","-e",
     `process.argv=["node","offline-proof",...${JSON.stringify(args)}];const c=(await import(${JSON.stringify(url)})).default;console.log(JSON.stringify({hasDatasource:!!c.datasource,schema:c.schema}));`],
     {encoding:"utf8",env:{PATH:process.env.PATH,NODE_ENV:"test",...env}});
-  const approved={PRODUCT_DATABASE_MODE:"test",PRODUCT_DATABASE_CONFIRMED:"true",PRODUCT_MIGRATION_CONFIRMED:"true",
+  const approved={PRODUCT_DATABASE_MODE:"test",PRODUCT_DATABASE_CONFIRMED:"true",PRODUCT_MIGRATION_CONFIRMED:"true",PRODUCT_PASSWORD_RESET_MIGRATION_CONFIRMED:"true",
     PRODUCT_TEST_MIGRATION_DATABASE_URL:"postgresql://stitchtrack_product_test_migrator:synthetic-only@127.0.0.1:5432/stitchtrack_product_test?schema=product"};
   const offline=load(["validate","--config","prisma/product/prisma.config.ts"]); assert.equal(offline.status,0,offline.stderr);
   assert.equal(JSON.parse(offline.stdout).hasDatasource,false);
@@ -25,6 +25,10 @@ test("real config stays offline; deploy/status require the exact approved produc
     assert.equal(JSON.parse(result.stdout).hasDatasource,true);
     assert.doesNotMatch(result.stdout,/synthetic-only|postgresql:/u);
   }
+  const deploy=["migrate","deploy","--config","prisma/product/prisma.config.ts"];
+  assert.notEqual(load(deploy,{...approved,PRODUCT_PASSWORD_RESET_MIGRATION_CONFIRMED:undefined}).status,0);
+  assert.notEqual(load(deploy,{...approved,PRODUCT_DATABASE_MODE:"development",PRODUCT_DEV_MIGRATION_DATABASE_URL:
+    "postgresql://stitchtrack_product_dev_migrator:synthetic-only@127.0.0.1:5432/stitchtrack_product_dev?schema=product"}).status,0);
   assert.ok(read("../../prisma/product/migration-files.ts").includes(createHash("sha256").update(migration).digest("hex")));
   assert.doesNotMatch(config,/import[^\n]*dotenv|shadowDatabaseUrl/u);
 });
