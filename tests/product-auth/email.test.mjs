@@ -160,3 +160,13 @@ test("default Nodemailer factory failure remains lazy and sanitized",async t=>{
   });
   assert.equal(calls,1);
 });
+
+test("reset mail reuses the secured multipart transport with reset-specific instructions and no automatic sign-in",async()=>{
+ const message=renderVerificationEmail(payload,expiry,"password-reset");
+ assert.equal(message.subject,"Reset your StitchTrack password");
+ for(const part of [message.text,message.html]){assert.match(part,/004281/);assert.match(part,/five minutes from issue/);assert.match(part,/Resetting signs out all devices; log in again afterwards/);assert.doesNotMatch(part,/account (?:created|verified)/iu);}
+ assert.ok(message.html.includes("o&#39;neal@example.invalid"));
+ const f=fixture();assert.deepEqual(await f.mailer.sendVerification(payload,expiry,"password-reset"),{status:"accepted"});
+ assert.equal(f.calls[0].message.subject,message.subject);assert.equal(f.calls[0].options.tls.rejectUnauthorized,true);
+ assert.throws(()=>renderVerificationEmail(payload,expiry,"unsupported"),fixedError("email_invalid_message"));
+});

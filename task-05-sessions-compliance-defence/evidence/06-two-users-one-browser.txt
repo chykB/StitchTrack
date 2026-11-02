@@ -1,0 +1,34 @@
+TASK FIVE - EVIDENCE 06
+Two Different Users in One Browser
+
+Environment:
+StitchTrack local application
+Chrome Incognito, same browser profile throughout
+Isolated product test database
+
+Test identities:
+User A: Existing verified tailor, display name "my account"
+User B: Second verified tailor, display name "User B"
+
+Procedure:
+1. Signed in as User B in Chrome Incognito.
+2. Confirmed the interface displayed "Logged in as User B".
+3. Logged out of User B.
+4. Signed in as User A in the same Incognito window.
+5. Confirmed the interface displayed "Logged in as my account".
+6. Refreshed the page and confirmed "Logged in as my account" remained visible.
+
+Expected:
+The browser must display the identity belonging to
+the current authenticated session, not the previous user.
+
+Observed:
+The interface correctly changed from User B to User A.
+No previous-user identity was displayed after switching.
+
+Result:
+PASS - The correct User A identity remained visible after refresh.
+
+This demonstrates sequential account switching in one
+browser profile. It does not demonstrate simultaneous
+multiple-user sessions in the same cookie store.

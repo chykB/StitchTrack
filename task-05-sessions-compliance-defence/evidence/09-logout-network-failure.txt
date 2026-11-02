@@ -1,0 +1,45 @@
+TASK FIVE - EVIDENCE 09
+Logout Network Failure
+
+Environment:
+StitchTrack local Next.js application
+http://127.0.0.1:3000
+Isolated product test database
+
+Test procedure:
+1. Logged into StitchTrack using normal Chrome.
+2. Confirmed that the authentication cookie existed.
+3. Opened Chrome DevTools > Request conditions.
+4. Blocked only the logout endpoint:
+   /api/internal/tailor-session/logout
+5. Clicked Log out.
+
+Observed application response:
+"Logout could not be confirmed. You may still be
+logged in. Check your session or try logout again."
+
+The interface retained the previously known account
+identity and provided a Check session action.
+
+Recovery:
+With the logout endpoint still blocked, clicked
+Check session.
+
+The application successfully restored the
+authenticated display.
+
+Result:
+PASS - The application did not falsely claim logout
+success when the request was blocked.
+
+The blocked request did not reach the server.
+This demonstration does not establish that a
+server-side revocation was attempted.
+
+Supporting screenshot:
+logout-network-failure.png
+
+Limitation:
+This test demonstrates the corrected behavior.
+No separate screenshot of a historically defective
+implementation was captured.

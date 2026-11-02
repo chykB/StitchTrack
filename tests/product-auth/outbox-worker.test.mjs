@@ -36,7 +36,7 @@ function fixture() {
      if(sql.includes("current_database"))return result([{database:"stitchtrack_product_test",role:"stitchtrack_product_test_app",namespace:"product",rolsuper:false,rolcreatedb:false,rolcreaterole:false,rolbypassrls:false}]);
      if(sql.startsWith("SET "))return result([]);
      if(sql.includes("pg_try_advisory_lock")){assert.deepEqual(values,[...OUTBOX_LOCK]);if(owner!==null)return result([{locked:false}]);owner=id;return result([{locked:true}]);}
-     if(tag==="next")return result(row.status==="pending" && row.availableAt<=values[0] && (row.approvedTerms || sql.includes("OR NOT EXISTS")&&row.hasTermsAcceptance===false) && row.templateVersion===values[1]?[{id:row.id}]:[]);
+     if(tag==="next")return result(row.status==="pending" && row.availableAt<=values[0] && ((row.approvedTerms || sql.includes("OR NOT EXISTS")&&row.hasTermsAcceptance===false) && row.templateVersion===values[1] || row.purpose==="password-reset"&&row.templateVersion===values[2])?[{id:row.id}]:[]);
      if(tag==="load")return result([structuredClone(row)]);
      if(tag==="cancel"){if(row.status==="pending"){row.status="cancelled";row.updatedAt=values[1];return result([{}]);}return result([]);}
      if(tag==="reserve"){
@@ -223,4 +223,18 @@ test("development consent delivery is opt-in, marker-scoped and never admits his
   }
   process.env.NODE_ENV="production";assert.throws(()=>createOutboxWorker(devEnv,prepare().deps));
  }finally{if(old===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=old;}
+});
+
+test("reset jobs use the same worker with purpose-separated HMAC, fresh eligibility and reset rendering",async()=>{
+ const f=fixture();Object.assign(f.row,{purpose:"password-reset",templateVersion:"tailor-password-reset-v1",emailVerified:true,disabledAt:null,deletionRequestedAt:null,hasCredential:true,approvedTerms:false});
+ const context={id:f.row.id,issuanceId:f.row.issuanceId,templateVersion:f.row.templateVersion};Object.assign(f.row,f.tools.seal(context,f.payload));
+ f.row.verifier=f.tools.mac("password-reset/"+f.row.issuanceId,f.payload.email,f.payload.otp);
+ const send=f.deps.mailer.sendVerification;f.deps.mailer.sendVerification=async(payload,expiry,purpose)=>{assert.equal(purpose,"password-reset");return send(payload,expiry);};
+ assert.equal(await f.worker().runOnce(),"sent");assert.equal(f.sends(),1);
+});
+test("reset delivery cancels expired, consumed, superseded, locked or passwordless state before decryption",async()=>{
+ for(const patch of [{disabledAt:new Date()},{deletionRequestedAt:new Date()},{hasCredential:false},{consumedAt:new Date()},{supersededAt:new Date()},{failedAttempts:3},{issueExpiresAt:new Date(0)}]){
+  const f=fixture();Object.assign(f.row,{purpose:"password-reset",templateVersion:"tailor-password-reset-v1",emailVerified:true,disabledAt:null,deletionRequestedAt:null,hasCredential:true,approvedTerms:false},patch);
+  assert.equal(await f.worker().runOnce(),"cancelled");assert.equal(f.opens(),0);assert.equal(f.sends(),0);
+ }
 });

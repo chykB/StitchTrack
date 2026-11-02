@@ -18,26 +18,28 @@ function color(role: keyof typeof tokens["stitchtrack color roles"]["roles"]) {
 const body = tokens.typography.body.medium, heading = tokens.typography.headline.small;
 
 // Rendering only: no SMTP, storage, code generation or authentication action.
-export function renderVerificationEmail(input: unknown, expiresAt: Date) {
+export function renderVerificationEmail(input: unknown, expiresAt: Date, purpose:"email-verification"|"password-reset"="email-verification") {
   const parsed = payloadSchema.safeParse(input);
   if (!parsed.success || !input || typeof input !== "object" || !("email" in input) || input.email !== parsed.data.email ||
       !(expiresAt instanceof Date) || !Number.isFinite(expiresAt.getTime())) throw new ProductAuthError("email_invalid_message");
+  if(!["email-verification","password-reset"].includes(purpose))throw new ProductAuthError("email_invalid_message");
+  const reset=purpose==="password-reset", title=reset?"Reset your password":"Verify your email address";
   const {email, otp} = parsed.data;
   const deadline = new Intl.DateTimeFormat("en-NG", {dateStyle:"medium", timeStyle:"medium", timeZone:"Africa/Lagos"}).format(expiresAt) + " WAT";
-  const instructions = "Enter this code on the StitchTrack email verification screen. Do not share it with anyone.";
+  const instructions = reset?"Enter this code on the StitchTrack password reset screen, then choose a new password. Do not share it. Resetting signs out all devices; log in again afterwards.":"Enter this code on the StitchTrack email verification screen. Do not share it with anyone.";
   const validity = "Valid for up to five minutes from issue. Expires at " + deadline + ". Delivery delays do not extend its validity.";
   const unexpected = "If you did not request this code, ignore this email. No action is needed.";
   return {
     recipient: email,
-    subject: "Verify your StitchTrack email address",
-    text: ["StitchTrack", "Verify your email address", "For: " + email, "Verification code: " + otp, instructions, validity, unexpected].join("\n\n"),
+    subject: reset?"Reset your StitchTrack password":"Verify your StitchTrack email address",
+    text: ["StitchTrack", title, "For: " + email, "Verification code: " + otp, instructions, validity, unexpected].join("\n\n"),
     html: `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verify your StitchTrack email address</title></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} | StitchTrack</title></head>
 <body style="margin:0;background:${color("background")};color:${color("on background")};font-family:'${body.fontFamily.value}',Arial,sans-serif;font-size:${body.fontSize.value}px;line-height:${body.lineHeight.value}px">
 <table role="presentation" style="width:100%;border-collapse:collapse"><tr><td style="padding:24px 16px">
 <table role="presentation" style="width:100%;max-width:560px;margin:0 auto;border-collapse:collapse;background:${color("surface container lowest")}"><tr><td style="padding:24px">
 <p style="margin:0 0 16px;color:${color("primary")};font-weight:${heading.fontWeight.value}">StitchTrack</p>
-<h1 style="margin:0 0 16px;font-size:${heading.fontSize.value}px;line-height:${heading.lineHeight.value}px;font-weight:${heading.fontWeight.value}">Verify your email address</h1>
+<h1 style="margin:0 0 16px;font-size:${heading.fontSize.value}px;line-height:${heading.lineHeight.value}px;font-weight:${heading.fontWeight.value}">${escapeHtml(title)}</h1>
 <p>For: ${escapeHtml(email)}</p>
 <p style="padding:16px;background:${color("primary container")};color:${color("on primary container")}">Verification code: <strong>${escapeHtml(otp)}</strong></p>
 <p>${escapeHtml(instructions)}</p><p>${escapeHtml(validity)}</p><p>${escapeHtml(unexpected)}</p>

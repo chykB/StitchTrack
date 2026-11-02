@@ -1,0 +1,79 @@
+TASK FIVE - EVIDENCE 10
+Logout Edge Case: Corrected Behaviour
+
+Environment:
+StitchTrack local Next.js application
+http://127.0.0.1:3000
+Isolated product test database
+
+1. FAILURE HANDLING
+
+Chrome DevTools Request conditions blocked:
+POST /api/internal/tailor-session/logout
+
+Observed response:
+"Logout could not be confirmed. You may still be
+logged in. Check your session or try logout again."
+
+StitchTrack did not claim successful logout.
+
+2. SESSION RECOVERY
+
+With logout still blocked, clicked Check session.
+
+Observed result:
+The application returned to the authenticated view,
+displaying "Logged in as my account."
+
+This confirms the browser could still recover its
+authenticated state after the blocked request.
+
+3. SUCCESSFUL LOGOUT
+
+Disabled the logout request-blocking condition.
+
+Clicked Log out once.
+
+Observed:
+- StitchTrack displayed the logged-out interface.
+- The authentication session cookie disappeared.
+- Only the CSRF cookie remained visible.
+
+4. POST-LOGOUT ACCESS CHECK
+
+Refreshed the application.
+
+GET /api/internal/tailor-session/session
+HTTP status: 401 Unauthorized
+
+The server did not authenticate the browser after logout.
+
+5. DATABASE INSPECTION
+
+A subsequent guarded read-only PostgreSQL inspection
+reported:
+
+remaining_sessions: 1
+unexpired_sessions: 1
+distinct_digests: 1
+session_inspection_exit: 0
+
+The remaining session may belong to an earlier login.
+This aggregate check does not identify the exact
+session removed during the successful logout.
+
+6. RESULT
+
+PASS: Browser logout failure was reported honestly.
+PASS: Session lookup recovered after blocked logout.
+PASS: Normal logout cleared browser authentication.
+PASS: Subsequent session lookup returned HTTP 401.
+
+LIMITATION:
+The original defective behaviour was not captured.
+A matching before-and-after session-row screenshot
+is still required for Evidence 07 and Evidence 08.
+
+Supporting screenshots:
+logout-network-failure.png
+logout-success.png

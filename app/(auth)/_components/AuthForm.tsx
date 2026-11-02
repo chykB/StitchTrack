@@ -26,6 +26,7 @@ type AuthFormProps = {
   legend: string;
   hideLegend?: boolean;
   localSessionOrigin?: string;
+  initialEmail?:string;onEmailDraftChange?:(email:string)=>void;
   registrationController?: RegistrationController;
   sessionController?: SessionController; // Injection for reviewed composition/offline tests only.
   draftPreview?: DraftTermsPreview;
@@ -67,9 +68,10 @@ export function handleLocalSubmit(
 }
 
 export async function submitAuthForm(event: FormEvent<HTMLFormElement>, ready:boolean, mode:AuthMode,
-  requireDraftAcknowledgement:boolean, dispatch:(event:ValidationEvent)=>void, controller?:SessionController) {
+  requireDraftAcknowledgement:boolean, dispatch:(event:ValidationEvent)=>void, controller?:SessionController, rememberEmail?:(email:string)=>void) {
   if(mode === "login" && controller?.enabled && controller.getSnapshot().pending) {event.preventDefault();return false;}
   const values=handleLocalSubmit(event,ready,mode,requireDraftAcknowledgement,dispatch);
+  if(mode==="login"&&values)rememberEmail?.(values.email);
   return mode === "login" && controller?.enabled && values ? controller.login({email:values.email,password:values.password}) : false;
 }
 
@@ -107,7 +109,7 @@ export function AuthSessionControls({snapshot,onRefresh,onLogout,ready=true}:{sn
 }
 
 export default function AuthForm({
-  mode, buttonLabel, unavailableMessage, legend, hideLegend = false, draftPreview, onOpenDocument, sessionController, localSessionOrigin, registrationController,
+  mode, buttonLabel, unavailableMessage, legend, hideLegend = false, draftPreview, onOpenDocument, sessionController, localSessionOrigin, registrationController,initialEmail,onEmailDraftChange,
 }: AuthFormProps) {
   const [disabledRegistration]=useState(()=>createRegistrationController(createRegistrationClient()));
   const registration=registrationController??disabledRegistration;
@@ -129,7 +131,7 @@ export default function AuthForm({
     (current: ValidationState, event: ValidationEvent | {type:"login-complete"}) => event.type === "login-complete"
       ? {...initialValidationState(),values:{email:current.values.email,password:""}}
       : reduceValidation(mode, current, event, requireDraftAcknowledgement),
-    undefined, initialValidationState,
+    undefined, () => ({...initialValidationState(),values:{...initialValidationState().values,email:initialEmail??""}}),
   );
   const errors = visibleErrors(mode, state, requireDraftAcknowledgement);
   const signupBlocked = signupSubmissionBlocked(mode, state, requireDraftAcknowledgement);
@@ -152,7 +154,7 @@ export default function AuthForm({
 
   return (
     <form method="post" noValidate onSubmit={event => {
-      const submitted=liveSignup?submitRegistrationForm(event,ready,dispatch,registration,setTermsError):submitAuthForm(event,ready,mode,requireDraftAcknowledgement,dispatch,controller);
+      const submitted=liveSignup?submitRegistrationForm(event,ready,dispatch,registration,setTermsError):submitAuthForm(event,ready,mode,requireDraftAcknowledgement,dispatch,controller,onEmailDraftChange);
       void submitted.then(success=>{
         if(success) {dispatch({type:"login-complete"});setPasswordVisible(false);}
       });
@@ -169,7 +171,7 @@ export default function AuthForm({
         )}
         <FormField id={mode + "-email"} name="email" label="Email address"
           type="email" autoComplete="email" value={state.values.email} error={errors.email}
-          onChange={event => dispatch({ type: "change", field: "email", value: event.currentTarget.value })}
+          onChange={event => {dispatch({ type: "change", field: "email", value: event.currentTarget.value });onEmailDraftChange?.(event.currentTarget.value);}}
           onBlur={event => dispatch({ type: "blur", field: "email", value: event.currentTarget.value })} />
         {mode !== "reset" && (
           <FormField id={mode + "-password"} name="password" label="Password"
