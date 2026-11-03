@@ -8,6 +8,7 @@ import {createAuthRateLimiter, type AuthRatePolicy, type BucketPolicy, type Rate
 import {createHttpSessionService, localSessionHttpConfiguration, sessionConnectionFromSocket, sessionHttpRequest,type SessionOperation,type VerifiedSessionConnection} from "./session-http.server.ts";
 import {localDevelopmentHttpOrigin} from "./development-policy.ts";
 import {ProductAuthError} from "./secrets.server.ts";
+import {createAdministratorService} from "./admin.server.ts";
 
 type Environment = Readonly<Record<string, string | undefined>>;
 export type LocalHttpsRatePolicy = Readonly<{
@@ -56,7 +57,9 @@ export function directLocalHttpsConnection(incoming: IncomingMessage, origin:str
 // Shared composition for Next Node API routes and the historical HTTPS proof.
 // Inert: no connections, listener, files or certificates are created/read.
 export function createLocalSessionDispatcher(client:PrismaClient,options:Options) {
-  const {env}=prepared(options);
+  const {env,config}=prepared(options);
+  const sessions=createHttpSessionService(client,config);
+  const admin=env.ENABLE_PRODUCT_ADMIN_HTTP === "true" ? createAdministratorService(client,sessions) : undefined;
   const limiter=createAuthRateLimiter(client,{mode:"test",identifierKey:options.identifierKey,
     policies:{login:options.policy.login},ipOnlyPolicies:{session:options.policy.session,logout:options.policy.logout}});
   return async(request:Request,operation:SessionOperation,connection:VerifiedSessionConnection):Promise<Response>=>{
@@ -73,7 +76,8 @@ export function createLocalSessionDispatcher(client:PrismaClient,options:Options
           const result=decision(await limiter.consumeAccount("login",connection.rateTransport,email));
           return result.allowed?result:{...result,retryAfterSeconds:Math.max(nextIpTokenSeconds,result.retryAfterSeconds)};
         }},
-      sessions:current=>createHttpSessionService(client,current),
+      sessions:()=>sessions,
+      ...(admin ? {administration:async(headers:Headers)=>(await admin.request(headers,false)).status === 200} : {}),
     });
   };
 }

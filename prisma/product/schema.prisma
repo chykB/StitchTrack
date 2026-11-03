@@ -18,6 +18,9 @@ model User {
   name String @db.Text
   email String @unique @map("emailCanonical") @db.Text
   emailVerified Boolean @default(false)
+  // Platform operations only; never a business membership or signup field.
+  // DB-only default: Prisma must omit this protected column on ordinary INSERT.
+  isAdministrator Boolean @default(dbgenerated("false"))
   disabledAt DateTime? @db.Timestamptz(3)
   deletionRequestedAt DateTime? @db.Timestamptz(3)
   image String? @db.Text

@@ -104,6 +104,8 @@ export function AuthSessionControls({snapshot,onRefresh,onLogout,ready=true}:{sn
   const blocked=!ready||snapshot.pending!==null||snapshot.retryUntil!==null;
   return <section aria-label="Login session">
     {snapshot.session && <p>{snapshot.status === "authenticated" ? "Logged in as " : "Previously logged in as "}{snapshot.session.user.name}.</p>}
+    {ready && snapshot.status === "authenticated" && !blocked && snapshot.session?.administration === true &&
+      <a className={styles.documentLink} href="/admin">Administration</a>}
     {snapshot.session && <button className={styles.submit} type="button" disabled={blocked} onClick={onLogout}>
       {snapshot.pending === "logout" ? "Logging out..." : "Log out"}</button>}
     {snapshot.status === "unknown" && <button className={styles.submit} type="button" disabled={blocked} onClick={onRefresh}>Check session</button>}

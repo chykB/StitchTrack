@@ -22,7 +22,7 @@ The 30-day limit is StitchTrack's approved direction, not a claimed universal st
 
 | Model | Significant personal data | Action and trigger/duration | Reason / proposed basis | Dependencies and unresolved questions |
 | --- | --- | --- | --- | --- |
-| User | Name, canonical email, image reference, identifiers, verification/lock/request timestamps | Lock immediately; erase eligible row promptly, no later than request + 30 days. Assessment job only targets its new disposable fixture. | Account operation: contractual necessity where applicable; security and erasure-request handling require reviewed basis. | Account, Session, TermsAcceptance and Issuance RESTRICT deletion. Non-null image blocks job pending external-object review. No promise that deleting a URL deletes a hosted image. |
+| User | Name, canonical email, image reference, identifiers, administrator flag, verification/lock/request timestamps | Lock immediately; erase eligible row promptly, no later than request + 30 days. Assessment job only targets its new disposable fixture. | Account operation: contractual necessity where applicable; security and erasure-request handling require reviewed basis. | Account, Session, TermsAcceptance and Issuance RESTRICT deletion. Non-null image blocks job pending external-object review. No promise that deleting a URL deletes a hosted image. |
 | Account | Argon2id credential hash, user/account identifiers; token/scope fields exist but current SQL requires them NULL | Delete with eligible User in the same transaction; never preserve the hash as an anonymized record. | Authentication purpose ends when eligible account data is erased. Security basis during active service needs review. | User FK RESTRICT. No credential replacement or passwordless-client password creation. |
 | Session | HMAC token digest, user identifier, IP/user-agent if populated, timestamps | Revoke all at Stage 1; erase any stale residual rows with User. Ordinary expired-session maintenance is separate. | Necessary access control/security; no need to retain usable sessions after lock. | User FK RESTRICT. Digest is protected/pseudonymous, not anonymous. No new session lifetime. |
 | Verification | Identifier may embed email; keyed OTP value/attempt encoding, expiry/timestamps | Stop authentication through account lock; erase linked and exact current signup/reset orphan identifiers with User. Expiry alone does not erase the row. | Time-limited authentication/security processing, then no ongoing challenge purpose. | No User FK. Issuance reference uses SET NULL. Job removes own issuances first, rejects cross-user references and unsupported attributable formats. Future plugins need ownership review. |
@@ -48,7 +48,7 @@ is **not approved for an unattended production scheduler**; a future least-privi
 identity needs separate approval/provisioning before operational deployment.
 
 Guards validate URL database/role/host/port/schema before connection, then actual database,
-current/session role, non-superuser flags, product ownership, UTC, four exact applied
+current/session role, non-superuser flags, product ownership, UTC, the manifest's exact applied
 migration checksums, all nine tables/history and every FK/RESTRICT/SET NULL relationship.
 New business tables/FKs or unexpected schema/history stop the job. The private format-1
 receipt requires successful setup; it contains only run UUID and historical counts/digests,

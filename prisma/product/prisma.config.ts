@@ -9,6 +9,8 @@ if(target) {
   // This new migration is for owner-reviewed product-test execution only.
   if(command==="deploy" && (target.mode!=="test" || process.env.PRODUCT_PASSWORD_RESET_MIGRATION_CONFIRMED!=="true"))
     throw new Error("Separate owner confirmation for product-test password-reset migration required.");
+  if(command==="deploy" && process.env.PRODUCT_ADMIN_MIGRATION_CONFIRMED!=="true")
+    throw new Error("Separate owner confirmation for product-test administrator migration required.");
   assertProductMigrationFiles();
 }
 

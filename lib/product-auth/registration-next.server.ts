@@ -1,5 +1,6 @@
 import "server-only";
 import type {NextApiRequest,NextApiResponse} from "next";
+import type {IncomingMessage} from "node:http";
 import {Readable} from "node:stream";
 import type {PrismaClient} from "../../prisma/product/generated/client.ts";
 import {PRODUCT_PRISMA_CONNECTION_OPTIONS,productDatabaseConfig} from "../../prisma/product/targets.ts";
@@ -81,41 +82,51 @@ async function sessionRuntime(env:Environment):Promise<SessionDispatcher> {
 }
 // One supported Node API transport for the two existing auth boundaries. No
 // custom server. Never use req.headers: Next has already modified them.
-function nodeHandler(path:string,method:"GET"|"POST",flag:string,unavailable:string,
+function nodeResponse(path:string|readonly string[],method:"GET"|"POST",flag:string,unavailable:string,
   environment:(()=>Environment)|undefined,
   runtime:(env:Environment)=>Promise<(request:Request,connection:Parameters<Dispatcher>[2])=>Promise<Response>>) {
-  return async(incoming:NextApiRequest,outgoing:NextApiResponse):Promise<void>=>{
-    const reply=(error:string,status:number,headers?:Record<string,string>)=>sendHttpsResponse(outgoing,authJson({error},status,headers));
+  return async(incoming:IncomingMessage):Promise<Response>=>{
+    const reply=(error:string,status:number,headers?:Record<string,string>)=>authJson({error},status,headers);
     let stage:RegistrationFailureStage="transport_configuration";
     try {
       const env=(environment??(()=>process.env))();
       if(process.env.NODE_ENV!=="development"||env.NODE_ENV!=="development"||env[flag]!=="true") {
-        await reply("not_found",404);return;
+        return reply("not_found",404);
       }
       const origin=localOrigin(env),url=new URL(origin);
       const connection=url.protocol==="https:"?directLocalHttpsConnection(incoming,origin):sessionConnectionFromSocket(incoming.socket);
       if(url.protocol==="http:"&&(connection?.secure||incoming.socket.localAddress!=="127.0.0.1"||
-        incoming.socket.localPort!==3000||incoming.aborted)) {await reply("not_found",404);return;}
-      if(!connection||connection.peerAddress!=="127.0.0.1") {await reply("not_found",404);return;}
+        incoming.socket.localPort!==3000||incoming.aborted)) {return reply("not_found",404);}
+      if(!connection||connection.peerAddress!=="127.0.0.1") {return reply("not_found",404);}
       let headers:Record<string,string>;
-      try{headers=wireHeaders(incoming.rawHeaders);}catch{await reply("invalid_headers",400);return;}
-      if(Object.keys(headers).some(k=>k==="forwarded"||k==="x-real-ip"||k.startsWith("x-forwarded-"))) {await reply("forwarded_metadata_not_allowed",403);return;}
+      try{headers=wireHeaders(incoming.rawHeaders);}catch{return reply("invalid_headers",400);}
+      if(Object.keys(headers).some(k=>k==="forwarded"||k==="x-real-ip"||k.startsWith("x-forwarded-"))) {return reply("forwarded_metadata_not_allowed",403);}
       const incomingPath=incoming.url?.split("?")[0];
-      if(headers.host!==url.host||incomingPath!==path||/[\\#\x00-\x20\x7f]/u.test(incoming.url??"")) {await reply("not_found",404);return;}
-      if(incoming.method!==method) {await reply("method_not_allowed",405,{allow:method});return;}
-      if((method==="POST"||headers.origin!==undefined)&&headers.origin!==origin) {await reply("origin_not_allowed",403);return;}
-      if(headers.upgrade||headers.expect||headers.trailer||headers.connection&&headers.connection.split(",").some(t=>!["close","keep-alive"].includes(t.trim().toLowerCase()))) {await reply("unsupported_transport",400);return;}
+      if(headers.host!==url.host||!incomingPath||(typeof path==="string"?incomingPath!==path:!path.includes(incomingPath))||/[\\#\x00-\x20\x7f]/u.test(incoming.url??"")) {return reply("not_found",404);}
+      if(incoming.method!==method) {return reply("method_not_allowed",405,{allow:method});}
+      if((method==="POST"||headers.origin!==undefined)&&headers.origin!==origin) {return reply("origin_not_allowed",403);}
+      if(headers.upgrade||headers.expect||headers.trailer||headers.connection&&headers.connection.split(",").some(t=>!["close","keep-alive"].includes(t.trim().toLowerCase()))) {return reply("unsupported_transport",400);}
       if(headers["content-length"]!==undefined&&(!/^\d+$/u.test(headers["content-length"])||headers["transfer-encoding"]!==undefined)||
-        headers["transfer-encoding"]!==undefined&&headers["transfer-encoding"].toLowerCase()!=="chunked") {await reply("invalid_framing",400);return;}
-      if(method==="GET"&&(headers["transfer-encoding"]||headers["content-length"]!==undefined&&headers["content-length"]!=="0")) {await reply("body_not_allowed",400);return;}
+        headers["transfer-encoding"]!==undefined&&headers["transfer-encoding"].toLowerCase()!=="chunked") {return reply("invalid_framing",400);}
+      if(method==="GET"&&(headers["transfer-encoding"]||headers["content-length"]!==undefined&&headers["content-length"]!=="0")) {return reply("body_not_allowed",400);}
       stage="runtime_initialization";
       const dispatch=await runtime(env);
       stage="request_execution";
       const init:RequestInit&{duplex?:"half"}={method,headers};
       if(method==="POST"){init.body=Readable.toWeb(incoming) as ReadableStream<Uint8Array>;init.duplex="half";}
       const request=new Request(new URL(incoming.url!,origin),init);
-      await sendHttpsResponse(outgoing,await dispatch(request,connection));
-    }catch(error){if(flag==="ENABLE_PRODUCT_REGISTRATION_HTTP")reportRegistrationFailure(stage,error);await reply(unavailable,503).catch(()=>{});}
+      return await dispatch(request,connection);
+    }catch(error){if(flag==="ENABLE_PRODUCT_REGISTRATION_HTTP")reportRegistrationFailure(stage,error);return reply(unavailable,503);}
+  };
+}
+
+
+// API responses and the server-rendered admin page use identical raw-socket checks.
+function nodeHandler(...args:Parameters<typeof nodeResponse>) {
+  const respond=nodeResponse(...args);
+  return async(incoming:NextApiRequest,outgoing:NextApiResponse):Promise<void>=>{
+    try{await sendHttpsResponse(outgoing,await respond(incoming));}
+    catch{await sendHttpsResponse(outgoing,authJson({error:args[3]},503)).catch(()=>{});}
   };
 }
 
@@ -143,4 +154,16 @@ export function createNextAccountDeletionHandler(dependencies:HandlerDependencie
  return nodeHandler(accountDeletionPath,"POST","ENABLE_PRODUCT_ACCOUNT_DELETION_HTTP","deletion_unavailable",dependencies.environment,async env=>{
   return (dependencies.runtime??(async settings=>{const {client,identifierKey}=await localRuntime(settings);return createLocalAccountDeletionDispatcher(client,settings,identifierKey);}))(env);
  });
+}
+
+export function createNextAdminResponse(operation:"page"|"summary",dependencies:HandlerDependencies<import("./admin.server.ts").AdminDispatcher>={}) {
+ return nodeResponse(operation==="page"?["/admin","/api/internal/tailor-session/admin-page"]:"/api/internal/tailor-session/admin-summary",operation==="page"?"GET":"POST",
+  "ENABLE_PRODUCT_ADMIN_HTTP","administration_unavailable",dependencies.environment,async env=>{
+   const dispatch=await (dependencies.runtime??(async settings=>{
+    const {createLocalAdminDispatcher}=await import("./admin.server.ts");
+    const {client,identifierKey}=await localRuntime(settings);
+    return createLocalAdminDispatcher(client,settings,identifierKey);
+   }))(env);
+   return (request,connection)=>dispatch(request,operation,connection);
+  });
 }

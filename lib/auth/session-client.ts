@@ -6,12 +6,12 @@ import {emailSchema,loginSchema} from "./schemas.ts";
 // the browser HTTPS origin before every request; no public build-time flag.
 export const FRONTEND_AUTH_ENABLED = false;
 export type SessionUser = {id:string;name:string;email:string};
-export type FrontendSession = {user:SessionUser;expiresAt:number};
+export type FrontendSession = {user:SessionUser;expiresAt:number;administration?:boolean};
 export type AuthFailure = {ok:false;kind:"disabled"|"invalid_input"|"invalid_credentials"|"unauthenticated"|"rate_limited"|"network"|"unavailable";retryAfterSeconds?:number};
 export type AuthResult<T> = {ok:true;data:T}|AuthFailure;
 const user=z.strictObject({id:z.string().min(1),name:z.string().min(1),email:emailSchema});
 const loginReply=z.strictObject({user});
-const sessionReply=z.strictObject({user,expiresAt:z.string().datetime({offset:true})});
+const sessionReply=z.strictObject({user,expiresAt:z.string().datetime({offset:true}),administration:z.boolean().optional()});
 const logoutReply=z.strictObject({loggedOut:z.literal(true)});
 const deletionReply=z.strictObject({requested:z.literal(true)});
 const paths={login:"/api/internal/tailor-session/login",session:"/api/internal/tailor-session/session",logout:"/api/internal/tailor-session/logout",deletion:accountDeletionPath} as const;
@@ -51,7 +51,8 @@ export function createSessionClient(options:{enabled?:boolean;fetch?:typeof fetc
     async session():Promise<AuthResult<FrontendSession|null>> {
       const result=await request("session",sessionReply);
       if(!result.ok)return result.kind==="unauthenticated"?{ok:true,data:null}:result;
-      return {ok:true,data:{user:result.data.user,expiresAt:Date.parse(result.data.expiresAt)}};
+      return {ok:true,data:{user:result.data.user,expiresAt:Date.parse(result.data.expiresAt),
+        ...(result.data.administration === undefined ? {} : {administration:result.data.administration})}};
     },
     logout:()=>request("logout",logoutReply,{}),
     async requestDeletion(input:unknown):Promise<AuthResult<{requested:true}>> {

@@ -39,3 +39,11 @@ test("disabled integration preserves truthful local-unavailable validation behav
   const controller=createSessionController(createSessionClient({fetch:async()=>assert.fail("No request permitted")})),e=event(),events=[];
   assert.equal(await submitAuthForm(e.value,true,"login",false,v=>events.push(v),controller),false);assert.equal(e.prevented(),true);assert.equal(events[0].type,"submit");assert.equal(events[0].values.password," Exact synthetic password ");
 });
+
+test("Administration is beside account controls only for confirmed, current eligible sessions",()=>{
+ const markup=value=>renderToStaticMarkup(createElement(AuthSessionControls,{snapshot:value,onRefresh(){},onLogout(){}}));
+ const admin={...snapshot,session:{...session,administration:true}};
+ assert.match(markup(admin),/<a[^>]*href="\/admin"[^>]*>Administration<\/a>/);
+ for(const value of [snapshot,{...admin,status:"unknown"},{...admin,pending:"session"},{...admin,pending:"logout"},{...admin,session:{...session,administration:false}},{...admin,status:"unauthenticated",session:null}])assert.doesNotMatch(markup(value),/>Administration</);
+ const unready=renderToStaticMarkup(createElement(AuthSessionControls,{snapshot:admin,ready:false,onRefresh(){},onLogout(){}}));assert.doesNotMatch(unready,/>Administration</);
+});

@@ -10,7 +10,8 @@ test("fourth migration is test-only, preserves applied SQL, separates open purpo
  assert.match(sql,/current_database\(\)<>'stitchtrack_product_test'/);assert.doesNotMatch(sql,/stitchtrack_product_dev|UPDATE.*Account|DELETE FROM|CREATE SCHEMA/);
  assert.match(sql,/DEFAULT 'email-verification'/);assert.match(sql,/\("userId","purpose"\)/);assert.match(sql,/password-reset/);
  const grants=read("prisma/product/setup/password-reset-test-permissions.sql");assert.deepEqual(grants.match(/^GRANT.*$/gm),['GRANT UPDATE ("password","updatedAt") ON product."Account" TO stitchtrack_product_test_app;']);
- for(const digest of Object.values(PRODUCT_MIGRATIONS))assert.ok(grants.includes(digest));
+ // This is the historical fourth-migration grant, not authorization for later migrations.
+ for(const [name,digest] of Object.entries(PRODUCT_MIGRATIONS))if(name<="20261102_password_reset")assert.ok(grants.includes(digest));
  assert.ok(read("prisma/product/prisma.config.ts").includes('PRODUCT_PASSWORD_RESET_MIGRATION_CONFIRMED!=="true"'));
 });
 test("integration harness is inert on import, needs exact test-only authorization and never sends SMTP",()=>{

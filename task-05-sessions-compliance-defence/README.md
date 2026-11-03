@@ -27,7 +27,7 @@ screenshot, agent database test or completed browser workflow. See the
 | Login | Canonical email, Argon2id, generic refusals, fresh sessions and PostgreSQL counters tested; historical curl HTTPS proof passed; owner completed the current Next.js registration/email/OTP/login/session browser journey. | Captured Task Five browser evidence and production ingress/rate policies remain pending. |
 | Protected routes/logout | Individual/user-wide server revocation and account-lock PostgreSQL races owner-verified; curl lookup/logout/revocation passed; fresh lookup rejects locked identities. | Protected business routes, two-account browser identity and logout network-failure evidence. |
 | Reset and deletion | Existing sessions can be revoked by user; real reset implementation is offline-tested and prepared. | Apply/review reset prerequisites and run its PostgreSQL/browser proof; the new Stage 1 deletion request needs owner browser evidence; purge remains separate. |
-| Administrative authorization | Authentication remains separate from business permissions. | Resolve the assessment's administrative-role requirement within approved product scope; business-scoped authorization remains mandatory. |
+| Administrative authorization | Default-off `/admin` and aggregate-summary action now enforce server-controlled role, verified session and account locks; offline tested. | Owner review/execution of fifth test-only migration, restricted INSERT grants and role assignment; browser Evidence 16. Business-scoped authorization remains mandatory. |
 
 ## References and evidence boundary
 
@@ -50,7 +50,7 @@ authorizer and sets the lock/revokes sessions atomically. Login now uses a real 
 transaction with Better Auth bound to its exact Prisma tx; fresh lookup rejects locked
 accounts and cookies are returned only after commit. The adapter callback itself still
 provides no transaction. Individual logout, fixed seven-day policy and prior evidence
-are preserved. No administrative endpoint or complete erasure workflow exists. The new default-off authenticated deletion-request boundary provides locking/session revocation only; see [account lifecycle](docs/account-lifecycle.md#stage-1-authenticated-deletion-request).
+are preserved. No administrative suspension endpoint or complete operational erasure workflow exists. The new default-off authenticated deletion-request boundary provides locking/session revocation only; see [account lifecycle](docs/account-lifecycle.md#stage-1-authenticated-deletion-request).
 
 The owner completed the [real PostgreSQL proof and separate cleanup](../prisma/product/account-access-postgres-verification.md)
 for run `a02fc98d-905c-4f0b-a0f6-b9b721869d1d`. Preflight, both login/lock orderings,
@@ -139,9 +139,9 @@ notes below are now prepared; existing owner evidence is preserved, not audited 
 
 Reset still needs its unapplied database prerequisites and owner proof; full deletion/purge,
 retention, roles and protected business functionality remain application dependencies. Account-locking and revocation foundations are already verified;
-reuse them rather than rebuilding them. The assessment's administrative-role requirement
-and soft-gating demonstration need explicit scope reconciliation with the PRD's two V1
-user types and mandatory tailor verification. Public launch/legal approval is not claimed.
+reuse them rather than rebuilding them. The administrator capability below is separately
+authorized for local test use; it does not change the PRD's two V1 user types. The soft-gating
+demonstration remains separate from mandatory product verification. Public launch/legal approval is not claimed.
 
 ## Password-reset implementation prepared (not database-verified)
 
@@ -167,3 +167,11 @@ has run by the agent, and no erasure evidence is invented. Existing non-fixture 
 are outside executable assessment scope. Real Terms retention, external data/backups,
 least-privilege operational execution and scheduling/monitoring block activation of the
 proposed maximum-30-day user promise. Stage 1 wording and completed evidence are preserved.
+
+## Administrator authorization prepared
+
+[Administrator design and owner Evidence 16 procedure](docs/administration.md) document the
+default-false server-controlled capability, protected `/admin` page and independently
+authorized aggregate action. No role is assigned by signup or frontend claims. This does
+not add a third V1 user type or access to business records. Database/browser verification
+is pending; no migration, grant, assignment or new evidence was executed by the agent.

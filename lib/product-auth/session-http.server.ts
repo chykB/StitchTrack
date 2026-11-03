@@ -46,6 +46,8 @@ export type SessionHttpDependencies = {
     consumeAccount: (canonicalEmail: string) => Promise<Decision>;
   };
   sessions?: (config: LocalSessionHttpConfig) => SessionService;
+  // Optional presentation capability only; protected admin operations authorize independently.
+  administration?: (headers: Headers) => Promise<boolean>;
 };
 export const sessionPaths = {login: "/api/internal/tailor-session/login", session: "/api/internal/tailor-session/session", logout: "/api/internal/tailor-session/logout"} as const;
 function reply(body: unknown, status: number, cookies?: Headers) {
@@ -128,7 +130,15 @@ export async function sessionHttpRequest(request: Request, operation: Operation,
     // Minimal protected identity boundary. No browser-supplied identity or business scope.
     const result = await service.lookup(request.headers);
     if (!result.session) return reply({error: "unauthenticated"}, 401, result.headers);
-    if (operation === "session") return reply({user: userData(result.session.user), expiresAt: result.session.expiresAt.toISOString()}, 200, result.headers);
+    if (operation === "session") {
+      let administration: boolean | undefined;
+      if (dependencies.administration) {
+        // Failure must hide navigation, never grant access or break ordinary login.
+        try {administration = await dependencies.administration(request.headers) === true;} catch {administration = false;}
+      }
+      return reply({user: userData(result.session.user), expiresAt: result.session.expiresAt.toISOString(),
+        ...(administration === undefined ? {} : {administration})}, 200, result.headers);
+    }
     const logout = await service.logout(request.headers); return reply({loggedOut: true}, 200, logout.headers);
   } catch (error) {
     if (operation === "login" && error instanceof ProductAuthError && error.code === "login_rejected") {

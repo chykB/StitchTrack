@@ -125,3 +125,15 @@ test("double logout cannot issue another mutation while revocation is pending",a
   assert.equal(await controller.logout(),false);assert.equal(await controller.login({email:user.email,password:"x"}),false);assert.equal(calls,1);
   finish({ok:true,data:{loggedOut:true}});assert.equal(await pending,true);assert.equal(controller.getSnapshot().status,"unauthenticated");
 });
+
+test("administration presentation follows authoritative session refresh, identity changes and revocation",async()=>{
+ const time=clock();let capability=true,missing=false;
+ const client=createSessionClient({enabled:true,now:time.now,fetch:async(path)=>path.endsWith("/login")?json({user}):missing?json({error:"unauthenticated"},401):json({user,expiresAt:new Date(initialTime+60000).toISOString(),administration:capability})});
+ const controller=createSessionController(client,time);
+ assert.equal(await controller.login({email:user.email,password:"Exact synthetic password"}),true);
+ assert.equal(controller.getSnapshot().session.administration,true);
+ capability=false;await controller.refresh();assert.equal(controller.getSnapshot().session.administration,false);
+ missing=true;await controller.refresh();assert.equal(controller.getSnapshot().session,null);
+ const forged=createSessionClient({enabled:true,fetch:async()=>json({user,expiresAt:new Date(initialTime+60000).toISOString(),administration:"true"})});
+ assert.equal((await forged.session()).kind,"unavailable");
+});
