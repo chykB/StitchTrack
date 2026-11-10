@@ -23,20 +23,26 @@ export class ProductConfigurationError extends Error {
     this.reason=productConfigurationReasons.includes(reason)?reason:"configuration";
   }
 }
+export const PRODUCT_TEST_CLEANUP_ROLE="stitchtrack_product_test_cleanup";
+export function productCleanupConfig(env:Environment=process.env) {
+  if(env.NODE_ENV!=="test"||env.PRODUCT_DATABASE_MODE!=="test"||env.PRODUCT_CLEANUP_CONFIRMED!=="true"||
+    env.PGOPTIONS||env.PGSERVICE||env.PGSERVICEFILE)throw new ProductConfigurationError();
+  return parseProductTarget(env,false,true);
+}
 export function productDatabaseConfig(env:Environment=process.env) {return parseProductTarget(env, false);}
 export function productMigrationConfig(env:Environment=process.env) {
   if(env.PGOPTIONS || env.PGSERVICE || env.PGSERVICEFILE)throw new ProductConfigurationError();
   return parseProductTarget(env, true);
 }
-function parseProductTarget(env:Environment, migration:boolean) {
+function parseProductTarget(env:Environment, migration:boolean, cleanup=false) {
   let reason:ProductConfigurationReason="database_environment";
   try {
     const mode=env.PRODUCT_DATABASE_MODE;
     if(env.NODE_ENV==="production" || (mode!=="development" && mode!=="test") || env.PRODUCT_DATABASE_CONFIRMED!=="true")throw new Error();
-    const target=PRODUCT_TARGETS[mode], user=migration?PRODUCT_MIGRATORS[mode]:target.role;
+    const target=PRODUCT_TARGETS[mode], user=cleanup?PRODUCT_TEST_CLEANUP_ROLE:migration?PRODUCT_MIGRATORS[mode]:target.role;
     reason="migration_confirmation";
     if(migration && env.PRODUCT_MIGRATION_CONFIRMED!=="true")throw new Error();
-    const variable=migration?(mode==="test"?"PRODUCT_TEST_MIGRATION_DATABASE_URL":"PRODUCT_DEV_MIGRATION_DATABASE_URL")
+    const variable=cleanup?"PRODUCT_TEST_CLEANUP_DATABASE_URL":migration?(mode==="test"?"PRODUCT_TEST_MIGRATION_DATABASE_URL":"PRODUCT_DEV_MIGRATION_DATABASE_URL")
       :(mode==="test"?"PRODUCT_TEST_DATABASE_URL":"PRODUCT_DEV_DATABASE_URL");
     const raw=env[variable];
     reason="database_url_missing";if(!raw)throw new Error();

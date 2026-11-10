@@ -2,9 +2,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createElement} from "react";
+import {AuthScreen} from "./rendering.mjs";
 import {renderToStaticMarkup} from "react-dom/server";
 import "./rendering.mjs";
-const {default:AuthForm,AuthSessionControls,submitAuthForm}=await import("../../app/(auth)/_components/AuthForm.tsx");
+const {default:AuthForm,AuthSessionControls,refreshLoginSession,submitAuthForm}=await import("../../app/(auth)/_components/AuthForm.tsx");
 const {createSessionController}=await import("../../lib/auth/session-controller.ts");
 const {createSessionClient}=await import("../../lib/auth/session-client.ts");
 const user={id:"synthetic",name:"<Synthetic tailor>",email:"synthetic@example.invalid"};
@@ -19,12 +20,11 @@ test("existing login markup stays default-disabled, labelled and limited to its 
   assert.match(html,/<fieldset[^>]*disabled/u);assert.match(html,/for="login-email"/u);assert.match(html,/for="login-password"/u);assert.match(html,/aria-label="Show password"/u);
   assert.equal((html.match(/role="status"/gu)||[]).length,1);assert.match(html,/aria-live="polite" aria-atomic="true"/u);assert.doesNotMatch(html,/Login session|Log out|Check session/u);
 });
-test("session controls distinguish authenticated and uncertain states and never invent a dashboard",()=>{
-  const markup=value=>renderToStaticMarkup(createElement(AuthSessionControls,{snapshot:value,onRefresh(){},onLogout(){}}));
-  const authenticated=markup(snapshot);assert.match(authenticated,/Logged in as &lt;Synthetic tailor&gt;/u);assert.match(authenticated,/>Log out</u);assert.doesNotMatch(authenticated,/Check session|href=|businessId/u);
-  const uncertain=markup({...snapshot,status:"unknown"});assert.match(uncertain,/Previously logged in as/u);assert.match(uncertain,/>Check session</u);
-  const busy=markup({...snapshot,pending:"logout"});assert.match(busy,/<button[^>]*disabled/u);assert.match(busy,/Logging out/u);
-  const prehydration=renderToStaticMarkup(createElement(AuthSessionControls,{snapshot,ready:false,onRefresh(){},onLogout(){}}));assert.match(prehydration,/<button[^>]*disabled/u);
+test("login offers only a session recheck for uncertainty, never an intermediate account menu",()=>{
+ const markup=value=>renderToStaticMarkup(createElement(AuthSessionControls,{snapshot:value,onRefresh(){}}));
+ assert.equal(markup(snapshot),"");assert.equal(markup({...snapshot,status:"unauthenticated",session:null}),"");
+ const uncertain=markup({...snapshot,status:"unknown"});assert.match(uncertain,/>Check session</u);assert.doesNotMatch(uncertain,/Go to dashboard|Log out|Logged in as|Administration/u);
+ assert.match(markup({...snapshot,status:"unknown",pending:"session"}),/<button[^>]*disabled/u);
 });
 test("shared submit path preserves error focus, hydration guard and exact credentials, including duplicate prevention",async()=>{
   let calls=0,resolve;const client={enabled:true,login:input=>{calls++;assert.equal(input.password," Exact synthetic password ");return new Promise(r=>{resolve=r;});},session:async()=>({ok:true,data:session}),logout:async()=>({ok:true,data:{loggedOut:true}})};
@@ -40,10 +40,47 @@ test("disabled integration preserves truthful local-unavailable validation behav
   assert.equal(await submitAuthForm(e.value,true,"login",false,v=>events.push(v),controller),false);assert.equal(e.prevented(),true);assert.equal(events[0].type,"submit");assert.equal(events[0].values.password," Exact synthetic password ");
 });
 
-test("Administration is beside account controls only for confirmed, current eligible sessions",()=>{
- const markup=value=>renderToStaticMarkup(createElement(AuthSessionControls,{snapshot:value,onRefresh(){},onLogout(){}}));
- const admin={...snapshot,session:{...session,administration:true}};
- assert.match(markup(admin),/<a[^>]*href="\/admin"[^>]*>Administration<\/a>/);
- for(const value of [snapshot,{...admin,status:"unknown"},{...admin,pending:"session"},{...admin,pending:"logout"},{...admin,session:{...session,administration:false}},{...admin,status:"unauthenticated",session:null}])assert.doesNotMatch(markup(value),/>Administration</);
- const unready=renderToStaticMarkup(createElement(AuthSessionControls,{snapshot:admin,ready:false,onRefresh(){},onLogout(){}}));assert.doesNotMatch(unready,/>Administration</);
+test("post-login navigation waits for the existing authoritative lookup and occurs once without another session request",async()=>{
+ let logins=0,lookups=0,resolveLookup,entered;
+ const lookupStarted=new Promise(resolve=>{entered=resolve;});
+ const controller=createSessionController({enabled:true,
+  login:async()=>{logins++;return {ok:true,data:{user}};},
+  session:()=>{lookups++;entered();return new Promise(resolve=>{resolveLookup=resolve;});},
+  logout:async()=>({ok:true,data:{loggedOut:true}})});
+ const destinations=[],navigate=path=>destinations.push(path);
+ const pending=submitAuthForm(event().value,true,"login",false,()=>{},controller,undefined,navigate);
+ await lookupStarted;assert.deepEqual(destinations,[]);assert.equal(controller.getSnapshot().pending,"login");
+ assert.equal(await submitAuthForm(event().value,true,"login",false,()=>{},controller,undefined,navigate),false);
+ resolveLookup({ok:true,data:session});assert.equal(await pending,true);
+ assert.deepEqual(destinations,["/dashboard"]);assert.equal(logins,1);assert.equal(lookups,1);
+ // Opening account controls or submitting an already-authenticated form must not loop.
+ assert.equal(await submitAuthForm(event().value,true,"login",false,()=>{},controller,undefined,navigate),false);
+ assert.deepEqual(destinations,["/dashboard"]);assert.equal(lookups,1);
+});
+test("failed, unconfirmed, expired and mismatched-identity logins never navigate",async()=>{
+ for(const kind of ["credentials","network","rate","lookup-failure","revoked","expired","other-user"]){
+  const controller=createSessionController({enabled:true,
+   login:async()=>{if(kind==="network")throw new Error("synthetic network failure");return kind==="credentials"?{ok:false,kind:"invalid_credentials"}:kind==="rate"?{ok:false,kind:"rate_limited",retryAfterSeconds:1}:{ok:true,data:{user}};},
+   session:async()=>kind==="lookup-failure"?{ok:false,kind:"unavailable"}:{ok:true,data:kind==="revoked"?null:{...session,...(kind==="expired"?{expiresAt:Date.now()-1}:{}),...(kind==="other-user"?{user:{...user,id:"other"}}:{})}},
+   logout:async()=>({ok:true,data:{loggedOut:true}})});
+  const destinations=[];assert.equal(await submitAuthForm(event().value,true,"login",false,()=>{},controller,undefined,path=>destinations.push(path)),false,kind);assert.deepEqual(destinations,[],kind);
+ }
+});
+
+
+test("opening Login with an active session navigates after exactly one authoritative refresh",async()=>{
+ let reads=0,logins=0;const destinations=[];
+ const controller=createSessionController({enabled:true,session:async()=>{reads++;return {ok:true,data:session};},login:async()=>{logins++;return {ok:true,data:{user}};},logout:async()=>({ok:true,data:{loggedOut:true}})});
+ assert.equal(await refreshLoginSession(controller,path=>destinations.push(path)),true);assert.deepEqual(destinations,["/dashboard"]);assert.equal(reads,1);assert.equal(logins,0);
+ const current={...controller,getServerSnapshot:controller.getSnapshot};
+ const html=renderToStaticMarkup(createElement(AuthScreen,{mode:"login",sessionController:current}));assert.match(html,/<h1[^>]*>Opening your dashboard<\/h1>/u);
+ assert.doesNotMatch(html,/>Your account<|Go to dashboard|Logged in as|Log out|Account settings|Forgot your password/u);
+});
+test("expired, revoked, unavailable and disabled lookups never redirect or fabricate login",async()=>{
+ for(const kind of ["expired","revoked","failure","disabled"]){
+  const destinations=[],controller=createSessionController({enabled:kind!=="disabled",session:async()=>kind==="failure"?{ok:false,kind:"network"}:{ok:true,data:kind==="revoked"?null:{...session,expiresAt:kind==="expired"?Date.now()-1:session.expiresAt}},login:async()=>assert.fail(),logout:async()=>assert.fail()});
+  await refreshLoginSession(controller,path=>destinations.push(path));assert.deepEqual(destinations,[],kind);
+ }
+ const source=(await import('node:fs')).readFileSync(new URL('../../app/(auth)/auth/AuthScreen.tsx',import.meta.url),'utf8');
+ assert.match(source,/onLoginConfirmed=\{mode==="login"\?navigateAfterLogin:undefined\}/u);assert.match(source,/mode==="reset"&&passwordResetOrigin/u);assert.match(source,/signup.phase!=="signup"/u);
 });

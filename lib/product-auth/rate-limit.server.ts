@@ -7,7 +7,7 @@ import {reportRegistrationFailure} from "./secrets.server.ts";
 import {emailSchema} from "../auth/schemas.ts";
 
 type Database = Pick<Prisma.TransactionClient, "$queryRaw">;
-export type AuthRateOperation = "login" | "signup" | "reset" | "verify-email" | "resend-verification";
+export type AuthRateOperation = "login" | "signup" | "reset" | "verify-email" | "resend-verification" | "business-read" | "business-write" | "client-read" | "client-write" | "measurement-read" | "measurement-write" | "order-read" | "order-write";
 export type AuthIpOperation = AuthRateOperation | "session" | "logout";
 export type BucketPolicy = Readonly<{capacity: number; refillIntervalMs: number}>;
 export type AuthRatePolicy = Readonly<{version: string; account: BucketPolicy; ip: BucketPolicy}>;
@@ -75,7 +75,7 @@ export function createAuthRateLimiter(client: Database, config: {
       !config.policies || !Object.keys(config.policies).length) throw new Error("Authentication rate-limit configuration required.");
   const policies = new Map<AuthRateOperation, AuthRatePolicy>();
   for (const [operation, policy] of Object.entries(config.policies)) {
-    if (!["login", "signup", "reset", "verify-email", "resend-verification"].includes(operation) || !policy || !/^[A-Za-z0-9_-]{1,48}$/u.test(policy.version) ||
+    if (!["login", "signup", "reset", "verify-email", "resend-verification", "business-read", "business-write", "client-read", "client-write", "measurement-read", "measurement-write", "order-read", "order-write"].includes(operation) || !policy || !/^[A-Za-z0-9_-]{1,48}$/u.test(policy.version) ||
         !validPolicy(policy.account) || !validPolicy(policy.ip)) throw new Error("Authentication rate-limit configuration required.");
     policies.set(operation as AuthRateOperation, {version: policy.version, account: {...policy.account}, ip: {...policy.ip}});
   }

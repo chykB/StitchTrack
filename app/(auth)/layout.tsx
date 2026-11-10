@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <main id="main" tabIndex={-1} className={styles.shell}>
+    <main data-auth-screen id="main" tabIndex={-1} className={styles.shell}>
       <section className={styles.panel} aria-labelledby="auth-title">
         {children}
       </section>

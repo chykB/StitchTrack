@@ -110,3 +110,20 @@ a[href] {
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
+
+.site-header .site-shell { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.site-nav { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.site-nav-link, .site-nav-action {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 10px 14px;
+  border-radius: 8px; color: var(--stitchtrack-color-primary); text-decoration: none;
+  font: var(--stitchtrack-type-label-large-font-weight) var(--stitchtrack-type-label-large-font-size)/var(--stitchtrack-type-label-large-line-height) var(--stitchtrack-type-label-large-font-family), sans-serif;
+}
+.site-nav-link:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+.site-nav-action { color: var(--stitchtrack-color-on-primary); background: var(--stitchtrack-color-primary); }
+.site-nav-action:hover { background: var(--stitchtrack-color-on-primary-container); }
+
+/* Auth screens already provide contextual account navigation beneath the form. */
+body:has(main[data-auth-screen]) .site-nav { display: none; }
+
+/* Marketing anchors are shown only by the homepage stylesheet. */
+.homepage-nav { display: none; }

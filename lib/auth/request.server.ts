@@ -29,7 +29,7 @@ export function parseAuthInput(operation: AuthOperation, input: unknown): AuthPa
   const result=resetSchema.safeParse(input);
   return result.success ? {ok:true,value:{operation:"reset",data:result.data}} : invalid(result.error);
 }
-export async function decodeAuthRequest(request: Request): Promise<{ok:true;value:unknown}|{ok:false;response:Response}> {
+export async function decodeAuthRequest(request: Request, bodyLimit = AUTH_BODY_LIMIT): Promise<{ok:true;value:unknown}|{ok:false;response:Response}> {
   const reject=(error:string,status:number,headers:Record<string,string>={})=>({ok:false as const,response:authJson({error},status,headers)});
   if(request.method !== "POST") return reject("method_not_allowed",405,{allow:"POST"});
   const url=new URL(request.url);
@@ -40,7 +40,7 @@ export async function decodeAuthRequest(request: Request): Promise<{ok:true;valu
   if(request.headers.has("content-encoding") && request.headers.get("content-encoding")!=="identity") return reject("encoding_not_supported",415);
   const length=request.headers.get("content-length");
   if(length && !/^\d+$/u.test(length)) return reject("invalid_length",400);
-  if(length && Number(length)>AUTH_BODY_LIMIT) return reject("body_too_large",413);
+  if(length && Number(length)>bodyLimit) return reject("body_too_large",413);
   try {
     const reader=request.body?.getReader();
     if(!reader) return reject("invalid_json",400);
@@ -49,7 +49,7 @@ export async function decodeAuthRequest(request: Request): Promise<{ok:true;valu
       while(true) {
         const next=await reader.read();if(next.done)break;
         size+=next.value.byteLength;
-        if(size>AUTH_BODY_LIMIT) { await reader.cancel();return reject("body_too_large",413); }
+        if(size>bodyLimit) { await reader.cancel();return reject("body_too_large",413); }
         chunks.push(next.value);
       }
     } finally {reader.releaseLock();}

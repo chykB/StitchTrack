@@ -20,15 +20,16 @@ export function DocumentInline({ content, onDocument }: { content: Inline[]; onD
   })}</>;
 }
 
-export default function DraftDocument({ kind, source, onBack, onDocument }: {
+export default function DraftDocument({ kind, source, onBack, onDocument, backLabel = "Back to Signup" }: {
   kind: DocumentKind; source: string; onBack: () => void; onDocument: (kind: DocumentKind) => void;
+  backLabel?: string;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const blocks = parseDraft(source);
   useEffect(() => { focusViewTarget(heading.current); }, [kind]);
   return (
     <article className={styles.legalDocument} aria-labelledby="auth-title">
-      <button type="button" className={styles.backToSignup} onClick={onBack}>Back to Signup</button>
+      <button type="button" className={styles.backToSignup} onClick={onBack}>{backLabel}</button>
       {blocks.map((block, index) => {
         const inline = (content: Inline[]) => <DocumentInline content={content} onDocument={onDocument} />;
         if (block.type === "heading") return createElement("h" + block.level, {

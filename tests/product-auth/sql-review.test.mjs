@@ -9,7 +9,7 @@ const read = path => readFileSync(new URL(path, import.meta.url), "utf8");
 const sql = read("../../prisma/product/migrations/20261029_product_auth_initial/migration.sql");
 const code = sql.replace(/--[^\n]*/gu, "");
 const schema = read("../../prisma/product/schema.prisma");
-const models = [...schema.matchAll(/^model (\w+) \{\n([\s\S]*?)^\}/gmu)].filter(([, name]) => name !== "AuthRateBucket");
+const models = [...schema.matchAll(/^model (\w+) \{\n([\s\S]*?)^\}/gmu)].filter(([, name]) => !["AuthRateBucket","Business","BusinessMember","Client","MeasurementVersion","MeasurementEntry"].includes(name));
 const table = name => code.match(new RegExp('CREATE TABLE "product"\\."' + name + '" \\(\\n([\\s\\S]*?)\\n\\);'))?.[1];
 
 test("single complete eight-table baseline matches every scalar column, type, default and nullability", () => {
@@ -34,7 +34,7 @@ test("single complete eight-table baseline matches every scalar column, type, de
   }
   assert.equal(count, 70);
   const dirs = readdirSync(new URL("../../prisma/product/migrations/", import.meta.url), {withFileTypes:true}).filter(entry => entry.isDirectory());
-  assert.deepEqual(dirs.map(entry => entry.name), ["20261029_product_auth_initial", "20261030_auth_rate_bucket", "20261030_user_access_locks", "20261102_password_reset", "20261102_user_administrator"]);
+  assert.deepEqual(dirs.map(entry => entry.name), ["20261029_product_auth_initial", "20261030_auth_rate_bucket", "20261030_user_access_locks", "20261102_password_reset", "20261102_user_administrator", "20261106_business_ownership", "20261107_client_records", "20261108_measurement_history", "20261108_measurement_label_unicode"]);
 });
 test("all declared unique/index/FK contracts are included; outbox ownership has one required path", () => {
   let indexes = 0, fks = 0;

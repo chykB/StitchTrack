@@ -16,7 +16,7 @@ function fixture() {
  // approvedTerms represents a mocked approved operational acceptance, never an
  // approval of real policies or a row inserted into any PostgreSQL database.
  const row={...context,...tools.seal(context,payload),status:"pending",attemptCount:0,availableAt:time,createdAt:time,updatedAt:time,sentAt:null,
-  userId:"synthetic-user",userEmail:payload.email,emailVerified:false,issueEmail:payload.email,issueVerificationId:"synthetic-vendor",
+  userId:"synthetic-user",userEmail:payload.email,emailVerified:false,disabledAt:null,deletionRequestedAt:null,issueEmail:payload.email,issueVerificationId:"synthetic-vendor",
   issueExpiresAt:new Date(+time+300_000),failedAttempts:0,consumedAt:null,supersededAt:null,
   verifier:tools.mac(context.issuanceId,payload.email,payload.otp),verifierKeyId:"v",verificationRecordId:"synthetic-vendor",
   verificationExpiresAt:new Date(+time+300_000),approvedTerms:true};
@@ -237,4 +237,12 @@ test("reset delivery cancels expired, consumed, superseded, locked or passwordle
   const f=fixture();Object.assign(f.row,{purpose:"password-reset",templateVersion:"tailor-password-reset-v1",emailVerified:true,disabledAt:null,deletionRequestedAt:null,hasCredential:true,approvedTerms:false},patch);
   assert.equal(await f.worker().runOnce(),"cancelled");assert.equal(f.opens(),0);assert.equal(f.sends(),0);
  }
+});
+
+test("signup delivery refuses disabled/deletion-locked/missing account state before decrypt and after final reread",async()=>{
+ for(const patch of [{disabledAt:new Date()},{deletionRequestedAt:new Date()},{disabledAt:undefined},{deletionRequestedAt:undefined}]){
+  const f=fixture();Object.assign(f.row,patch);assert.equal(await f.worker().runOnce(),"cancelled");assert.equal(f.opens(),0);assert.equal(f.sends(),0);
+ }
+ const f=fixture();let reads=0;f.onQuery=async tag=>{if(tag==="load"&&++reads===3)f.row.deletionRequestedAt=f.now();};
+ assert.equal(await f.worker().runOnce(),"cancelled");assert.equal(f.opens(),1);assert.equal(f.sends(),0);
 });

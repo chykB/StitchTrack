@@ -30,6 +30,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </span>
               StitchTrack
             </a>
+            <nav className="homepage-nav" aria-label="Homepage navigation">
+              <a href="/#how-it-works">How it works</a>
+              <a href="/#workspace-preview">Workspace preview</a>
+            </nav>
+            <nav className="site-nav" aria-label="Account navigation">
+              <a className="site-nav-link" href="/auth?login">Log in</a>
+              <a className="site-nav-action" href="/auth?signup">Create account</a>
+            </nav>
           </div>
         </header>
         {children}

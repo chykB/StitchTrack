@@ -2,6 +2,8 @@ import {z} from "zod";
 import {signupSchema,emailSchema} from "./schemas.ts";
 export const developmentSignupSchema=signupSchema;
 export const registrationSchema=signupSchema.extend({termsAccepted:z.literal(true),termsVersionId:z.string().min(1)});
+// Privacy notice acknowledgement is separate from contractual acceptance and purpose-specific consent.
+export const signupAcknowledgementsSchema=registrationSchema.extend({privacyAcknowledged:z.literal(true)});
 export const emailVerificationSchema=z.strictObject({email:emailSchema,otp:z.string().regex(/^[0-9]{6}$/u)});
 export const issuanceVerificationSchema=emailVerificationSchema.extend({issuanceId:z.string().uuid()});
 export const resendVerificationSchema=z.strictObject({email:emailSchema});

@@ -23,18 +23,23 @@ export default function AccountDeletionForm({controller}:{controller:SessionCont
  useEffect(()=>{setPassword("");setVisible(false);setError(undefined);setOpen(false);},[snapshot.status,snapshot.session?.user.id]);
  if(snapshot.status!=="authenticated"||!snapshot.session)return null;
  const busy=snapshot.pending!==null||snapshot.retryUntil!==null;
- return <section aria-label="Request account deletion">
-  {!open?<button type="button" disabled={!ready||busy} onClick={()=>setOpen(true)}>Delete my account</button>:
-   <form noValidate aria-describedby="deletion-warning" aria-busy={snapshot.pending==="delete-account"||undefined} onSubmit={event=>{
+ return <section className={styles.deletionPanel} aria-label="Request account deletion">
+  {!open?<button className={styles.secondaryButton} type="button" disabled={!ready||busy} onClick={()=>setOpen(true)}>Request account deletion</button>:
+   <form noValidate aria-labelledby="deletion-heading" aria-describedby="deletion-warning deletion-irreversible deletion-timing" aria-busy={snapshot.pending==="delete-account"||undefined} onSubmit={event=>{
     void submitAccountDeletion(event,ready,controller,setError).finally(()=>{setPassword("");setVisible(false);});
    }}>
-    <h2>Request account deletion</h2>
-    <p id="deletion-warning">This locks your entire account immediately and signs out every device. It does not permanently erase your records. No purge date is promised.</p>
+    <h2 id="deletion-heading">Delete your StitchTrack account?</h2>
+    <p id="deletion-warning">Your account will be locked immediately, and you'll be signed out on every device. You won't be able to log in again.</p>
+    <p id="deletion-irreversible">This request cannot be reversed in the current application.</p>
+    <h3>When will my data be deleted?</h3>
+    <p id="deletion-timing">Your account becomes eligible for permanent deletion after 24 hours. Automatic deletion is not yet available, so we cannot confirm a completion date.</p>
     <fieldset className={styles.fields} disabled={!ready||busy}><legend className={styles.visuallyHidden}>Confirm account deletion request</legend>
-     <FormField id="delete-account-password" name="password" type="password" label="Confirm your current password" autoComplete="current-password" value={password} error={error}
+     <FormField id="delete-account-password" name="password" type="password" label="Confirm your password" autoComplete="current-password" value={password} error={error}
       onChange={event=>{setPassword(event.currentTarget.value);setError(undefined);}} onBlur={()=>{}} passwordVisible={visible} onTogglePassword={()=>setVisible(v=>!v)}/>
-     <button type="submit" className={styles.submit}>{snapshot.pending==="delete-account"?"Requesting deletion...":"Request account deletion"}</button>
-     <button type="button" onClick={()=>{setPassword("");setVisible(false);setOpen(false);setError(undefined);}}>Cancel</button>
+     <div className={styles.deletionActions}>
+      <button type="submit" className={styles.submit}>{snapshot.pending==="delete-account"?"Requesting deletion...":"Confirm account deletion"}</button>
+      <button type="button" className={styles.secondaryButton} onClick={()=>{setPassword("");setVisible(false);setOpen(false);setError(undefined);}}>Cancel</button>
+     </div>
     </fieldset>
    </form>}
  </section>;

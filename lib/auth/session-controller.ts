@@ -3,12 +3,16 @@ export type SessionSnapshot=Readonly<{
   status:"disabled"|"unknown"|"authenticated"|"unauthenticated";
   pending:"login"|"session"|"logout"|"delete-account"|null;
   session:FrontendSession|null;message:string;retryUntil:number|null;
+  deletionRequested?:true; // Presentation receipt of confirmed request, never inferred from session loss.
 }>;
 // Presentation-only session state, never authorization. Passwords/tokens are
 // never included. Server checks remain mandatory for every protected action.
-export function createSessionController(client:SessionClient,clock:{now?:()=>number;setTimer?:typeof setTimeout;clearTimer?:typeof clearTimeout}={}) {
+export function createSessionController(client:SessionClient,clock:{now?:()=>number;setTimer?:typeof setTimeout;clearTimer?:typeof clearTimeout}={},initialSession?:FrontendSession) {
   const now=clock.now??Date.now,setTimer=clock.setTimer??setTimeout,clearTimer=clock.clearTimer??clearTimeout;
-  const initial:SessionSnapshot=Object.freeze({status:client.enabled?"unknown":"disabled",pending:null,session:null,message:"",retryUntil:null});
+  // Optional presentation seed comes from the server-verified dashboard response.
+  // It does not authorize any operation; every API still verifies its cookie.
+  const seeded=client.enabled&&initialSession&&initialSession.expiresAt>now()?initialSession:null;
+  const initial:SessionSnapshot=Object.freeze({status:!client.enabled?"disabled":seeded?"authenticated":initialSession?"unauthenticated":"unknown",pending:null,session:seeded,message:client.enabled&&initialSession&&!seeded?"Your session has expired. Log in again.":"",retryUntil:null});
   let state=initial,timer:ReturnType<typeof setTimeout>|undefined;
   const listeners=new Set<()=>void>();
   function schedule() {
@@ -34,7 +38,7 @@ export function createSessionController(client:SessionClient,clock:{now?:()=>num
   }
   function accept(session:FrontendSession|null,message:string) {
     if(session&&session.expiresAt<=now())session=null;
-    publish({...state,pending:null,status:session?"authenticated":"unauthenticated",session,message:session?message:"You are not logged in. Log in to continue.",retryUntil:null});
+    publish({...state,pending:null,status:session?"authenticated":"unauthenticated",session,...(session?{deletionRequested:undefined}:{}),message:session?message:"You are not logged in. Log in to continue.",retryUntil:null});
   }
   function blocked(){tick();return !client.enabled||state.pending!==null||state.retryUntil!==null&&state.retryUntil>now();}
   return {
@@ -48,7 +52,7 @@ export function createSessionController(client:SessionClient,clock:{now?:()=>num
     },
     async login(input:unknown) {
       if(blocked()||state.status==="authenticated")return false;
-      publish({...state,pending:"login",message:"Logging in..."});
+      publish({...state,pending:"login",message:"Logging in...",deletionRequested:undefined});
       try {
         const result=await client.login(input);if(!result.ok){failed(result,"login");return false;}
         // Login JSON intentionally has no session token or expiry. Confirm the
@@ -67,8 +71,8 @@ export function createSessionController(client:SessionClient,clock:{now?:()=>num
       try {
         const result=await client.requestDeletion(input);
         if(!result.ok){failed(result,"delete-account");return false;}
-        publish({...state,status:"unauthenticated",pending:null,session:null,retryUntil:null,
-          message:"Deletion requested. Your account is locked and all sessions are revoked. Permanent erasure has not occurred."});return true;
+        publish({...state,status:"unauthenticated",pending:null,session:null,retryUntil:null,deletionRequested:true,
+          message:"Account deletion requested."});return true;
       }catch{failed({ok:false,kind:"network"},"delete-account");return false;}
     },
     async logout() {

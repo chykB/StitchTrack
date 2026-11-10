@@ -125,7 +125,7 @@ test("existing session policy, digest storage and ordinary logout are unchanged"
 test("migration checksums and proposals isolate the role and never grant it to runtime or signup",()=>{
  assertProductMigrationFiles();const name="20261102_user_administrator",sql=readFileSync(new URL("../../prisma/product/migrations/"+name+"/migration.sql",import.meta.url),"utf8");
  assert.equal(createHash("sha256").update(sql).digest("hex"),PRODUCT_MIGRATIONS[name]);assert.match(sql,/BOOLEAN NOT NULL DEFAULT false/);assert.doesNotMatch(sql,/stitchtrack_product_dev/);
- for(const file of ["admin-test-permissions.sql","admin-role-test.sql"]){const source=readFileSync(new URL("../../prisma/product/setup/"+file,import.meta.url),"utf8");for(const hash of Object.values(PRODUCT_MIGRATIONS))assert.ok(source.includes(hash));assert.doesNotMatch(source,/stitchtrack_product_dev/);}
+ for(const file of ["admin-test-permissions.sql","admin-role-test.sql"]){const source=readFileSync(new URL("../../prisma/product/setup/"+file,import.meta.url),"utf8");for(const [name,hash] of Object.entries(PRODUCT_MIGRATIONS))if(name<="20261102_user_administrator")assert.ok(source.includes(hash));assert.doesNotMatch(source,/stitchtrack_product_dev/);}
  const permissions=readFileSync(new URL("../../prisma/product/setup/admin-test-permissions.sql",import.meta.url),"utf8");assert.match(permissions,/REVOKE INSERT ON product\."User"/);assert.doesNotMatch(permissions,/GRANT UPDATE/);
  const page=readFileSync(new URL("../../pages/api/internal/tailor-session/admin-page.ts",import.meta.url),"utf8");assert.match(page,/administratorPageResponse/);assert.match(page,/createNextAdminResponse\("page"\)/);assert.doesNotMatch(page,/localStorage|sessionStorage|document.cookie|userId/);
 });

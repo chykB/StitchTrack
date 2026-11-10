@@ -207,7 +207,8 @@ test("enabled Signup renders minimal draft labels and an always-visible native s
   assert.doesNotMatch(checkbox, /aria-describedby=/);
   const submit = /<button[^>]*type="submit"[^>]*>/.exec(fieldset)[0];
   assert.match(submit, /aria-disabled="true"/);
-  assert.doesNotMatch(submit, /\s(?:hidden|disabled|tabindex|tabIndex)=|\s(?:hidden|disabled)>/);
+  assert.match(submit, /\sdisabled=""/);
+  assert.doesNotMatch(submit, /\shidden=|\stabindex=/);
   assert.match(html, /I have reviewed the draft Terms and Privacy Policy\./);
   assert.doesNotMatch(html, /Assessment demonstration only|Complete Email and Password|signup-draft-notice|assessment-only|preview mode/i);
   assert.doesNotMatch(html, /UNAPPROVED TERMS TEST FIXTURE|UNAPPROVED PRIVACY TEST FIXTURE|<summary|<details|<pre/);

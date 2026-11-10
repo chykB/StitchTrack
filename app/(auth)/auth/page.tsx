@@ -1,4 +1,4 @@
-import { localFrontendAccountDeletionEnabled,localFrontendPasswordResetOrigin,localFrontendSessionOrigin,localFrontendRegistrationConfiguration } from "../../../lib/auth/local-session.ts";
+import { localFrontendPasswordResetOrigin,localFrontendSessionOrigin,localFrontendRegistrationConfiguration } from "../../../lib/auth/local-session.ts";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadDraftTermsPreview } from "../../../lib/auth/terms-preview";
@@ -35,7 +35,13 @@ export default async function AuthPage() {
   // The guard above also runs during metadata generation.
   if (mode === "verify") return <EmailVerificationForm />;
   const requestHeaders = await headers();
-  const draftPreview = await loadDraftTermsPreview(mode, process.env, requestHeaders.get("host"), async () => {
+  const registration = mode === "signup" ? localFrontendRegistrationConfiguration(process.env, requestHeaders.get("host")) : undefined;
+  // Explicit local signup opt-in also permits its non-binding legal UI preview.
+  // The existing loader still refuses production and non-loopback hosts.
+  const draftPreview = await loadDraftTermsPreview(mode, {
+    NODE_ENV: process.env.NODE_ENV,
+    ENABLE_AUTH_TERMS_PREVIEW: registration?.developmentConsentDeferred ? "true" : process.env.ENABLE_AUTH_TERMS_PREVIEW,
+  }, requestHeaders.get("host"), async () => {
     const directory = join(process.cwd(), "task-03-client-validation", "docs");
     const [terms, privacy] = await Promise.all([
       readFile(join(directory, "platform-terms-draft.md"), "utf8"),
@@ -43,7 +49,7 @@ export default async function AuthPage() {
     ]);
     return { terms, privacy };
   });
-  return <AuthScreen mode={mode} accountDeletionEnabled={mode==="login"&&localFrontendAccountDeletionEnabled(process.env,requestHeaders.get("host"))} passwordResetOrigin={mode==="reset"?localFrontendPasswordResetOrigin(process.env,requestHeaders.get("host")):undefined} draftPreview={draftPreview}
-    registration={mode === "signup"?localFrontendRegistrationConfiguration(process.env,requestHeaders.get("host")):undefined}
+  return <AuthScreen mode={mode} passwordResetOrigin={mode==="reset"?localFrontendPasswordResetOrigin(process.env,requestHeaders.get("host")):undefined} draftPreview={draftPreview}
+    registration={registration}
     localSessionOrigin={mode === "login" ? localFrontendSessionOrigin(process.env, requestHeaders.get("host")) : undefined} />;
 }

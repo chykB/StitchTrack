@@ -1,4 +1,4 @@
-// Product authentication foundation. Never use assessment databases for these models.
+// Product identity and business foundation. Never use assessment databases for these models.
 generator client {
   provider = "prisma-client"
   output = "./generated"
@@ -30,6 +30,7 @@ model User {
   sessions Session[]
   acceptances TermsAcceptance[]
   issuances EmailVerificationIssuance[]
+  businessMemberships BusinessMember[]
   @@schema("product")
 }
 
@@ -158,5 +159,112 @@ model AuthRateBucket {
   expiresAt DateTime @db.Timestamptz(3)
   lastAllowed Boolean
   @@index([expiresAt, keyDigest])
+  @@schema("product")
+}
+
+// A primary owner is a specific membership, not a role on the global identity.
+model Business {
+  id String @id @db.Text
+  primaryOwnerUserId String @unique @db.Text
+  name String @db.Text
+  timeZone String @default("Africa/Lagos") @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  // SQL defers this required FK until COMMIT so Business + owner membership
+  // can be inserted atomically. Prisma cannot express that deferral.
+  primaryOwner BusinessMember @relation("PrimaryBusinessOwner",fields:[id,primaryOwnerUserId],references:[businessId,userId],onDelete:NoAction,onUpdate:Restrict)
+  members BusinessMember[] @relation("BusinessMembers")
+  clients Client[]
+  @@schema("product")
+}
+
+model BusinessMember {
+  businessId String @db.Text
+  userId String @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  business Business @relation("BusinessMembers",fields:[businessId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  // The composite FK and Business primary key limit this inverse to zero or one.
+  // A Prisma list avoids an otherwise redundant composite unique index.
+  primaryOwnerships Business[] @relation("PrimaryBusinessOwner")
+  // No global userId uniqueness: non-owning relationships are not ownership.
+  // Only Business.primaryOwner grants ownership; no staff/client flow is enabled.
+  @@id([businessId,userId])
+  @@index([userId])
+  @@schema("product")
+}
+
+// Business-owned contact record, not a global login identity or portal authorization.
+model Client {
+  id String @id @default(uuid()) @db.Uuid
+  businessId String @db.Text
+  fullName String @db.Text
+  phone String? @db.Text
+  email String? @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  business Business @relation(fields:[businessId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  measurementVersions MeasurementVersion[]
+  orders Order[]
+  @@unique([businessId,id])
+  @@index([businessId,createdAt,id])
+  @@schema("product")
+}
+
+// One complete, immutable measurement-taking event. Future corrections append a version.
+model MeasurementVersion {
+  id String @id @default(uuid()) @db.Uuid
+  businessId String @db.Text
+  clientId String @db.Uuid
+  versionNumber Int
+  unit String @db.Text
+  recordedAt DateTime @default(now()) @db.Timestamptz(3)
+  client Client @relation(fields:[businessId,clientId],references:[businessId,id],onDelete:Restrict,onUpdate:Restrict)
+  entries MeasurementEntry[]
+  orderItems OrderItem[]
+  @@unique([clientId,id])
+  @@unique([clientId,versionNumber])
+  @@schema("product")
+}
+
+model MeasurementEntry {
+  measurementVersionId String @db.Uuid
+  name String @db.Text
+  // Unconstrained NUMERIC: the SQL scale check rejects excess precision before rounding.
+  value Decimal @db.Decimal
+  measurementVersion MeasurementVersion @relation(fields:[measurementVersionId],references:[id],onDelete:Restrict,onUpdate:Restrict)
+  // SQL additionally enforces case-insensitive label uniqueness with lower(name).
+  @@id([measurementVersionId,name])
+  @@schema("product")
+}
+
+// One business-owned Client's order; identity and assignment are not runtime-editable.
+model Order {
+  id String @id @default(uuid()) @db.Uuid
+  businessId String @db.Text
+  clientId String @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  client Client @relation(fields:[businessId,clientId],references:[businessId,id],onDelete:Restrict,onUpdate:Restrict)
+  items OrderItem[]
+  @@unique([id,clientId])
+  @@index([businessId,createdAt,id])
+  @@index([businessId,clientId,createdAt,id])
+  @@schema("product")
+}
+
+// One clothing item. clientId binds both its Order and any explicit measurement selection.
+model OrderItem {
+  id String @id @default(uuid()) @db.Uuid
+  orderId String @db.Uuid
+  clientId String @db.Uuid
+  description String @db.Text
+  measurementVersionId String? @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  order Order @relation(fields:[orderId,clientId],references:[id,clientId],onDelete:Restrict,onUpdate:Restrict)
+  measurementVersion MeasurementVersion? @relation(fields:[clientId,measurementVersionId],references:[clientId,id],onDelete:Restrict,onUpdate:Restrict)
+  @@index([orderId,createdAt,id])
+  @@index([clientId,measurementVersionId])
   @@schema("product")
 }

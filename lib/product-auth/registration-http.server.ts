@@ -2,7 +2,7 @@ import "server-only";
 import {reportRegistrationFailure,type RegistrationFailureStage} from "./secrets.server.ts";
 import {isLocalDevelopmentHttpOrigin} from "./development-policy.ts";
 import {authJson,decodeAuthRequest} from "../auth/request.server.ts";
-import {developmentSignupSchema,registrationSchema,emailVerificationSchema,resendVerificationSchema,registrationTermsSchema,registrationPaths,type RegistrationTerms,type RegistrationOperation} from "../auth/registration-contract.ts";
+import {developmentSignupSchema,signupAcknowledgementsSchema,emailVerificationSchema,resendVerificationSchema,registrationTermsSchema,registrationPaths,type RegistrationTerms,type RegistrationOperation} from "../auth/registration-contract.ts";
 import type {createRegistrationService} from "./registration.server.ts";
 import {isVerifiedSessionConnection,type VerifiedSessionConnection} from "./session-http.server.ts";
 
@@ -41,14 +41,18 @@ export async function registrationHttpRequest(request:Request,operation:Registra
     const ip=limited(await d.limits.consumeIp(rateOperations[operation],connection));if(ip)return ip;
     stage="http_boundary";
     const decoded=await decodeAuthRequest(request);if(!decoded.ok)return decoded.response;
-    const schema=operation==="signup"?(deferred?developmentSignupSchema:registrationSchema):operation==="verify"?emailVerificationSchema:resendVerificationSchema;
+    const schema=operation==="signup"?(deferred?developmentSignupSchema:signupAcknowledgementsSchema):operation==="verify"?emailVerificationSchema:resendVerificationSchema;
     const parsed=schema.safeParse(decoded.value);
     if(!parsed.success)return authJson({error:"validation_failed"},422);
     if(operation==="signup"&&!deferred&&("termsVersionId" in parsed.data&&parsed.data.termsVersionId!==d.terms?.id))return authJson({error:"validation_failed"},422);
     stage="rate_limit_account";
     const account=limited(await d.limits.consumeAccount(rateOperations[operation],parsed.data.email,connection));if(account)return account;
     stage=operation==="signup"?"registration_execution":operation==="verify"?"verification_execution":"resend_execution";
-    if(operation==="signup")await d.service.beginSignup(parsed.data);
+    if(operation==="signup") {
+      // Do not turn a reading acknowledgement into a TermsAcceptance or blanket consent.
+      const {privacyAcknowledged: _notice, ...registration}=parsed.data as typeof parsed.data & {privacyAcknowledged?:true};
+      await d.service.beginSignup(registration);
+    }
     else if(operation==="verify") {
       return await d.service.verifyEmail(parsed.data)==="verified"?authJson({verified:true},200):authJson({error:"invalid_code"},400);
     }else await d.service.reissue(parsed.data.email);

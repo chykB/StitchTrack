@@ -11,6 +11,16 @@ if(target) {
     throw new Error("Separate owner confirmation for product-test password-reset migration required.");
   if(command==="deploy" && process.env.PRODUCT_ADMIN_MIGRATION_CONFIRMED!=="true")
     throw new Error("Separate owner confirmation for product-test administrator migration required.");
+  if(command==="deploy" && process.env.PRODUCT_BUSINESS_MIGRATION_CONFIRMED!=="true")
+    throw new Error("Separate owner confirmation for product-test business migration required.");
+  if(command==="deploy" && process.env.PRODUCT_CLIENT_MIGRATION_CONFIRMED!=="true")
+    throw new Error("Separate owner confirmation for product-test client migration required.");
+  if(command==="deploy" && process.env.PRODUCT_MEASUREMENT_MIGRATION_CONFIRMED!=="true")
+    throw new Error("Separate owner confirmation for product-test measurement migration required.");
+  if(command==="deploy" && process.env.PRODUCT_MEASUREMENT_UNICODE_MIGRATION_CONFIRMED!=="true")
+    throw new Error("Separate owner confirmation for product-test measurement Unicode migration required.");
+  if(command==="deploy" && process.env.PRODUCT_ORDER_MIGRATION_CONFIRMED!=="true")
+    throw new Error("Separate owner confirmation for product-test Order migration required.");
   assertProductMigrationFiles();
 }
 

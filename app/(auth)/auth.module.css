@@ -30,6 +30,9 @@
   letter-spacing: var(--stitchtrack-type-headline-large-letter-spacing);
 }
 .title + form { margin-top: 24px; }
+.inlineVerification { margin-top: 24px; min-inline-size: 0; }
+.inlineVerification form { margin-top: 24px; }
+.verificationActions { display: grid; gap: 12px; margin-top: 20px; }
 .description { margin: 16px 0 24px; color: var(--stitchtrack-color-on-surface-variant); }
 .fields { min-inline-size: 0; padding: 0; margin: 0; border: 0; }
 .legend, .field label, .submit {
@@ -51,7 +54,7 @@
   white-space: nowrap;
   border: 0;
 }
-.field { display: grid; gap: 8px; margin-bottom: 24px; }
+.field { display: grid; gap: 8px; margin-bottom: 20px; }
 .field input {
   inline-size: 100%;
   min-inline-size: 0;
@@ -76,7 +79,7 @@
   background: var(--stitchtrack-color-primary-container);
   color: var(--stitchtrack-color-on-primary-container);
 }
-.fields:disabled .submit, .submit[aria-disabled="true"] {
+.fields:disabled .submit, .submit:disabled, .submit[aria-disabled="true"] {
   background: var(--stitchtrack-color-surface-container-high);
   color: var(--stitchtrack-color-on-surface-variant);
   border-color: var(--stitchtrack-color-outline-variant);
@@ -91,7 +94,6 @@
 .navigation p { margin: 8px 0 0; }
 .navigation a { color: var(--stitchtrack-color-primary); text-underline-offset: 0.2em; }
 .navigation a:hover { color: var(--stitchtrack-color-on-primary-container); text-decoration-thickness: 2px; }
-.clientNote { margin: 16px 0 0; color: var(--stitchtrack-color-on-surface-variant); }
 @media (min-width: 420px) { .shell { padding: 32px 24px; } }
 @media (min-width: 760px) {
   .shell { padding: 42px 40px; }
@@ -142,7 +144,7 @@
 .passwordToggle:disabled { cursor: not-allowed; }
 
 .draftAcknowledgement { margin-bottom: 24px; min-inline-size: 0; }
-.acknowledgementRow { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); gap: 8px; align-items: start; }
+.acknowledgementRow { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); gap: 8px; align-items: start; line-height: 1.5; }
 .acknowledgementRow p { margin: 0; overflow-wrap: anywhere; }
 .checkboxTarget { display: grid; place-items: center; inline-size: 2.75rem; block-size: 2.75rem; cursor: pointer; }
 .draftAcknowledgement input { inline-size: 1.25rem; block-size: 1.25rem; margin: 0; accent-color: var(--stitchtrack-color-primary); }
@@ -161,9 +163,12 @@
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
+/* Legal links flow with the sentence rather than stretching each line as buttons. */
+.acknowledgementRow .documentLink { min-block-size: 0; padding: 0; line-height: inherit; vertical-align: baseline; }
+.acknowledgementRow .checkboxTarget { align-items: start; }
 .documentLink:hover { color: var(--stitchtrack-color-on-primary-container); text-decoration-thickness: 2px; }
 .documentLink:disabled { cursor: not-allowed; }
-.documentLink:focus-visible, .draftAcknowledgement input:focus-visible, .backToSignup:focus-visible,
+.documentLink:focus-visible, .draftAcknowledgement input:focus-visible, .backToSignup:focus-visible, .secondaryButton:focus-visible,
 .legalDocument h1:focus, .tableScroll:focus-visible {
   outline: 2px solid var(--stitchtrack-color-primary);
   outline-offset: 4px;
@@ -188,6 +193,7 @@
 .legalDocument p, .legalDocument li { margin-block: 0 16px; }
 .legalDocument a { color: var(--stitchtrack-color-primary); text-underline-offset: 0.2em; }
 .legalDocument a:hover { color: var(--stitchtrack-color-on-primary-container); }
+.secondaryButton,
 .backToSignup {
   padding: 0.75rem 1.5rem;
   border: 1px solid var(--stitchtrack-color-outline);
@@ -200,8 +206,52 @@
   letter-spacing: var(--stitchtrack-type-label-large-letter-spacing);
   cursor: pointer;
 }
+.secondaryButton:hover:not(:disabled),
 .backToSignup:hover { color: var(--stitchtrack-color-on-primary-container); background: var(--stitchtrack-color-primary-container); }
 .tableScroll { max-inline-size: 100%; overflow-x: auto; margin-block: 16px; }
 .legalDocument table { inline-size: 100%; min-inline-size: 28rem; border-collapse: collapse; }
 .legalDocument th, .legalDocument td { padding: 8px; border: 1px solid var(--stitchtrack-color-outline-variant); vertical-align: top; text-align: start; }
 .legalDocument th { background: var(--stitchtrack-color-surface-container-low); }
+
+.secondaryButton { inline-size: 100%; min-block-size: 2.75rem; }
+.secondaryButton:disabled {
+  color: var(--stitchtrack-color-on-surface-variant);
+  background: var(--stitchtrack-color-surface-container-high);
+  border-color: var(--stitchtrack-color-outline-variant);
+  cursor: not-allowed;
+}
+.deletionPanel { margin-block-start: 24px; }
+.deletionPanel h2, .feedback h2 {
+  margin: 24px 0 16px;
+  font: var(--stitchtrack-type-title-large-font-weight)
+    var(--stitchtrack-type-title-large-font-size) / var(--stitchtrack-type-title-large-line-height)
+    var(--stitchtrack-type-title-large-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-title-large-letter-spacing);
+}
+.deletionPanel h3 {
+  margin: 24px 0 8px;
+  font: var(--stitchtrack-type-label-large-font-weight)
+    var(--stitchtrack-type-label-large-font-size) / var(--stitchtrack-type-label-large-line-height)
+    var(--stitchtrack-type-label-large-font-family), sans-serif;
+  letter-spacing: var(--stitchtrack-type-label-large-letter-spacing);
+}
+.deletionPanel p { margin: 0 0 16px; }
+.deletionActions { display: grid; gap: 12px; }
+
+/* Account navigation has one primary destination; destructive settings stay folded. */
+.sessionControls { display: grid; gap: 12px; }
+.sessionControls p { margin: 0; overflow-wrap: anywhere; }
+.dashboardAction {
+  display: flex; justify-content: center; align-items: center;
+  min-block-size: 3rem; padding: 12px 20px; border-radius: 8px;
+  background: var(--stitchtrack-color-primary); color: var(--stitchtrack-color-on-primary);
+  text-decoration: none;
+  font: var(--stitchtrack-type-label-large-font-weight) var(--stitchtrack-type-label-large-font-size)/var(--stitchtrack-type-label-large-line-height) var(--stitchtrack-type-label-large-font-family), sans-serif;
+}
+.dashboardAction:hover { background: var(--stitchtrack-color-on-primary-container); }
+.dashboardAction:focus-visible, .accountSettings summary:focus-visible { outline: 2px solid var(--stitchtrack-color-primary); outline-offset: 4px; }
+.accountSettings { margin-block-start: 24px; padding-block-start: 16px; border-block-start: 1px solid var(--stitchtrack-color-outline-variant); }
+.accountSettings summary { min-block-size: 2.75rem; padding-block: 12px; cursor: pointer; color: var(--stitchtrack-color-primary); }
+.draftAcknowledgement .hint { margin-block-start: 8px; }
+.submit { min-block-size: 3rem; }
+@media (max-width: 419px) { .panel { padding: 24px 20px; } }

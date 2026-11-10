@@ -84,7 +84,7 @@ export function createOutboxWorker(env: Readonly<Record<string,string|undefined>
         const load=async()=> (await db!.query<Joined>(loadSql,[id])).rows[0];
         const isReset=(state:Joined)=>state.purpose==="password-reset"&&state.templateVersion===RESET_TEMPLATE;
         const eligible=(state:Joined|undefined,time:Date,availability?:Date):state is Joined=>{
-          if(!state)return false;
+          if(!state||state.disabledAt!==null||state.deletionRequestedAt!==null)return false;
           if(isReset(state))return target.mode==="test"&&state.emailVerified&&state.hasCredential===true&&state.disabledAt===null&&state.deletionRequestedAt===null&&
             state.status==="pending"&&(availability??state.availableAt)<=time&&state.userEmail===state.issueEmail&&!!state.issueVerificationId&&
             state.verificationRecordId===state.issueVerificationId&&!!state.verificationExpiresAt&&state.verificationExpiresAt>time&&

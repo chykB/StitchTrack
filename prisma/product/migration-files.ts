@@ -7,6 +7,11 @@ export const PRODUCT_MIGRATIONS = Object.freeze({
   "20261030_user_access_locks": "89232633d4fde96695591017bb1fab6cb3c6ea425591da14a93f29dbecb78ddd",
   "20261102_password_reset": "2a13abcd028ab3a37b840f6c62d7a46d761e96d3029201a0a67f1eca927de4ed",
   "20261102_user_administrator": "e6fd462d9de12bb85cb749b54f068819b6862213ab2348b7a25747de8c04e665",
+  "20261106_business_ownership": "2da4b064634968dccac5cc8e05bbf767c5b5755b871915ae83a9be468e75c9f2",
+  "20261107_client_records": "970d877fd5516d63200b8017e10d06bb437a20ecaa7b3c42b43e7616876ccb52",
+  "20261108_measurement_history": "af18b1306e90c9833cd613cd3d9df2163084f250a96ff74df6b66731480c39d1",
+  "20261108_measurement_label_unicode": "93897652a948ee943a6e51f1ca2e48d9ea085abde59f3e68dc859a46725a7275",
+  "20261109_order_items": "8c2d2c37ae5c9bbe873bce3ebbedb3d7519cce79e9ef947efa524456bf954931",
 });
 export function assertProductMigrationFiles(root = new URL("./migrations/", import.meta.url)) {
   try {

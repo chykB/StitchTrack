@@ -17,6 +17,10 @@ import {resetPaths,type ResetOperation} from "../auth/password-reset-contract.ts
 import {createLocalPasswordResetDispatcher} from "./password-reset-http.server.ts";
 
 import {accountDeletionPath} from "../auth/account-deletion-contract.ts";
+import {businessPath} from "../business-contract.ts";
+import {clientRecordPath} from "../client-record-contract.ts";
+import {measurementPath} from "../measurement-contract.ts";
+import {orderPath} from "../order-contract.ts";
 import {createLocalAccountDeletionDispatcher} from "./account-deletion-http.server.ts";
 
 const legacyOrigin="https://127.0.0.1:3443";
@@ -165,5 +169,69 @@ export function createNextAdminResponse(operation:"page"|"summary",dependencies:
     return createLocalAdminDispatcher(client,settings,identifierKey);
    }))(env);
    return (request,connection)=>dispatch(request,operation,connection);
+  });
+}
+
+// Same raw socket/header guard, PostgreSQL budget and authoritative tailor lookup
+// as the session API. No App Router metadata shortcut or client-only page guard.
+export function createNextDashboardResponse(dependencies:HandlerDependencies<SessionDispatcher>={}) {
+  return nodeResponse(["/dashboard","/api/internal/tailor-session/dashboard"],"GET","ENABLE_PRODUCT_SESSION_HTTP","authentication_unavailable",dependencies.environment,async env=>{
+    const dispatch=await (dependencies.runtime??sessionRuntime)(env);
+    return (request,connection)=>{
+      const url=new URL(request.url);url.pathname=sessionPaths.session;
+      return dispatch(new Request(url,{method:"GET",headers:request.headers}),"session",connection);
+    };
+  });
+}
+
+// Business traffic shares the reviewed raw HTTP adapter and lazy product-test pool.
+export function createNextBusinessResponse(dependencies:HandlerDependencies<ReturnType<typeof import("./business-http.server.ts").createLocalBusinessDispatcher>>={}) {
+  const runtime=async(env:Environment)=>{
+    const dispatch=await(dependencies.runtime??(async settings=>{
+      const {createLocalBusinessDispatcher}=await import("./business-http.server.ts");
+      const {client,identifierKey}=await localRuntime(settings);
+      return createLocalBusinessDispatcher(client,settings,identifierKey);
+    }))(env);
+    return (request:Request,connection:Parameters<Dispatcher>[2])=>dispatch(request,connection);
+  };
+  const get=nodeResponse(businessPath,"GET","ENABLE_PRODUCT_SESSION_HTTP","business_unavailable",dependencies.environment,runtime);
+  const post=nodeResponse(businessPath,"POST","ENABLE_PRODUCT_SESSION_HTTP","business_unavailable",dependencies.environment,runtime);
+  return async(incoming:IncomingMessage)=>{
+    const response=await(incoming.method==="POST"?post:get)(incoming);
+    if(response.status===405)response.headers.set("allow","GET, POST");
+    return response;
+  };
+}
+
+export function createNextClientRecordHandler(dependencies:HandlerDependencies<ReturnType<typeof import("./client-records-http.server.ts").createLocalClientRecordDispatcher>>={}){
+  return nodeHandler(clientRecordPath,"POST","ENABLE_PRODUCT_SESSION_HTTP","client_unavailable",dependencies.environment,async env=>{
+    const dispatch=await(dependencies.runtime??(async settings=>{
+      const {createLocalClientRecordDispatcher}=await import("./client-records-http.server.ts");
+      const {client,identifierKey}=await localRuntime(settings);
+      return createLocalClientRecordDispatcher(client,settings,identifierKey);
+    }))(env);
+    return (request,connection)=>dispatch(request,connection);
+  });
+}
+
+export function createNextMeasurementHandler(dependencies:HandlerDependencies<ReturnType<typeof import("./measurements-http.server.ts").createLocalMeasurementDispatcher>>={}){
+  return nodeHandler(measurementPath,"POST","ENABLE_PRODUCT_SESSION_HTTP","measurement_unavailable",dependencies.environment,async env=>{
+    const dispatch=await(dependencies.runtime??(async settings=>{
+      const {createLocalMeasurementDispatcher}=await import("./measurements-http.server.ts");
+      const {client,identifierKey}=await localRuntime(settings);
+      return createLocalMeasurementDispatcher(client,settings,identifierKey);
+    }))(env);
+    return (request,connection)=>dispatch(request,connection);
+  });
+}
+
+export function createNextOrderHandler(dependencies:HandlerDependencies<ReturnType<typeof import("./orders-http.server.ts").createLocalOrderDispatcher>>={}){
+  return nodeHandler(orderPath,"POST","ENABLE_PRODUCT_SESSION_HTTP","order_unavailable",dependencies.environment,async env=>{
+    const dispatch=await(dependencies.runtime??(async settings=>{
+      const {createLocalOrderDispatcher}=await import("./orders-http.server.ts");
+      const {client,identifierKey}=await localRuntime(settings);
+      return createLocalOrderDispatcher(client,settings,identifierKey);
+    }))(env);
+    return (request,connection)=>dispatch(request,connection);
   });
 }

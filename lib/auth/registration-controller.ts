@@ -1,4 +1,4 @@
-import {registrationSchema,developmentSignupSchema} from "./registration-contract.ts";
+import {signupAcknowledgementsSchema,developmentSignupSchema} from "./registration-contract.ts";
 import {codeFormatError} from "./email-code.ts";
 import type {RegistrationClient,RegistrationFailure} from "./registration-client.ts";
 export type RegistrationSnapshot=Readonly<{phase:"signup"|"verification"|"verified";pending:"signup"|"verify"|"resend"|null;email:string|null;message:string;codeError:string|null;retryUntil:number|null;resendAt:number|null}>;
@@ -22,13 +22,18 @@ export function createRegistrationController(client:RegistrationClient,clock:{no
     subscribe(listener:()=>void){listeners.add(listener);schedule();return()=>{listeners.delete(listener);schedule();};},
     async signup(input:unknown) {
       if(blocked()||state.phase!=="signup")return false;
-      const parsed=(client.consentDeferred?developmentSignupSchema:registrationSchema).safeParse(input);if(!parsed.success){failure({ok:false,kind:"invalid_input"},"signup");return false;}
+      const parsed=(client.consentDeferred?developmentSignupSchema:signupAcknowledgementsSchema).safeParse(input);if(!parsed.success){failure({ok:false,kind:"invalid_input"},"signup");return false;}
       publish({...state,pending:"signup",message:"Submitting signup..."});
       try {
         const r=await client.signup(parsed.data);
         if(!r.ok){if(r.kind==="network")publish({...state,phase:"verification",email:parsed.data.email,resendAt:now()+60000});failure(r,"signup");return false;}
-        publish({...state,phase:"verification",pending:null,email:parsed.data.email,message:"If these details can be used, a code will be emailed. Enter it below.",resendAt:now()+60000});return true;
+        publish({...state,phase:"verification",pending:null,email:parsed.data.email,message:"If your email is eligible for registration, we'll send you a verification code. Please check your inbox or spam folder.",resendAt:now()+60000});return true;
       }catch{publish({...state,phase:"verification",email:parsed.data.email,resendAt:now()+60000});failure({ok:false,kind:"network"},"signup");return false;}
+    },
+    returnToSignup() {
+      if(state.pending!==null)return;
+      // Discard transient verification state, but preserve any active retry budget.
+      publish({...initial,retryUntil:state.retryUntil});
     },
     async verify(otp:string) {
       if(blocked()||state.phase!=="verification"||!state.email)return false;

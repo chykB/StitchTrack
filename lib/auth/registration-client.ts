@@ -1,6 +1,6 @@
 import {isLocalDevelopmentHttpOrigin} from "../product-auth/development-policy.ts";
 import {z} from "zod";
-import {developmentSignupSchema,registrationSchema,emailVerificationSchema,resendVerificationSchema,registrationTermsSchema,registrationPaths,type RegistrationTerms,type RegistrationOperation} from "./registration-contract.ts";
+import {developmentSignupSchema,signupAcknowledgementsSchema,emailVerificationSchema,resendVerificationSchema,registrationTermsSchema,registrationPaths,type RegistrationTerms,type RegistrationOperation} from "./registration-contract.ts";
 export type RegistrationFrontendConfig={origin:string;terms:RegistrationTerms;developmentConsentDeferred?:false}|{origin:string;developmentConsentDeferred:true;terms?:never};
 export type RegistrationFailure={ok:false;kind:"disabled"|"invalid_input"|"invalid_code"|"network"|"unavailable"|"rate_limited";retryAfterSeconds?:number};
 export type RegistrationResult={ok:true}|RegistrationFailure;
@@ -11,7 +11,7 @@ export function createRegistrationClient(options:{configuration?:RegistrationFro
   const terms=enabled?c!.terms:undefined;
   async function request(operation:RegistrationOperation,input:unknown):Promise<RegistrationResult> {
     if(!enabled||(options.currentOrigin?.()??globalThis.location?.origin)!==c!.origin)return {ok:false,kind:"disabled"};
-    const schema=operation==="signup"?(consentDeferred?developmentSignupSchema:registrationSchema):operation==="verify"?emailVerificationSchema:resendVerificationSchema;
+    const schema=operation==="signup"?(consentDeferred?developmentSignupSchema:signupAcknowledgementsSchema):operation==="verify"?emailVerificationSchema:resendVerificationSchema;
     const parsed=schema.safeParse(input);
     if(!parsed.success||operation==="signup"&&!consentDeferred&&"termsVersionId" in parsed.data&&parsed.data.termsVersionId!==terms!.id)return {ok:false,kind:"invalid_input"};
     const stop=new AbortController(),timer=setTimeout(()=>stop.abort(),15000);

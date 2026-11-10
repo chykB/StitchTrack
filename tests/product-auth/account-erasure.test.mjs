@@ -10,7 +10,7 @@ import "../../scripts/register-server-only.mjs";
 import {PRODUCT_MIGRATIONS} from "../../prisma/product/migration-files.ts";
 import {authorizeErasure,readErasureReceipt} from "../../scripts/account-erasure.mjs";
 import {authorizeErasureProof} from "./account-erasure.integration.mjs";
-const {runControlledErasure,erasureProofPlan,erasureDeadline,ERASURE_TABLES,EXPECTED_ERASURE_FKS}=await import("../../lib/product-auth/account-erasure.server.ts");
+const {runControlledErasure,erasureProofPlan,erasureDeadline,lockErasureGraceEligibility,ERASURE_TABLES,EXPECTED_ERASURE_FKS}=await import("../../lib/product-auth/account-erasure.server.ts");
 const run="cd3c1c18-24d3-45e8-bb70-8d541e8c1e68",plan=erasureProofPlan(run),now=new Date("2026-11-02T12:00:00Z");
 const externalFetch=globalThis.fetch;globalThis.fetch=async()=>assert.fail("No external requests in erasure tests");test.after(()=>globalThis.fetch=externalFetch);
 function fixture(){
@@ -81,6 +81,8 @@ test("eligibility starts immediately, uses a 30-day maximum, warns before deadli
 test("dry-run writes nothing; execute deletes credentials, linked/orphan challenges and ciphertext in FK order, preserving unrelated and shared data",async()=>{
  const f=fixture(),before=structuredClone(f.rows()),db=f.connection();const dry=await runControlledErasure(db,f.receipt,"dry-run");assert.equal(dry.outcome,"dry_run");assert.equal(dry.wouldErase.Verification,2);assert.deepEqual(f.rows(),before);
  const result=await runControlledErasure(db,f.receipt,"execute");assert.equal(result.outcome,"erased");assert.deepEqual(result.counts,{User:1,Account:1,Session:1,Verification:2,TermsVersion:0,TermsAcceptance:1,EmailOutbox:1,EmailVerificationIssuance:1,AuthRateBucket:1});
+ assert.equal(db.events.filter(sql=>sql.includes('DELETE FROM product."TermsAcceptance"')).length,1);
+ assert.equal(f.rows().TermsAcceptance.some(row=>row.userId===plan.target),false);
  assert.equal(f.rows().User[0].id,"primary-existing-user");assert.deepEqual(f.rows().TermsVersion,before.TermsVersion);assert.equal(f.rows().TermsAcceptance[0].id,"other-acceptance");assert.equal(f.rows().AuthRateBucket.length,2);
  const again=await runControlledErasure(db,f.receipt,"execute");assert.equal(again.outcome,"noop");assert.ok(Object.values(again.counts).every(n=>n===0));
 });
@@ -123,7 +125,7 @@ test("owner CLI/harness are inert on import, exact-test-only, require successful
   assert.equal(authorizeErasure(["--owner-run","--dry-run"],env).mode,"dry-run");assert.equal(authorizeErasureProof(["--owner-setup"],env).target.mode,"test");
   for(const patch of [{NODE_ENV:"production"},{PRODUCT_DATABASE_MODE:"development"},{PRODUCT_ACCOUNT_ERASURE_ENABLED:undefined},{PRODUCT_ACCOUNT_ERASURE_CONFIRMED:undefined},{PRODUCT_EMAIL_WORKER_ENABLED:"true"},{NODE_DEBUG:"pg"},{PRODUCT_TEST_MIGRATION_DATABASE_URL:env.PRODUCT_TEST_MIGRATION_DATABASE_URL.replace("_migrator:","_app:")}])assert.throws(()=>authorizeErasure(["--owner-run","--execute"],{...env,...patch}));
   assert.throws(()=>authorizeErasure(["--owner-run","--execute","--all-users"],env));receipt.created=false;writeFileSync(file,JSON.stringify(receipt));assert.throws(()=>readErasureReceipt(directory));
-  const core=readFileSync(new URL("../../lib/product-auth/account-erasure.server.ts",import.meta.url),"utf8");assert.doesNotMatch(core,/TRUNCATE|DROP TABLE|DELETE FROM product\."TermsVersion"/);assert.match(core,/WHERE "id"=\$1 AND "deletionRequestedAt"=\$2/);
+  const core=readFileSync(new URL("../../lib/product-auth/account-erasure.server.ts",import.meta.url),"utf8");assert.doesNotMatch(core,/\bTRUNCATE\s+(?:TABLE\s+)?product\b|DROP TABLE|DELETE FROM product\."TermsVersion"/);assert.match(core,/WHERE "id"=\$1 AND "deletionRequestedAt"=\$2/);
  }finally{rmSync(file);rmdirSync(directory);}
 });
 
@@ -183,4 +185,69 @@ test("a bare run UUID or incomplete setup receipt cannot bypass the owner receip
  const cli=readFileSync(new URL("../../scripts/account-erasure.mjs",import.meta.url),"utf8");assert.match(cli,/runControlledErasure\(db,scope\.receipt,scope\.mode\)/);
  const harness=readFileSync(new URL("./account-erasure.integration.mjs",import.meta.url),"utf8");assert.match(harness,/erasureHistoricalSnapshot:snapshot,erasureRetainedDigest:retained/);
  assert.doesNotMatch(harness,/string_agg\(to_jsonb/);
+});
+
+// SQL/transaction doubles only: exercise the real helper and model PostgreSQL's
+// predicate. They do not execute SQL or prove actual PostgreSQL row locking.
+function graceDb(requested,{missing=false,transaction=true}={}){
+ const state={requested,now:+now,locked:false,events:[],beforeLock:null,afterLock:null,decision:undefined};
+ const db={async query(sql,args=[]){
+  state.events.push({sql,args});
+  if(sql==="SAVEPOINT erasure_grace_check"){if(!transaction)throw new Error("private transaction error");return {rows:[]};}
+  if(sql.includes("erasure:grace-lock")){
+   assert.deepEqual(args,["grace-account"]);assert.match(sql,/FOR UPDATE$/);
+   state.beforeLock?.();state.locked=!missing;state.afterLock?.();return {rows:missing?[]:[{id:args[0]}]};
+  }
+  if(sql.includes("erasure:grace-check")){
+   assert.equal(state.locked,true);assert.deepEqual(args,["grace-account"]);
+   assert.match(sql,/clock_timestamp\(\)/);assert.match(sql,/<=stamp.now-INTERVAL '24 hours'/);
+   assert.match(sql,/isfinite\(u\."deletionRequestedAt"\)/);
+   const value=state.requested;
+   const decision=state.decision??(value===null?"no_request":!Number.isFinite(+value)?"invalid_request":+value>state.now?"future_request":+value<=state.now-86400000?"eligible":"grace_period");
+   return {rows:[{decision}]};
+  }
+  if(sql==="RELEASE SAVEPOINT erasure_grace_check"){return {rows:[]};}
+  assert.fail("Unexpected grace query");
+ }};
+ return {db,state};
+}
+test("future-path grace predicate refuses null/future/23:59:59 requests and includes the exact database 24-hour boundary",async t=>{
+ t.mock.method(Date,"now",()=>0); // An unrelated application clock cannot supply eligibility.
+ for(const [requested,expected]of [
+  [null,{status:"not_eligible",reason:"no_request"}],
+  [new Date(+now+1),{status:"not_eligible",reason:"future_request"}],
+  [new Date(+now-86399000),{status:"not_eligible",reason:"grace_period"}],
+  [new Date(+now-86400000),{status:"eligible"}],
+  [new Date(+now-86400001),{status:"eligible"}],
+  [new Date(NaN),{status:"not_eligible",reason:"invalid_request"}],
+ ]){
+  const f=graceDb(requested);assert.deepEqual(await lockErasureGraceEligibility(f.db,"grace-account"),expected);
+  assert.equal(f.state.events[0].sql,"SAVEPOINT erasure_grace_check");
+  assert.equal(f.state.events.at(-1).sql,"RELEASE SAVEPOINT erasure_grace_check");
+  assert.ok(f.state.events.every(e=>!/^BEGIN|^COMMIT|^DELETE|^UPDATE|^INSERT/.test(e.sql)));
+ }
+});
+test("grace eligibility rereads the locked request and samples database time after lock waiting",async()=>{
+ const f=graceDb(new Date(+now-86400000));
+ f.state.beforeLock=()=>{f.state.requested=new Date(+now-1000);};
+ assert.deepEqual(await lockErasureGraceEligibility(f.db,"grace-account"),{status:"not_eligible",reason:"grace_period"});
+ const waiting=graceDb(new Date(+now-86399000));waiting.state.afterLock=()=>{waiting.state.now+=1000;};
+ assert.deepEqual(await lockErasureGraceEligibility(waiting.db,"grace-account"),{status:"eligible"});
+ assert.ok(waiting.state.events.findIndex(e=>e.sql.includes("grace-lock"))<waiting.state.events.findIndex(e=>e.sql.includes("grace-check")));
+});
+test("grace check requires an existing transaction and distinguishes missing from already erased or retention-approved",async()=>{
+ const outside=graceDb(new Date(0),{transaction:false});
+ await assert.rejects(lockErasureGraceEligibility(outside.db,"grace-account"),{message:"Erasure grace eligibility unavailable."});
+ assert.equal(outside.state.events.length,1);
+ const absent=graceDb(null,{missing:true});assert.deepEqual(await lockErasureGraceEligibility(absent.db,"grace-account"),{status:"missing"});
+ assert.equal(absent.state.events.some(e=>e.sql.includes("grace-check")),false);
+ const malformed=graceDb(new Date(0));malformed.state.decision="retention_approved";
+ await assert.rejects(lockErasureGraceEligibility(malformed.db,"grace-account"),{message:"Erasure grace eligibility unavailable."});
+ assert.equal(malformed.state.events.at(-1).sql.includes("grace-check"),true); // Caller must roll back on failure.
+});
+test("historical fixture execution remains immediate and never invokes the future grace check",async()=>{
+ const f=fixture(),db=f.connection();assert.equal(+f.rows().User[0].deletionRequestedAt,+now-1000);
+ assert.equal((await runControlledErasure(db,f.receipt,"execute")).outcome,"erased");
+ assert.equal((await runControlledErasure(db,f.receipt,"execute")).outcome,"noop");
+ assert.equal(db.events.some(sql=>sql.includes("erasure:grace-")||sql.includes("erasure_grace_check")),false);
 });

@@ -6,6 +6,8 @@ import ts from "typescript";
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
+    if (specifier === "next/navigation") return {url:"stitchtrack-test:next-navigation",shortCircuit:true};
+    if (specifier === "next/server") return nextResolve("next/server.js", context);
     if (specifier === "next/link") return nextResolve("next/link.js", context);
     try { return nextResolve(specifier, context); }
     catch (error) {
@@ -19,9 +21,13 @@ registerHooks({
     }
   },
   load(url, context, nextLoad) {
+    // No browser router in offline markup tests; submit tests inject navigation spies.
+    if (url === "stitchtrack-test:next-navigation") return {format:"module",source:"export const useRouter=()=>({replace(){}});",shortCircuit:true};
     if (url.endsWith(".module.css")) {
       return { format: "module", source: "export default new Proxy({}, { get: (_, key) => String(key) });", shortCircuit: true };
     }
+    // Global CSS is tested as source separately; markup rendering has no CSS engine.
+    if (url.endsWith(".css")) return {format:"module",source:"export default {};",shortCircuit:true};
     if (url.endsWith(".tsx")) {
       const source = ts.transpileModule(readFileSync(new URL(url), "utf8"), {
         compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },

@@ -13,7 +13,7 @@ const {sessionConnectionFromSocket}=await import("../../lib/product-auth/session
 const {registrationHttpRequest}=await import("../../lib/product-auth/registration-http.server.ts");
 const {verifyPassword}=await import("../../lib/auth/password.server.ts");
 const origin="https://synthetic.example.invalid",terms={id:"synthetic-terms",version:"test-only",path:"/terms"};
-const input={name:"Ọlá",email:" Synthetic@EXAMPLE.INVALID ",password:" Exact e\u0301 synthetic password ",termsVersionId:terms.id,termsAccepted:true};
+const input={name:"Ọlá",email:" Synthetic@EXAMPLE.INVALID ",password:" Exact e\u0301 synthetic password ",termsVersionId:terms.id,termsAccepted:true,privacyAcknowledged:true};
 async function setup() {
  const f=fakeProduct();let time=new Date();const calls=[];
  const verifierKeys={currentId:"test-verifier",keys:new Map([["test-verifier",Buffer.alloc(32,4)]])},outboxKeys={currentId:"test-outbox",keys:new Map([["test-outbox",Buffer.alloc(32,5)]])};
@@ -38,7 +38,7 @@ test("product boundary is default-inert and refuses forged metadata/CSRF before 
 });
 test("boundary validates all schemas and both shared budgets before calling registration",async()=>{
  const f=await setup();try{
-  for(const patch of [{name:" \u2003"},{password:"short"},{termsAccepted:false},{termsVersionId:"other"},{extra:"private"}])assert.equal((await f.call("signup",{...input,...patch})).status,422);
+  for(const patch of [{name:" \u2003"},{password:"short"},{termsAccepted:false},{privacyAcknowledged:false},{privacyAcknowledged:undefined},{termsVersionId:"other"},{extra:"private"}])assert.equal((await f.call("signup",{...input,...patch})).status,422);
   assert.equal(f.rows().user.length,0);
   f.dependencies.limits.consumeIp=async()=>({allowed:false,retryAfterSeconds:9});let r=await f.call("signup",input);assert.equal(r.status,429);assert.equal(r.headers.get("retry-after"),"9");
   f.dependencies.limits.consumeIp=async()=>{throw new Error("private storage error");};assert.equal((await f.call("signup",input)).status,503);
@@ -89,4 +89,39 @@ test("ordinary storage failure remains unavailable for an existing email; no dup
   const response=await f.call("signup",input);assert.equal(response.status,503);assert.deepEqual(await response.json(),{error:"registration_unavailable"});assert.equal(calls,1);
   assert.equal(f.rows().user.length,1);assert.equal(f.rows().account.length,1);assert.equal(f.rows().session.length,0);
  }finally{f.close();}
+});
+
+test("reading acknowledgement is required at HTTP boundary but never creates extra acceptance or a session",async()=>{
+ const f=await setup();try{
+  assert.equal((await f.call("signup",{...input,privacyAcknowledged:false})).status,422);assert.equal(f.rows().user.length,0);
+  assert.equal((await f.call("signup",input)).status,202);assert.equal((await f.call("signup",input)).status,202);
+  assert.equal(f.rows().termsAcceptance.length,1);assert.equal(f.rows().session.length,0);
+  assert.equal((await f.call("verify",f.mail())).status,200);assert.equal(f.rows().termsAcceptance.length,1);assert.equal(f.rows().session.length,0);
+ }finally{f.close();}
+});
+
+
+test("verified, unverified and locked duplicate registrations remain indistinguishable without issuing codes or changing accounts",async()=>{
+ for(const state of ["unverified","verified","disabled","deletion-locked"]){
+  const f=await setup();try{
+   const first=await f.call("signup",input);assert.equal(first.status,202);
+   if(state==="verified")assert.equal((await f.call("verify",f.mail())).status,200);
+   if(state==="disabled"||state==="deletion-locked")await f.client.user.update({where:{id:f.rows().user[0].id},data:state==="disabled"?{disabledAt:new Date()}:{deletionRequestedAt:new Date()}});
+   const baseline=structuredClone(f.rows()),responses=[];
+   const client=createRegistrationClient({configuration:{origin,terms},currentOrigin:()=>origin,fetch:async(path,options)=>{
+    assert.equal(path,registrationPaths.signup);const response=await f.call("signup",JSON.parse(options.body));
+    responses.push({status:response.status,body:await response.clone().json(),cookie:response.headers.get("set-cookie")});return response;
+   }}),controller=createRegistrationController(client);
+   assert.equal(await controller.signup({...input,email:"SYNTHETIC@example.invalid",password:" Another synthetic password "}),true);
+   assert.deepEqual(responses,[{status:202,body:await first.json(),cookie:null}]);
+   assert.equal(controller.getSnapshot().phase,"verification");
+   assert.equal(controller.getSnapshot().message,"If your email is eligible for registration, we'll send you a verification code. Please check your inbox or spam folder.");
+   assert.deepEqual(f.rows(),baseline,state+": duplicate must not create or change a user, credential, acceptance, session or issuance");
+   if(state==="unverified"){
+    assert.equal((await f.call("resend",{email:input.email})).status,202);assert.deepEqual(f.rows(),baseline);
+    f.advance(60000);assert.equal((await f.call("resend",{email:input.email})).status,202);
+    assert.equal(f.rows().emailOutbox.length,2);assert.equal(f.rows().user.length,1);assert.equal(f.rows().user[0].id,baseline.user[0].id);
+   }
+  }finally{f.close();}
+ }
 });

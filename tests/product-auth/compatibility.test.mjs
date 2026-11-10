@@ -96,7 +96,7 @@ test("all installed core scalar fields/types/nullability fit the product schema 
       if (options.required) assert.ok(!line.trim().startsWith(field + " " + types[options.type] + "?"), name + "." + field);
     }
   }
-  assert.equal(Object.keys(models).length, 9);
+  assert.equal(Object.keys(models).length, 12);
   assert.ok(models.AuthRateBucket);
   assert.match(models.User, /email String @unique @map\("emailCanonical"\)/u);
   assert.match(models.Account, /@@unique\(\[providerId,accountId\]\)/u);
